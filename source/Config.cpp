@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/02 13:53:05 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:11:41 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,5 +42,5 @@ Config &Config::operator=(Config const &src)
 void Config::parseConfig(const std::string &filename)
 {
     this->_filename = filename;
-    std::ifstream fileConfig(_filename);   
+    std::ifstream fileConfig(_filename.c_str());   
 }
