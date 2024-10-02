@@ -18,13 +18,18 @@ class Server
 
 		Server &operator=(Server const &src);
 
-		long getFD();
+		long getSocketFd();
+		long getEpollFd();
+
 		int createSocket();
-		int bindAndListen();
-		int handleConnexion();
+		int runServer();
+		void handleEvent();
 		
 	private:
 		Config _config;
 		struct sockaddr_in _addr;
-		long	_fd;
+		long	_socketFd;
+		long 	_epollFd;
+		struct epoll_event _ev; // adding to the epoll instance 
+		//std::map<long, std::string>	_sockets;
 };
