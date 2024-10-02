@@ -29,9 +29,9 @@ Server::~Server()
 {
 }
 
-Server &Server::operator=(Server& const rhs)
+Server &Server::operator=(Server const &rhs)
 {
-	if (this != rhs)
+	if (this != &rhs)
 	{
 		_fd = rhs._fd;
 		_addr = rhs._addr;

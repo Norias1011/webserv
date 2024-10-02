@@ -27,4 +27,4 @@ class Server
 		Config _config;
 		struct sockaddr_in _addr;
 		long	_fd;
-}
+};
