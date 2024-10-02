@@ -1,0 +1,143 @@
+
+
+Step of webserv :
+
+1- prendre le fichier conf ( 2serv avec 2 ports) webserv.conf a faire
+2- bind les socket aux ports
+3 - parser les differentes requetes 
+	- premiere ligne 
+	- espace 
+	- Header
+		- parser par key/value (map)
+		- sous categorie des headers etc
+4- envoyer les reponses
+5- implementer le listen 
+	une connexion = 1 fd ( nombre limite)
+	connexion en meme temps mettre un max de a peu pres 200
+6- CGI (permet de faire un script dans le webserv qui nest pas visible i.e session pour mdp etc)
+7- passer le DDoS
+
+MAIN.cpp a faire avec antho et commencer Config et Serv
+
+Config (peut etre split entre plusieurs fichiers):
+	- check le file de config, le path etc 
+	- parse les donnes de la config (host, port etc)
+	- parser toustesles autres infos
+Server:
+	- creation de socket
+	- bind les ports
+	- listen
+	- accept les connexion
+	- handle les connexions client (FAIRE UN autre fichier pour parser les connexions)
+Launcher:
+	- get the config and launch the serv ?
+Client:
+	- connect to server
+	- send request
+Requetes: PLUS COMPLIQUE/Lourd parsing des requetes
+	-  gerer les requetes - Token avec Key et Value +case avec les differentes requetes std::map.
+Response:
+	- valider la requete du client
+	- envoyer reponses based on code status HTTP
+	- envoyer Headers
+	- envoyer Corps
+
+En plus = Faire un LOGGER pour avoir les logs des diff requetes pour debug le fichier
+
+CHAT GPT:
+
+1 - Fichier de Config
+DÉBUT
+
+INITIALISER le serveur :
+    - Créer un socket pour accepter les connexions
+    - Lier le socket à une adresse IP et à un port
+    - Mettre le socket en mode écoute (listen)
+
+TANT QUE le serveur est actif :
+    - ATTENDRE une connexion entrante (accept)
+    - SI une connexion est reçue :
+        - LANCER un thread ou un processus pour gérer la requête
+        - Traiter la requête
+    FIN SI
+FIN TANT QUE
+
+FERMER le socket principal
+FIN
+
+FONCTION gérer_requête (socket_client) :
+
+    LIRE la requête HTTP envoyée par le client
+    PARSER la requête :
+        - Extraire la méthode (GET, POST, etc.)
+        - Extraire le chemin (URL)
+        - Extraire les en-têtes
+        - Extraire le corps de la requête si présent (par exemple dans les POST)
+
+    SI la méthode est GET :
+        - TROUVER la ressource demandée (fichier statique ou autre)
+        - SI la ressource est trouvée :
+            - LIRE la ressource depuis le système de fichiers
+            - CRÉER une réponse HTTP avec un statut 200 (OK)
+            - AJOUTER les en-têtes nécessaires (type MIME, longueur du contenu, etc.)
+            - ENVOYER la réponse au client
+        - SINON :
+            - CRÉER une réponse HTTP avec un statut 404 (Non trouvé)
+            - ENVOYER la réponse au client
+
+    SINON SI la méthode est POST :
+        - LIRE les données envoyées dans le corps de la requête
+        - EFFECTUER les actions en fonction des données reçues (sauvegarde, traitement, etc.)
+        - CRÉER une réponse HTTP avec un statut 200 (OK) ou 201 (Créé)
+        - ENVOYER la réponse au client
+
+    SINON SI la méthode est DELETE :
+        - SUPPRIMER la ressource si elle existe
+        - CRÉER une réponse HTTP avec un statut approprié (200 pour succès, 404 si non trouvé)
+
+    AUTRE :
+        - CRÉER une réponse HTTP avec un statut 405 (Méthode non autorisée)
+
+    FERMER la connexion avec le client
+
+FIN FONCTION
+FONCTION gérer_erreur (code_statut) :
+    - CRÉER une page d'erreur HTML correspondant au code HTTP
+    - ENVOYER la page d'erreur avec le bon en-tête HTTP au client
+
+FIN FONCTION
+DÉBUT
+
+BOUCLE PRINCIPALE :
+
+    SOCKET_CLIENT = attendre_connexion()
+
+    SI SOCKET_CLIENT != NULL :
+        LANCER gérer_requête(SOCKET_CLIENT)
+    FIN SI
+
+    GÉRER les erreurs du serveur si nécessaire (timeout, socket fermé, etc.)
+
+FIN BOUCLE PRINCIPALE
+
+FIN
+FONCTION charger_configuration (fichier_config) :
+    OUVRIR fichier_config
+    LIRE chaque ligne du fichier
+    PARSER les informations (port, racine du serveur, routes, etc.)
+    STOCKER ces informations dans une structure de configuration
+FIN FONCTION
+
+Quelques éléments à prendre en compte :
+Multithreading : Le serveur doit pouvoir gérer plusieurs connexions en même temps. Tu peux utiliser des threads ou des processus.
+Gestion des en-têtes HTTP : Parse les en-têtes pour gérer les fonctionnalités comme le Content-Type, Content-Length, etc.
+Gestion des erreurs : Le serveur doit gérer proprement les erreurs comme les requêtes malformées ou les méthodes non supportées.
+Fichier de configuration : Le serveur doit pouvoir être configuré via un fichier qui définit les ports, les routes, et d'autres options.
+Support des CGI : Implémenter la gestion des scripts CGI si nécessaire.
+Ce pseudocode doit être ajusté en fonction des exigences spécifiques du projet Webserv. Il peut être implémenté en C++ avec des bibliothèques comme socket.h pour gérer les connexions réseau.
+
+Exemple test:
+
+curl : commande qui envoie des requetes a ton serv (GET POST etc)
++ creer des LOG pour DEBUG le webserv pour voir auqnd il revoit une requete ou quoi
+inspect ->storage pour voir les cookie
