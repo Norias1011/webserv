@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/02 13:41:16 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/02 14:54:40 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <vector>
 #include <fstream>
 #include <map>
+#include <algorithm>
 #include "ConfigServer.hpp"
 
 class ConfigServer;
@@ -30,7 +31,7 @@ class Config
         Config(Config const &src);
         Config &operator=(Config const &src);
         void parseConfig(const std::string &filename);
-
+        std::vector<std::string> Config::split(std::string& s, const std::string& delimiter);
     protected:
 
 
