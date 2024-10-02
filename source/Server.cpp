@@ -11,36 +11,35 @@
 #define IP "11.11.11.11"  //  to link to parsing
 #define PORT 8002 // to link to parsing
 
-/*#define MYPORT 3490 // to link to what?
-#define DESTPORT 8002 // to link to parsing
+/*
 #define DEST_IP "132.241.5.10" // to link to parsing
 #define MAX_CO 10 // to link to main
 */
 
 Server::Server()
 {
-};
+}
 
 Server::Server(Server const &copy)
 {
 	*this = copy;
-};
+}
 
 Server::~Server()
 {
-};
+}
 
-Server &operator=(Server& const rhs)
+Server &Server::operator=(Server& const rhs)
 {
 	if (this != rhs)
 	{
 		_fd = rhs._fd;
 		_addr = rhs._addr;
-		_confg = rhs._config;
+		_config = rhs._config;
 	}
 	return *this;
 
-};
+}
 
 long getFD();
 void createSocket();

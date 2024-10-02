@@ -9,14 +9,14 @@
 #include <sys/wait.h>
 #include "Config.hpp"
 
-class Server :
+class Server 
 {
 	public:
 		Server();
-		Server(const Server &copy)
+		Server(const Server &copy);
 		~Server();
 
-		Server &operator =(Server const &src)
+		Server &operator=(Server const &src);
 
 		long getFD();
 		int createSocket();
