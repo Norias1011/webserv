@@ -1,18 +1,9 @@
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <errno.h> 
-#include <string.h> 
-#include <netinet/in.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <sys/wait.h>
-#include <sys/epoll.h>
-#include <vector>
 #include "Server.hpp"
 
 #define IP 1270001  //  to link to parsing
 #define PORT 8002 // to link to parsing
 #define MAX_CO 10
+#define BUFFER 1024
 
 Server::Server()
 {
@@ -104,5 +95,28 @@ int Server::runServer()
 
 void Server::handleEvent(epoll_event &event)
 {
+	try
+	{
+		if (event.events & EPOLLIN)
+		{
+			ssize_t bytes = recv(event.data.fd,BUFFER,sizeof(BUFFER),0);
+			if (bytes == -1)
+			{
+				std::cerr << "no byte received" << std::endl;
+			}
+			else if (bytes == 0)
+			{
+				close(event.data.fd);
+			}
+			else
+			{
+				std::cerr << "data received bytes are" << bytes << std::endl;
+			}
+		}
+		if (event.events & EPOLLOUT)
+		{
+
+		}
+	}
 
 }
