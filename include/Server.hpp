@@ -9,6 +9,7 @@
 #include <sys/epoll.h>
 #include <vector>
 #include "Config.hpp"
+#include "Client.hpp"
 
 class Server 
 {
@@ -24,13 +25,18 @@ class Server
 
 		int createSocket();
 		int runServer();
+		void handleConnection();
+		void handleDc();
 		void handleEvent();
 		
 	private:
 		Config _config;
+		std::map<int,Client*> _clients;
 		struct sockaddr_in _addr;
 		long	_socketFd;
 		long 	_epollFd;
 		struct epoll_event _ev; // adding to the epoll instance 
 		//std::map<long, std::string>	_sockets;
+	
+	void addSocket(int epollFd, int socketFd, uint32_t flags);
 };

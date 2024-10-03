@@ -93,10 +93,12 @@ int Server::runServer()
 	}
 }
 
-void Server::handleEvent(epoll_event &event)
+void Server::handleEvent(epoll_event &events)
 {
 	try
 	{
+		if (event.events & (EPOLLOUT || EPOLLER || EPOLLHUB))
+			throw Client::EpollErrorExc();
 		if (event.events & EPOLLIN)
 		{
 			ssize_t bytes = recv(event.data.fd,BUFFER,sizeof(BUFFER),0);
@@ -104,19 +106,36 @@ void Server::handleEvent(epoll_event &event)
 			{
 				std::cerr << "no byte received" << std::endl;
 			}
-			else if (bytes == 0)
-			{
-				close(event.data.fd);
-			}
 			else
 			{
 				std::cerr << "data received bytes are" << bytes << std::endl;
+				this->handleConnection(this->_socketFd);
 			}
 		}
-		if (event.events & EPOLLOUT)
-		{
-
-		}
 	}
+	catch (Client::EpollErrorExc &s)
+	{
+		this->handleDc(_fd);
+	};
+}
+void Server::handleConnection(int fd)
+{
+	struct sockaddr_in addr;
+
+	int client_fd = accept(fd,(struct sockaddr *) &addr, sizeof(struct sockaddr));
+	if (client_fd == -1)
+	{
+		std::cerr << "accepting the client fail" << std::endl;
+		return -1;
+	}
+	this->_client[client_fd] = new Client(client_fd);
+	 // put to non blocking mode
+	int flags = fcntl(clientFd, F_GETFL, 0);
+    fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
 
 }
+
+void Server::handleDc(int fd)
+{}
+
+void addSocket(int epollFd, int socketFd, uint32_t flags);
