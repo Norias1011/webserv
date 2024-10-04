@@ -5,7 +5,7 @@
 #define MAX_CO 10
 #define BUFFER 1024
 
-Server::Server()
+Server::Server() : _socketFd(-1), _epollFd(-1)
 {
 }
 
@@ -16,6 +16,13 @@ Server::Server(Server const &copy)
 
 Server::~Server()
 {
+	close(_socketFd);
+	close(_epollFd);
+	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		delete it->second;
+	}
+	this->_clients.clear();
 }
 
 Server &Server::operator=(Server const &rhs)
@@ -30,16 +37,18 @@ Server &Server::operator=(Server const &rhs)
 	return *this;
 }
 
-long Server::getSocketFd()
+// getters mais je sais pas si ils vont etre neceassaires ?=> a voir
+long Server::getSocketFd() const
 {
 	return _socketFd;
 }
 
-long Server::getEpollFd()
+long Server::getEpollFd() const
 {
 	return _epollFd;
 }
 
+// Creation du server socket, bind, listen to incoming connection
 int Server::createSocket()
 {
 	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -65,6 +74,12 @@ int Server::createSocket()
 	return _socketFd;
 }
 
+// the epoll instance is created and the server socket is added to it to monitor the events.
+// especially EPOLLIN means that the socket is ready to read.
+// when new connection attemtpt is made by the client, the server socket will be ready to read.
+// and the epoll wait will return an event indicating the server socket is ready to read.
+// -1 corresponding to timeout  - to see if we add one.
+
 int Server::runServer()
 {
 	epoll_event events[MAX_CO];
@@ -72,16 +87,13 @@ int Server::runServer()
 	if (_epollFd == -1)
 	{
 		std::cerr << "epoll_create1 fail" << std::endl;
+		// to close here
         return -1;
 	}
-	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD,_socketFd, &events) == -1)
-	{
-		std::cerr << "epoll_ctl fail" << std::endl;
-		return -1;
-	}
+	addSocket(_epollFd, _socketFd, EPOLLIN);
 	while (true)
 	{
-		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1);
+		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1); 
 		if (num_fds == -1)
 		{
 			std::cerr << "epoll_wait fail" << std::endl;
@@ -89,35 +101,54 @@ int Server::runServer()
 		}
 		for (int i = 0; i < num_fds; i++)
 			handleEvent(events[i]);
-		// add un timeout ?
-	}
 }
 
-void Server::handleEvent(epoll_event &events)
+// this will handle the event on the server socket
+// check if the event in on the server socket
+// then if yes will accept the connection
+// check if the event is on the client socket
+// will handle the request 
+
+void Server::handleEvent(epoll_event &event)
 {
 	try
 	{
-		if (event.events & (EPOLLOUT || EPOLLER || EPOLLHUB))
+		if (event.events & (EPOLLOUT | EPOLLER | EPOLLHUB)) // TOCHECK: check the flags
 			throw Client::EpollErrorExc();
 		if (event.events & EPOLLIN)
 		{
-			ssize_t bytes = recv(event.data.fd,BUFFER,sizeof(BUFFER),0);
-			if (bytes == -1)
-			{
-				std::cerr << "no byte received" << std::endl;
-			}
+			if (event.data.fd == this->_socketFd) 
+				this->handleConnection(event.data.fd); 
 			else
 			{
-				std::cerr << "data received bytes are" << bytes << std::endl;
-				this->handleConnection(this->_socketFd);
+				ssize_t bytes = recv(event.data.fd,BUFFER,sizeof(BUFFER),0); 
+				if (bytes == -1 || bytes == 0)
+				{	
+					std::cerr << "no byte received" << std::endl;
+					this->handleDc(event.data.fd);
+				}
+				else
+				{
+					std::cerr << "DEBUG - bytes received" << std::endl;
+					this->_clients[event.data.fd]->handleRequest(); // TODO
+				}
 			}
 		}
+		if (event & EPOLLOUT)
+		{
+			//  TODO - this->sendResponse(event.data.fd);
+		}
 	}
-	catch (Client::EpollErrorExc &s)
+	catch (Client::EpollErrorExc &e)
 	{
-		this->handleDc(_fd);
+		this->handleDc(event.data.fd);
 	};
 }
+
+// this will accept the client fd thus create the client socket
+// add the new client in the map of clients
+// put the client socket in non blocking mode - if the fcntl fails we need to clear the client 
+
 void Server::handleConnection(int fd)
 {
 	struct sockaddr_in addr;
@@ -128,14 +159,29 @@ void Server::handleConnection(int fd)
 		std::cerr << "accepting the client fail" << std::endl;
 		return -1;
 	}
-	this->_client[client_fd] = new Client(client_fd);
-	 // put to non blocking mode
+	std::cerr << "DEBUG - accept work" << std::endl;
+	this->_client[client_fd] = new Client(client_fd, this->_socketFD); // TOCHECK: la socket FD not sure
 	int flags = fcntl(clientFd, F_GETFL, 0);
     fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-
+	addSocket(this->_epollFd, client_fd, EPOLLIN); // TOCHECK: verifier les flags REQUEST FLAGS
 }
 
 void Server::handleDc(int fd)
-{}
+{
+	close(fd);
+	delete _clients[fd]
+	_clients.erase(fd);
+}
 
-void addSocket(int epollFd, int socketFd, uint32_t flags);
+void addSocket(int epollFd, int fd, uint32_t flags)
+{
+	struct epoll_event ev;
+	ev.events = flags;
+	ev.data.fd = socketFd;
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &ev) == -1)
+	{
+		std::cerr << "epoll_ctl fail" << std::endl;
+		close(fd);
+		return -1;
+	}
+};
