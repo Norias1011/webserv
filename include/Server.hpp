@@ -11,9 +11,15 @@
 #include <sys/wait.h>
 #include <sys/epoll.h>
 #include <vector>
+#include <iostream>
+#include <string.h>
 #include <map>
-#include "Config.hpp"
-#include "Client.hpp"
+#include <fcntl.h>
+//#include "../include/Config.hpp"
+#include "../include/Client.hpp"
+
+class Client; 
+//class Config; 
 
 class Server 
 {
@@ -32,15 +38,16 @@ class Server
 		void handleConnection(int fd);
 		void handleDc(int fd);
 		void handleEvent(epoll_event &event);
+		void addSocket(int epollFd, int socketFd, uint32_t flags);
 		
 	private:
-		Config _config;
+		//Config _config;
 		std::map<int,Client*> _clients;
 		struct sockaddr_in _addr;
 		long	_socketFd;
 		long 	_epollFd;
 	
-	void addSocket(int epollFd, int socketFd, uint32_t flags);
 };
+
 
 #endif // SERVER_HPP

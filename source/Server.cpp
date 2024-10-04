@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
-#define IP 1270001  //  to link to parsing
-#define PORT 8002 // to link to parsing
+//#define IP 1270001  //  to link to parsing
+#define PORT 8001 // to link to parsing
 #define MAX_CO 10
 #define BUFFER 1024
 
@@ -32,7 +32,7 @@ Server &Server::operator=(Server const &rhs)
 		_socketFd = rhs._socketFd;
 		_epollFd = rhs._epollFd;
 		_addr = rhs._addr;
-		_config = rhs._config; //check this
+		//_config = rhs._config; //check this
 	}
 	return *this;
 }
@@ -59,7 +59,7 @@ int Server::createSocket()
 	}
 	_addr.sin_family = AF_INET;
 	_addr.sin_port = htons(PORT);
-	_addr.sin_addr.s_addr = htonl(IP);
+	_addr.sin_addr.s_addr = INADDR_ANY;
 	bzero(&(_addr.sin_zero),8);
     if (bind(_socketFd, (struct sockaddr *)&_addr, sizeof(struct sockaddr)) == -1) 
 	{
@@ -101,6 +101,8 @@ int Server::runServer()
 		}
 		for (int i = 0; i < num_fds; i++)
 			handleEvent(events[i]);
+	}
+	return 0;
 }
 
 // this will handle the event on the server socket
@@ -113,75 +115,69 @@ void Server::handleEvent(epoll_event &event)
 {
 	try
 	{
-		if (event.events & (EPOLLOUT | EPOLLER | EPOLLHUB)) // TOCHECK: check the flags
+		if (event.events & (EPOLLOUT | EPOLLET | EPOLLHUP)) // TOCHECK: check the flags
 			throw Client::EpollErrorExc();
 		if (event.events & EPOLLIN)
 		{
-			if (event.data.fd == this->_socketFd) 
+			if (event.data.fd == _socketFd) 
 				this->handleConnection(event.data.fd); 
 			else
-			{
-				ssize_t bytes = recv(event.data.fd,BUFFER,sizeof(BUFFER),0); 
-				if (bytes == -1 || bytes == 0)
-				{	
-					std::cerr << "no byte received" << std::endl;
-					this->handleDc(event.data.fd);
-				}
-				else
-				{
-					std::cerr << "DEBUG - bytes received" << std::endl;
-					this->_clients[event.data.fd]->handleRequest(); // TODO
-				}
-			}
+				this->_clients[event.data.fd]->handleRequest(); // TODO
 		}
-		if (event & EPOLLOUT)
-		{
-			//  TODO - this->sendResponse(event.data.fd);
-		}
+		if (event.events & EPOLLOUT)
+			this->_clients[event.data.fd]->sendResponse("Hi"); //->sendResponse(event.data.fd
 	}
 	catch (Client::EpollErrorExc &e)
 	{
 		this->handleDc(event.data.fd);
-	};
-}
+	}
+};
+
 
 // this will accept the client fd thus create the client socket
 // add the new client in the map of clients
 // put the client socket in non blocking mode - if the fcntl fails we need to clear the client 
+// F_GETL to get  the flag and then block the socket with O_NONBLOCK
 
-void Server::handleConnection(int fd)
+void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception dans cette fonction
 {
 	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(struct sockaddr);
 
-	int client_fd = accept(fd,(struct sockaddr *) &addr, sizeof(struct sockaddr));
+	int client_fd = accept(fd,(struct sockaddr *) &addr, &addrlen);
 	if (client_fd == -1)
 	{
 		std::cerr << "accepting the client fail" << std::endl;
-		return -1;
+		this->handleDc(client_fd);
 	}
 	std::cerr << "DEBUG - accept work" << std::endl;
-	this->_client[client_fd] = new Client(client_fd, this->_socketFD); // TOCHECK: la socket FD not sure
-	int flags = fcntl(clientFd, F_GETFL, 0);
-    fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
-	addSocket(this->_epollFd, client_fd, EPOLLIN); // TOCHECK: verifier les flags REQUEST FLAGS
+	this->_clients[client_fd] = new Client(client_fd);
+	int flags = fcntl(client_fd, F_GETFL, 0);// TOCHECK: verifier les diff parametres
+	if (flags == -1) 
+	{	
+		std::cerr << "fcntl fail" << std::endl;
+		this->handleDc(client_fd);
+	}
+    if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		this->handleDc(client_fd);
+	this->addSocket(_epollFd, client_fd, EPOLLIN); // TOCHECK: verifier les flags REQUEST FLAGS
 }
 
 void Server::handleDc(int fd)
 {
 	close(fd);
-	delete _clients[fd]
+	delete _clients[fd];
 	_clients.erase(fd);
 }
 
-void addSocket(int epollFd, int fd, uint32_t flags)
+void Server::addSocket(int epollFd, int fd, uint32_t flags)
 {
 	struct epoll_event ev;
 	ev.events = flags;
-	ev.data.fd = socketFd;
+	ev.data.fd = fd;
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl fail" << std::endl;
 		close(fd);
-		return -1;
 	}
-};
+}

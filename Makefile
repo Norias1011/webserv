@@ -1,7 +1,7 @@
 NAME = webserv
 CC = c++
 CFLAGS = -g -Wall -Wextra -Werror -std=c++98
-
+INCLUDES = -Iinclude
 SRC_DIR = source
 OBJ_DIR = obj
 
@@ -23,11 +23,12 @@ END			=	\033[0m
 all: $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CC) $(CFLAGS) -O2 -c  $< -o $@
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -O2 -c  $< -o $@
 	@echo "$(BLUE)-> compiling $<$(END)"
 
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(NAME)
 	@echo "$(GREEN)$(NAME) successfully compiled$(END)"
 
 clean:

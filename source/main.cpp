@@ -1,17 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/02 14:25:06 by ehamm            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../include/Config.hpp"
+//#include "../include/Config.hpp"
 #include "../include/Server.hpp"
+#include "../include/Client.hpp"
 #include <signal.h>
 
 void signalHandler(int signum)
@@ -25,12 +14,14 @@ int main(int argc, char *argv[])
     if (argc == 2 || argc == 1)
     {
         std::string config_file;
-        Config config;
+       // Config config;
 		Server server;
         config_file = (argc == 2) ? argv[1] : "default.conf";
         signal(SIGINT, signalHandler);
-        config.parseConfig(config_file);
+        //config.parseConfig(config_file);
 		if (server.createSocket()== - 1)
+			return(-1);
+        if (server.runServer()== - 1)
 			return(-1);
     }
     else
