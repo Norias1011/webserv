@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/02 16:31:55 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/04 12:23:01 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class ConfigServer
         ConfigServer &operator=(ConfigServer const &src);
         ConfigServer parseServer(std::ifstream &fileConfig);
         std::vector<std::string> ConfigServer::split(std::string& s, const std::string& delimiter);
-        bool checkServerLine(std::vector<std::string> serverLine, std::string line, std::ifstream &fileConfig);
+        bool checkServerLine(std::vector<std::string>& serverLine, std::string& line, std::ifstream &fileConfig);
     protected:
 
     private:

@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/02 15:30:35 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/04 12:54:12 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void Config::parseConfig(const std::string &filename)
     {
         int num_file = 0; // Pour connaitre le numero de la ligne dans le config file
         num_file++;
-        if (line.empty() || line[0] == '#')
+        if (line.empty() || line[0] == '#' || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
             continue;
         serverLines = split(line, " "); // Split the line by space
         for (std::vector<std::string>::iterator it = serverLines.begin(); it != serverLines.end(); it++)
