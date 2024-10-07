@@ -57,6 +57,7 @@ int Server::createSocket()
 		std::cerr << "Error: Unable to create socket" << std::endl;
         return (-1);
 	}
+	std::cout << "[DEBUG] - success creating the socket" << std::endl;
 	_addr.sin_family = AF_INET;
 	_addr.sin_port = htons(PORT);
 	_addr.sin_addr.s_addr = INADDR_ANY;
@@ -66,11 +67,13 @@ int Server::createSocket()
         std::cerr << "Error: Unable to bind socket" << std::endl;
         return (-1);
     }
+	std::cout << "[DEBUG] - success binding the socket to" << PORT << std::endl;
 	if (listen(_socketFd,MAX_CO) == -1)
 	{
 		std::cerr << "Error: Unable to listen" << std::endl;
 		return(-1);
 	}
+	std::cout << "[DEBUG] - success listenning to port" << PORT << std::endl;
 	return _socketFd;
 }
 
@@ -90,7 +93,8 @@ int Server::runServer()
 		// to close here
         return -1;
 	}
-	addSocket(_epollFd, _socketFd, EPOLLIN);
+	std::cout << "[DEBUG] - success creating the epoll instance" << std::endl;
+	this->addSocket(_epollFd, _socketFd, EPOLLIN);
 	while (true)
 	{
 		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1); 
@@ -116,7 +120,7 @@ void Server::handleEvent(epoll_event &event)
 	try
 	{
 		if (event.events & (EPOLLOUT | EPOLLET | EPOLLHUP)) // TOCHECK: check the flags
-			throw Client::EpollErrorExc();
+			throw Client::DecoExc();
 		if (event.events & EPOLLIN)
 		{
 			if (event.data.fd == _socketFd) 
@@ -125,9 +129,9 @@ void Server::handleEvent(epoll_event &event)
 				this->_clients[event.data.fd]->handleRequest(); // TODO
 		}
 		if (event.events & EPOLLOUT)
-			this->_clients[event.data.fd]->sendResponse("Hi"); //->sendResponse(event.data.fd
+			this->_clients[event.data.fd]->sendResponse("Hi"); //->sendResponse(event.data.fd)
 	}
-	catch (Client::EpollErrorExc &e)
+	catch (Client::DecoExc &e)
 	{
 		this->handleDc(event.data.fd);
 	}
@@ -150,7 +154,7 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 		std::cerr << "accepting the client fail" << std::endl;
 		this->handleDc(client_fd);
 	}
-	std::cerr << "DEBUG - accept work" << std::endl;
+	std::cout << "[DEBUG] - success accepting connection with client fd" << client_fd << std::endl;
 	this->_clients[client_fd] = new Client(client_fd);
 	int flags = fcntl(client_fd, F_GETFL, 0);// TOCHECK: verifier les diff parametres
 	if (flags == -1) 
@@ -160,7 +164,7 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 	}
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		this->handleDc(client_fd);
-	this->addSocket(_epollFd, client_fd, EPOLLIN); // TOCHECK: verifier les flags REQUEST FLAGS
+	this->addSocket(_epollFd, client_fd, EPOLLIN);
 }
 
 void Server::handleDc(int fd)
