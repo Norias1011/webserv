@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 15:25:38 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 18:17:26 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include <map>
 #include <algorithm>
 #include "ConfigServer.hpp"
+#include "ConfigLocation.hpp"
+#include "ConfigListen.hpp"
+#include <cstdlib>
 
 class ConfigServer;
 
@@ -38,11 +41,9 @@ class Config
 
 
     private:
-        ConfigServer _webServer;
         std::string _filename;
         std::vector<ConfigServer> _servers;
         std::map<std::string, std::vector<ConfigServer> > _serverConfigs;
-        
 };
 
 

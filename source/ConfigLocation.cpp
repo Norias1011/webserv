@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 11:24:32 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 17:58:07 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,7 +180,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
     }
     else if (line == "rewrite" && locationLine.size() == 3)
     {
-        this->_rewrite.first = std::stoi(locationLine[1]);
+        this->_rewrite.first = std::atoi(locationLine[1].c_str());
         if (this->_rewrite.first < 300 || this->_rewrite.first > 399)
         {
             std::cerr << "Error: Invalid status code for rewrite" << std::endl; //throw une error ici

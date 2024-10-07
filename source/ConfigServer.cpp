@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 15:01:36 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 18:07:07 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,20 @@ void ConfigServer::pathsClean()
 {
     for (size_t i = 0; i < this->_locations.size(); i++)
     {
+        if (!this->_locations[i].getPath().empty() && this->_locations[i].getPath()[this->_locations[i].getPath().size() - 1] == '/')
+            this->_locations[i].setPath(this->_locations[i].getPath().substr(0, this->_locations[i].getPath().size() - 1));
+    }
+
+    if (!this->_root.empty() && this->_root[this->_root.size() - 1] == '/')
+        this->_root = this->_root.substr(0, this->_root.size() - 1);
+
+    for (std::map<int, std::string>::iterator it = this->_errorPages.begin(); it != this->_errorPages.end(); it++)
+    {
+        if (!it->second.empty() && it->second[it->second.size() - 1] == '/')
+            it->second = it->second.substr(0, it->second.size() - 1);
+    }
+    /*for (size_t i = 0; i < this->_locations.size(); i++)
+    {
         if (this->_locations[i].getPath().back() == '/')
             this->_locations[i].setPath(this->_locations[i].getPath().substr(0, this->_locations[i].getPath().size() - 1));
     }
@@ -108,7 +122,7 @@ void ConfigServer::pathsClean()
     {
         if (it->second.back() == '/')
             it->second = it->second.substr(0, it->second.size() - 1);
-    }
+    }*/
 }
 
 void ConfigServer::checkDoubleLocation()
@@ -215,17 +229,17 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
     }
     else if (line == "error_page" && serverLine.size() == 3)
     {
-        if (std::stoi(serverLine[1]) < 400 || std::stoi(serverLine[1]) > 599)
+        if (std::atoi(serverLine[1].c_str()) < 400 || std::atoi(serverLine[1].c_str()) > 599)
         {
             std::cerr << "Error: Invalid status code for error_page" << std::endl; //throw une error ici
             exit(1);
         }
-        this->_errorPages[std::stoi(serverLine[1])] = serverLine[2];
+        this->_errorPages[std::atoi(serverLine[1].c_str())] = serverLine[2];
         return true;
     }
     else if (line == "client_max_body_size" && serverLine.size() == 2)
     {
-        this->_maxBodySize = std::stoull(serverLine[1]);
+        this->_maxBodySize = std::strtoull(serverLine[1].c_str(), NULL, 10);
         this->_doubleInformation["client_max_body_size"]++;
         return true;
     }

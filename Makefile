@@ -17,19 +17,19 @@ CXX = c++
 
 CPPFLAGS = -g -Wall -Wextra -Werror -std=c++98 -I include
 
-RM = rm -f
+RM = rm -rf
 
 all: $(NAME)
 
-$(NAME): $(BINS)
-		$(CXX) $^ $(CPPFLAGS) -o $(NAME)
+$(NAME): $(OUT) $(BINS)
+		$(CXX) $(CPPFLAGS) -o $(NAME) $(BINS)
 
 
-$(OUT)%.o:	source/%.cpp $$(@D) | %/.f
+$(OUT)%.o:	source/%.cpp 
 	$(CXX) $(CPPFLAGS) -c $< -o $@
 
-%/.f:
-	mkdir -p $(dir $@)
+$(OUT):
+	mkdir -p $(OUT)
 
 clean:
 	$(RM) $(OUT)
@@ -39,4 +39,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONE: all clean fclean re
+.PHONY: all clean fclean re
