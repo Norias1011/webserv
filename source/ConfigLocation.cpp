@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/04 16:20:40 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 11:24:32 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ ConfigLocation ConfigLocation::parseLocation(std::ifstream &fileConfig, std::str
             exit(1);
         }
     }
-    if (index == 0)
+    if (index == 0 && is_empty(fileConfig))
     {
         std::cerr << "Error: Missing closing bracket for location" << std::endl; //throw une error ici
         exit(1);
@@ -114,6 +114,11 @@ void ConfigLocation::checkDoubleInformation()
             exit(1);
         }
     }
+}
+
+bool ConfigLocation::is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
 }
 
 

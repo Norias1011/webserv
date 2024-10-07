@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/04 12:54:12 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 15:07:48 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,8 @@ void Config::parseConfig(const std::string &filename)
         ConfigServer server(_filename);
         _servers.push_back(server.parseServer(fileConfig));
     }
+    checkDoubleServerName();
+    configBlock();
     fileConfig.close();
 }
 
@@ -91,4 +93,40 @@ std::vector<std::string> Config::split(std::string& s, const std::string& delimi
     }
     tokens.push_back(s);
     return tokens;
+}
+
+void Config::configBlock()
+{
+    for (size_t i = 0; i < this->_servers.size(); i++)
+    {
+        std::map<std::string, ConfigListen> listens = this->_servers[i].getListens();
+        for (std::map<std::string, ConfigListen>::iterator it = listens.begin(); it != listens.end(); it++)
+        {
+            _serverConfigs[it->first].push_back(this->_servers[i]);
+        }
+    }
+}
+
+void Config::checkDoubleServerName()
+{
+    for (size_t i = 0; i < this->_servers.size(); i++)
+    {
+        for (size_t j = 0; j < this->_servers[i].getServerNames().size(); j++)
+        {
+            for (size_t k = 0; k < this->_servers.size(); k++)
+            {
+                if (i != k)
+                {
+                    for (size_t l = 0; l < this->_servers[k].getServerNames().size(); l++)
+                    {
+                        if (this->_servers[i].getServerNames()[j] == this->_servers[k].getServerNames()[l])
+                        {
+                            std::cerr << "Error: Duplicate server name" << std::endl; //throw une error ici
+                            exit(1);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

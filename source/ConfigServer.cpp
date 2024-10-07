@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/04 13:18:32 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 15:01:36 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 ConfigServer::ConfigServer() : _filename(""), _maxBodySize(1048576) // equal to 1MB
 {
+    _doubleInformation["root"] = 0;
+    _doubleInformation["client_max_body_size"] = 0;
 }
 
 ConfigServer::~ConfigServer()
@@ -22,6 +24,8 @@ ConfigServer::~ConfigServer()
 
 ConfigServer::ConfigServer(std::string filename) : _filename(filename), _maxBodySize(1048576)
 {
+    _doubleInformation["root"] = 0;
+    _doubleInformation["client_max_body_size"] = 0;
 }
 
 ConfigServer::ConfigServer(ConfigServer const &src)
@@ -76,7 +80,76 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
             exit(1);
         }
     }
+    if (index == 0 && is_empty(fileConfig))
+    {
+        std::cerr << "Error: Missing closing bracket for server" << std::endl; // on peut throw une erreur ici
+        exit(1);
+    }
+    checkDoubleInformation();
+    defaultValues();
+    checkDoubleLocation();
+    pathsClean();
+    return *this;
+}
 
+
+void ConfigServer::pathsClean()
+{
+    for (size_t i = 0; i < this->_locations.size(); i++)
+    {
+        if (this->_locations[i].getPath().back() == '/')
+            this->_locations[i].setPath(this->_locations[i].getPath().substr(0, this->_locations[i].getPath().size() - 1));
+    }
+
+    if (this->_root.back() == '/')
+        this->_root = this->_root.substr(0, this->_root.size() - 1);
+
+    for (std::map<int, std::string>::iterator it = this->_errorPages.begin(); it != this->_errorPages.end(); it++)
+    {
+        if (it->second.back() == '/')
+            it->second = it->second.substr(0, it->second.size() - 1);
+    }
+}
+
+void ConfigServer::checkDoubleLocation()
+{
+    for (size_t i = 0; i < this->_locations.size(); i++)
+    {
+        for (size_t j = i + 1; j < this->_locations.size(); j++)
+        {
+            if (this->_locations[i].getPath() == this->_locations[j].getPath())
+            {
+                std::cerr << "Error: Duplicate location" << std::endl; //throw une error ici
+                exit(1);
+            }
+        }
+    }
+}
+
+void ConfigServer::defaultValues()
+{
+    if (this->_root.empty())
+        this->_root = ".";
+    if (this->_index.empty())
+        this->_index.push_back("index.html");
+    if (this->_listens.empty())
+    {
+        ConfigListen listen("0.0.0.0:80");
+        this->_listens[listen.get_IpAndPort()] = listen;
+    }
+}
+
+
+void ConfigServer::checkDoubleInformation()
+{
+    for (std::map<std::string, int>::iterator it = this->_doubleInformation.begin(); it != this->_doubleInformation.end(); it++)
+    {
+        if (it->second > 1)
+        {
+            std::cerr << "Error: Duplicate information in location" << std::endl; //throw une error ici
+            exit(1);
+        }
+    }
 }
 
 std::vector<std::string> ConfigServer::split(std::string& s, const std::string& delimiter) {
@@ -92,6 +165,11 @@ std::vector<std::string> ConfigServer::split(std::string& s, const std::string& 
     return tokens;
 }
 
+bool ConfigServer::is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
+}
+
 bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::string& line, std::ifstream &fileConfig)
 {
     if (serverLine.size() < 2)
@@ -104,42 +182,78 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
     }
     else if (line == "listen" && serverLine.size() == 2)
     {
-        std::vector<std::string> ipPort = split(serverLine[1], ":");
-        if (ipPort.size() == 2)
-        {
-            this->_ip = ipPort[0];
-            this->_port = std::stoi(ipPort[1]);
-            this->_joinIpPort = serverLine[1];
-            return true;
-        }
+        addListen(serverLine[1]);
+        return true;
     }
     else if (line == "server_name" && serverLine.size() == 2)
     {
+        for (size_t i = 0; i < this->_serverNames.size(); i++)
+        {
+            if (this->_serverNames[i] == serverLine[1])
+            {
+                std::cerr << "Error: Duplicate server name" << std::endl; //throw une error ici
+                exit(1);
+            }
+        }
         this->_serverNames.push_back(serverLine[1]);
         return true;
     }
     else if (line == "root" && serverLine.size() == 2)
     {
         this->_root = serverLine[1];
+        this->_doubleInformation["root"]++;
         return true;
     }
     else if (line == "index" && serverLine.size() > 1)
     {
         for (size_t i = 1; i < serverLine.size(); i++)
-            this->_index.push_back(serverLine[i]);
+        {
+            if (std::find(this->_index.begin(), this->_index.end(), serverLine[i]) == this->_index.end())
+                this->_index.push_back(serverLine[i]);
+        }
         return true;
     }
     else if (line == "error_page" && serverLine.size() == 3)
     {
+        if (std::stoi(serverLine[1]) < 400 || std::stoi(serverLine[1]) > 599)
+        {
+            std::cerr << "Error: Invalid status code for error_page" << std::endl; //throw une error ici
+            exit(1);
+        }
         this->_errorPages[std::stoi(serverLine[1])] = serverLine[2];
         return true;
     }
     else if (line == "client_max_body_size" && serverLine.size() == 2)
     {
         this->_maxBodySize = std::stoull(serverLine[1]);
+        this->_doubleInformation["client_max_body_size"]++;
         return true;
     }
     else
         return false; 
 }
 
+
+void ConfigServer::addListen(std::string &ipLine)
+{
+    ConfigListen listen(ipLine);
+
+    if (_listens.find(listen.get_IpAndPort()) != _listens.end())
+    {
+        std::cerr << "Error: Ip and port already taken" << std::endl; //throw une error ici
+        exit(1);
+    }
+    _listens[listen.get_IpAndPort()] = listen;
+}
+
+std::string ConfigServer::getServerNames()
+{
+    std::string serverNames = "";
+    for (size_t i = 0; i < this->_serverNames.size(); i++)
+    {
+        serverNames += this->_serverNames[i];
+        if (i != this->_serverNames.size() - 1)
+            serverNames += ", ";
+    }
+    return serverNames;
+}

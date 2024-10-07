@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:11 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/04 16:16:54 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/07 14:48:08 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@ class ConfigLocation
         bool checkLocationLine(std::vector<std::string>& locationLine, std::string& line);
         void defaultValue();
         void checkDoubleInformation();
+        bool is_empty(std::ifstream& pFile);
+        const std::string &getPath() const { return _path; };
+        void setPath(const std::string &path) { _path = path; };
     protected:
 
     private:
