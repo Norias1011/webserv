@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 17:58:07 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 13:41:02 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,23 +65,48 @@ ConfigLocation ConfigLocation::parseLocation(std::ifstream &fileConfig, std::str
 {
     std::string line;
     std::vector<std::string> locationLines;
-    ConfigLocation location(this->_filename);
     int index = 0;
 
-    location._path = option;
+    this->_path = option;
     while (std::getline(fileConfig, line))
     {
-        if (line.empty() || line[0] == '#' || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+        /*if (line.empty() || line[0] == '#' || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
             continue;
+        if (line[line.length() - 1] != ';')
+        {
+            std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
+            exit(1);
+        }
+        else 
+            line.erase(line.size() - 1);*/
+        std::cout << "Line : " << line << "|" << std::endl;
+        int i = 0;
+        while (isspace(line[i]))
+            line.erase(i, 1);
+        if (line.empty() || line[0] == '#') // || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+            continue;
+        if (line[line.length() - 1] != ';' && line.find("}") == std::string::npos && line.find("{") == std::string::npos)
+        {
+            std::cout << "Line : " << line << "|" << std::endl;
+            std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
+            exit(1);
+        }
+        else if (line[line.length() - 1] == ';')
+            line.erase(line.size() - 1);
+        std::cout << "Line : " << line << "|" << std::endl;
         locationLines = split(line, " ");
-         for (std::vector<std::string>::iterator it = locationLines.begin(); it != locationLines.end(); it++)
+        for (std::vector<std::string>::iterator it = locationLines.begin(); it != locationLines.end(); it++)
+        {
+            std::cout << "Before erase : |" << *it << "|" << std::endl;
             (*it).erase(std::remove_if((*it).begin(), (*it).end(), isspace), (*it).end());
+            std::cout << "After erase : |" << *it << "|" << std::endl;
+        }
         if (locationLines[0] == "}" && locationLines.size() == 1)
         {
             index = 1;
             break;
         }
-        if (checkLocationLine(locationLines, locationLines[0]))
+        else if (checkLocationLine(locationLines, locationLines[0]))
             continue;
         else
         {
@@ -178,7 +203,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
         this->_doubleInformation["upload_path"]++;
         return true;
     }
-    else if (line == "rewrite" && locationLine.size() == 3)
+    else if (line == "return" && locationLine.size() == 3)
     {
         this->_rewrite.first = std::atoi(locationLine[1].c_str());
         if (this->_rewrite.first < 300 || this->_rewrite.first > 399)
@@ -227,7 +252,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
         this->_doubleInformation["allow_method"]++;
         return true;
     }
-    else if (line == "cgi" && locationLine.size() == 3)
+    else if (line == "cgi_ext" && locationLine.size() == 3)
     {
         if (_cgi.find(locationLine[1]) != _cgi.end())
         {

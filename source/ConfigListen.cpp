@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 13:57:40 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 18:14:19 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 14:45:49 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,13 +32,13 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
         }
         if (ipPort[0].find(".") != std::string::npos)
         {
-            this->_ip = ipPort[0];
-            this->_port = 80;
+            _ip = ipPort[0];
+            _port = 80;
         }
         else
         {
-            this->_ip = "0.0.0.0";
-            this->_port = std::atoi(ipPort[0].c_str());
+            _ip = "0.0.0.0";
+            _port = std::atoi(ipPort[0].c_str());
         }
     }
     else if (ipPort.size() == 2)
@@ -48,15 +48,15 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
             std::cerr << "Error: Invalid ip or port" << std::endl; //throw une error ici
             exit(1);
         }
-        this->_ip = ipPort[0];
-        this->_port = std::atoi(ipPort[1].c_str());
+        _ip = ipPort[0];
+        _port = std::atoi(ipPort[1].c_str());
     }
     else
     {
         std::cerr << "Error: Invalid ip or port" << std::endl; //throw une error ici
         exit(1);
     }
-    this->_IpAndPort = this->_ip + ":" + NumberToString(this->_port); //::to_string(this->_port);
+    _IpAndPort = _ip + ":" + NumberToString(_port); //::to_string(this->_port);
     if (this->_port > 65535)
     {
         std::cerr << "Error: Invalid port" << std::endl; //throw une error ici

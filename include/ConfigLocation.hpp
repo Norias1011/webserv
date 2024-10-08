@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:11 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 14:48:08 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 11:35:49 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,16 @@ class ConfigLocation
         bool is_empty(std::ifstream& pFile);
         const std::string &getPath() const { return _path; };
         void setPath(const std::string &path) { _path = path; };
+
+        std::string getRoot() { return this->_root; };
+        std::string getUploadPath() { return this->_uploadPath; };
+        std::string getAlias() { return this->_alias; };
+        bool getAutoindex() { return this->_autoindex; };
+        std::string getFilename() { return this->_filename; };
+        std::vector<std::string> getIndex() { return this->_index; };
+        std::map<std::string, std::string> getCgi() { return this->_cgi; };
+        std::pair<int, std::string> getRewrite() { return this->_rewrite; };
+        std::vector<std::string> getMethods() { return this->_methods; };
     protected:
 
     private:

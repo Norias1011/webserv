@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 18:17:28 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 11:39:31 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,10 @@ int main(int argc, char *argv[])
     {
         std::string config_file;
         Config config;
-        config_file = (argc == 2) ? argv[1] : "default.conf";
+        config_file = (argc == 2) ? argv[1] : "configs/default.conf";
         signal(SIGINT, signalHandler);
         config.parseConfig(config_file);
+        config.printAll();
     }
     else
     {

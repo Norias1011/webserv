@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 18:17:26 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 17:42:05 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <algorithm>
 #include "ConfigServer.hpp"
@@ -37,6 +38,7 @@ class Config
         std::vector<std::string> split(std::string& s, const std::string& delimiter);
         void checkDoubleServerName();
         void configBlock();
+        void printAll();
     protected:
 
 

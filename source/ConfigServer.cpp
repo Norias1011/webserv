@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 18:07:07 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 17:29:06 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,20 +62,47 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
 
     while (std::getline(fileConfig, line))
     {
-        if (line.empty() || line[0] == '#' || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+        std::cout << "Line : " << line << "|" << std::endl;
+        /*if (line.empty() || line[0] == '#') // || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+            continue;*/
+        /* if (line[line.length() - 1] != ';' && line.find("}") == std::string::npos)
+        {
+            std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
+            exit(1);
+        }
+        else 
+            line.erase(line.size() - 1);*/
+        int i = 0;
+        while (isspace(line[i]))
+            line.erase(i, 1);
+        if (line.empty() || line[0] == '#') // || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
             continue;
+        if (line[line.length() - 1] != ';' && line.find("}") == std::string::npos && line.find("{") == std::string::npos)
+        {
+            std::cout << "Line : " << line << "|" << std::endl;
+            std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
+            exit(1);
+        }
+        else if (line[line.length() - 1] == ';')
+            line.erase(line.size() - 1);
+        std::cout << "Line : " << line << "|" << std::endl;
         serverLines = split(line, " ");
         for (std::vector<std::string>::iterator it = serverLines.begin(); it != serverLines.end(); it++)
+        {
+            std::cout << "Before ServerLine : |" << *it << "|" << std::endl;
             (*it).erase(std::remove_if((*it).begin(), (*it).end(), isspace), (*it).end());
+            std::cout << "After ServerLine : |" << *it << "|" << std::endl;
+        }
         if (serverLines[0] == "}" && serverLines[0].size() == 1 && serverLines.size() == 1)
         {
             index = 1;
             break;
         }
-        else if (this->checkServerLine(serverLines, serverLines[0], fileConfig))
+        else if (checkServerLine(serverLines, serverLines[0], fileConfig))
             continue;
         else
         {
+            std::cout << "Line : " << line << std::endl;
             std::cout << "Error: Invalid server configuration" << std::endl; // on peut throw une erreur ici
             exit(1);
         }
@@ -89,7 +116,7 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
     defaultValues();
     checkDoubleLocation();
     pathsClean();
-    return *this;
+    return (*this);
 }
 
 
@@ -196,6 +223,7 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
     }
     else if (line == "listen" && serverLine.size() == 2)
     {
+        std::cout << "********* ServerLine : " << serverLine[1] << std::endl;
         addListen(serverLine[1]);
         return true;
     }
@@ -257,6 +285,7 @@ void ConfigServer::addListen(std::string &ipLine)
         std::cerr << "Error: Ip and port already taken" << std::endl; //throw une error ici
         exit(1);
     }
+    std::cout << "********* Listen : " << listen.get_IpAndPort() << std::endl;
     _listens[listen.get_IpAndPort()] = listen;
 }
 

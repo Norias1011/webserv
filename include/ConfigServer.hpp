@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/07 15:25:09 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/08 17:42:04 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@
 #include "ConfigListen.hpp"
 
 class ConfigLocation;
-class Config;
 class ConfigListen;
 
 class ConfigServer
@@ -39,7 +38,13 @@ class ConfigServer
         void checkDoubleLocation();
         void pathsClean();
         std::string getServerNames();
-        const std::map<std::string, ConfigListen> &getListens() const { return _listens; };
+        const std::map<std::string, ConfigListen> &getListens() const { return this->_listens; };
+
+        std::string getRoot() { return this->_root; };
+        std::vector<std::string> getIndex() { return this->_index; };
+        std::map<int, std::string> getErrorPages() { return this->_errorPages; };
+        unsigned long long getMaxBodySize() { return this->_maxBodySize; };
+        std::vector<ConfigLocation> getLocations() { return this->_locations; };
     protected:
 
     private:
