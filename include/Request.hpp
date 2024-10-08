@@ -8,7 +8,8 @@ class Client;
 class Request
 {
     public:
-        Request();
+		Request();
+        Request(Client *client);
         ~Request();
         Request(Request const &copy);
         Request& operator=(Request const &src);
@@ -19,15 +20,20 @@ class Request
         std::string getMethod() const;
         std::string getRawRequest() const;
         std::string getHttpVersion() const;
+
+		void parseFirstLine(std::string const &line);
+        void parseHeader();
+        void parseBody();
     
     private:
-        Client* _client;
-        std::string _method;
-        std::string _rawRequest; //raw request before parsing
-        std::string _httpVersion;
 
-        parseHeader();
-        parseBody();
+        Client* _client;
+		std::string _rawRequest; //raw request before parsing
+        std::string _method;
+        std::string _httpVersion;
+		std::string _uri;
+		std::map<std::string, std::string> headers;
+		std::string body;
 
         //to complete + parser a discuter avec Antho pr le parsing des requetes 
 };

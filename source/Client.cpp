@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(-1) //request(nullptr), //_response(nullptr)
+Client::Client() : _fd(-1),  _request(NULL) //_response(NULL)
 {
 }
 
@@ -15,6 +15,8 @@ Client::Client(const Client &copy)
 
 Client::~Client()
 {
+	delete _request;
+	_request = NULL;
     close(_fd);
 }
 
@@ -23,7 +25,7 @@ Client &Client::operator=(Client const &src)
     if (this != &src)
     {
         this->_fd = src._fd;
-        //this->_request = src._request;
+        this->_request = src._request;
         //this->_response = src._response;
     }
     return *this;
@@ -51,9 +53,9 @@ void Client::handleRequest()
     }
     std::string request(buffer);
     std::cout << "[DEBUG] Beginning parsing of the request." << request << std::endl;
-    //this->_request->parseRequest(request);
+    this->_request->parseRequest(request);
     //this->_response->generateResponse();
-    this->sendResponse(std::string(buffer)); 
+    //this->sendResponse(std::string(buffer)); 
 }
 
 void Client::sendResponse(const std::string &response) // to REDO

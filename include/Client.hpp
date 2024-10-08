@@ -3,9 +3,12 @@
 #define CLIENT_HPP
 
 #include "Server.hpp"
-//#include "Request.hpp"
+#include "Request.hpp"
+
 
 #define CLIENT_BUFFER 1024
+
+class Request;
 
 class Client 
 {
@@ -31,7 +34,7 @@ class Client
 	
 	private:
 		int		_fd;
-		//Request*	_request; //WIP
+		Request*	_request;
 		//Response*	_response; // to create
 
 };
