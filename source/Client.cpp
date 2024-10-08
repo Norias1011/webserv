@@ -16,7 +16,7 @@ Client::Client(const Client &copy)
 Client::~Client()
 {
 	delete _request;
-	_request = NULL;
+	//delete _response;
     close(_fd);
 }
 

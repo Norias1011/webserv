@@ -24,14 +24,16 @@ class Request
 		void parseFirstLine(std::string const &line);
         void parseHeader();
         void parseBody();
+
+		bool isHttpVersionValid(std::string const &version);
     
     private:
 
         Client* _client;
 		std::string _rawRequest; //raw request before parsing
+		std::string _uri;
         std::string _method;
         std::string _httpVersion;
-		std::string _uri;
 		std::map<std::string, std::string> headers;
 		std::string body;
 

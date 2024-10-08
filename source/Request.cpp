@@ -32,7 +32,6 @@ int Request::parseRequest(std::string const &request)
 	size_t pos = request.find("\r\n");
 	if (request.empty() || pos == std::string::npos) //si c'est vide ou ya pas de new line = error
 		return -1;
-
 	std::string firstLine = request.substr(0,pos);
 	std::cout << firstLine << std::endl;
 	this->parseFirstLine(firstLine);
@@ -65,4 +64,9 @@ void Request::parseFirstLine(std::string const &line)
 	std::cout << "method:"<< _method << std::endl;
 	std::cout << "uri:"<<_uri << std::endl;
 	std::cout << "http version:"<<_httpVersion << std::endl;
+}
+
+bool Request::isHttpVersionValid(std::string const &version)
+{
+    return (version == "HTTP/1.1");
 }
