@@ -1,10 +1,10 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(-1),  _request(NULL) //_response(NULL)
+Client::Client() : _fd(-1),  _request(new Request(this)) //_response(NULL)
 {
 }
 
-Client::Client(int fd) : _fd(fd)
+Client::Client(int fd) : _fd(fd), _request(new Request(this)) 
 {    
 }
 
@@ -53,7 +53,11 @@ void Client::handleRequest()
     }
     std::string request(buffer);
     std::cout << "[DEBUG] Beginning parsing of the request." << request << std::endl;
-    this->_request->parseRequest(request);
+    if (this->_request->parseRequest(request) == -1)
+	{
+		std::cerr << "Request is wrong " << std::endl;
+		close(_fd);
+	}
     //this->_response->generateResponse();
     //this->sendResponse(std::string(buffer)); 
 }

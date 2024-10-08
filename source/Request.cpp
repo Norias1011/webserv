@@ -1,6 +1,5 @@
 #include "../include/Request.hpp"
 
-
 Request::Request() : _client(NULL), _rawRequest(""), _method(""), _httpVersion(""), _uri("")
 {
 }
@@ -32,17 +31,13 @@ int Request::parseRequest(std::string const &request)
 {
 	size_t pos = request.find("\r\n");
 	if (request.empty() || pos == std::string::npos) //si c'est vide ou ya pas de new line = error
-	{
-		std::cerr << "Error: Request empty" << std::endl;
 		return -1;
-	};
 
 	std::string firstLine = request.substr(0,pos);
 	std::cout << firstLine << std::endl;
 	this->parseFirstLine(firstLine);
 	//this->parseHeader();
 	//this->parseBody();
-
 	return 0;
 }
 
@@ -66,5 +61,8 @@ void Request::parseFirstLine(std::string const &line)
     _uri = line.substr(methodEnd + 1, uriEnd - methodEnd - 1);
     _httpVersion = line.substr(uriEnd + 1);
 
-	std::cout << "[DEBUG] parsing method uri and http version:"<< _method << _uri << _httpVersion << std::endl;
+	std::cout << "[DEBUG] parsing method uri and http version:"<< std::endl;
+	std::cout << "method:"<< _method << std::endl;
+	std::cout << "uri:"<<_uri << std::endl;
+	std::cout << "http version:"<<_httpVersion << std::endl;
 }
