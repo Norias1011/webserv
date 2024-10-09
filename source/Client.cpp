@@ -25,7 +25,7 @@ Client &Client::operator=(Client const &src)
     if (this != &src)
     {
         this->_fd = src._fd;
-        this->_request = src._request;
+        this->_request = new Request(this);
         //this->_response = src._response;
     }
     return *this;
@@ -58,6 +58,30 @@ void Client::handleRequest()
 		std::cerr << "Request is wrong " << std::endl;
 		close(_fd);
 	}
+    // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
+    std::string method = _request->getMethod();
+    std::string path = _request->getPath();
+    std::string httpVersion = _request->getHttpVersion(); // a tester dans request directly
+    std::ostringstream response;
+    if (method == "GET" && _request->isHttpVersionValid(httpVersion))
+    {
+            response << httpVersion << " 200 OK\r\n";
+            response << "Content-Type: text/plain\r\n";
+            response << "Content-Length: 13\r\n";
+            response << "\r\n";
+            response << "SALUT KIKOO";
+    }
+    else
+    {
+            response << httpVersion << " 400 Bad Request\r\n";
+            response << "Content-Type: text/plain\r\n";
+            response << "Content-Length: 11\r\n";
+            response << "\r\n";
+            response << "Bad Request";
+        }
+        std::string responseStr = response.str();
+        send(_fd, responseStr.c_str(), responseStr.size(), 0);
+    // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
     //this->_response->generateResponse();
     //this->sendResponse(std::string(buffer)); 
 }

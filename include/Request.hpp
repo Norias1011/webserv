@@ -2,6 +2,10 @@
 #define REQUEST_HPP
 
 #include "Client.hpp"
+#include <map>
+#include <string>
+#include <algorithm> // remove
+#include <sstream> // stringstream
 
 class Client;
 
@@ -16,10 +20,14 @@ class Request
         
         int parseRequest(std::string const &request);
 
-        Client* getClient() const;
+        //Client* getClient() const;
+
         std::string getMethod() const;
-        std::string getRawRequest() const;
+        std::string getRequest() const;
         std::string getHttpVersion() const;
+        std::string getPath() const;
+        std::map<std::string, std::string> getHeaders() const;
+        std::string getBody() const;
 
 		void parseFirstLine(std::string const &line);
         void parseHeader();
@@ -30,14 +38,12 @@ class Request
     private:
 
         Client* _client;
-		std::string _rawRequest; //raw request before parsing
-		std::string _uri;
+		std::string _request;
+		std::string _path;
         std::string _method;
         std::string _httpVersion;
-		std::map<std::string, std::string> headers;
-		std::string body;
-
-        //to complete + parser a discuter avec Antho pr le parsing des requetes 
+		std::map<std::string, std::string> _headers;
+		std::string _body;
 };
 
 #endif //REQUEST_HPP
