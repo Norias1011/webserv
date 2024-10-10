@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 09:20:15 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 14:02:34 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,10 @@ class Config
         void checkDoubleServerName();
         void configBlock();
         void printAll();
-    protected:
+
+    	std::map<std::string, std::vector<ConfigServer> > getConfigServer() { return _serverConfigs; }
+    
+	protected:
 
 
     private:

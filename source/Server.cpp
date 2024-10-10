@@ -5,7 +5,11 @@
 #define MAX_CO 10
 #define BUFFER 1024
 
-Server::Server() : _socketFd(-1), _epollFd(-1)
+Server::Server() : _config(), _socketFd(-1), _epollFd(-1)
+{
+}
+
+Server::Server(const Config &config) : _config(config),  _socketFd(-1), _epollFd(-1)
 {
 }
 
@@ -32,7 +36,7 @@ Server &Server::operator=(Server const &rhs)
 		_socketFd = rhs._socketFd;
 		_epollFd = rhs._epollFd;
 		_addr = rhs._addr;
-		//_config = rhs._config; //check this
+		_config = rhs._config;
 	}
 	return *this;
 }
@@ -59,6 +63,7 @@ int Server::createSocket()
 	}
 	std::cout << "[DEBUG] - success creating the socket" << std::endl;
 	_addr.sin_family = AF_INET;
+	//_addr.sin_port = _config.getConfigServer()[]; // SEE WITH ANTHO TO LINK IT HERE 
 	_addr.sin_port = htons(PORT);
 	_addr.sin_addr.s_addr = INADDR_ANY;
 	bzero(&(_addr.sin_zero),8);

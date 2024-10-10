@@ -99,11 +99,6 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	size_t b_start = _request.find("\r\n\r\n");
 	if(b_start != std::string::npos)
 		_body = _request.substr(b_start + 4);
-
-
-	//this->parseFirstLine(firstLine);
-	//this->parseHeader();
-	//this->parseBody();
 	return 0;
 }
 

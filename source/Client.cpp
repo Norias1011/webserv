@@ -63,7 +63,7 @@ void Client::handleRequest()
     std::string path = _request->getPath();
     std::string httpVersion = _request->getHttpVersion(); // a tester dans request directly
     std::ostringstream response;
-    if (method == "GET" && _request->isHttpVersionValid(httpVersion))
+    if (method == "GET")
     {
             response << httpVersion << " 200 OK\r\n";
             response << "Content-Type: text/plain\r\n";

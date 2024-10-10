@@ -15,16 +15,17 @@
 #include <string.h>
 #include <map>
 #include <fcntl.h>
-//#include "../include/Config.hpp"
+#include "../include/Config.hpp"
 #include "../include/Client.hpp"
 
 class Client; 
-//class Config; 
+class Config; 
 
 class Server 
 {
 	public:
 		Server();
+		Server(const Config &config);
 		Server(const Server &copy);
 		~Server();
 
@@ -41,7 +42,7 @@ class Server
 		void addSocket(int epollFd, int socketFd, uint32_t flags);
 		
 	private:
-		//Config _config;
+		Config _config;
 		std::map<int,Client*> _clients;
 		struct sockaddr_in _addr;
 		long	_socketFd;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 11:15:08 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 13:43:27 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,12 @@
 #include "../include/Client.hpp"
 #include <signal.h>
 
+//Server *global_server;
+
 void signalHandler(int signum)
 {
+	//if (global_server)
+	//	delete global_server;
     std::cout << "Interrupt signal (" << signum << ") received." << std::endl;
     exit(signum);
 }
@@ -26,14 +30,13 @@ int main(int argc, char *argv[])
     if (argc == 2 || argc == 1)
     {
         std::string config_file;
-       // Config config;
-		Server server;
         Config config;
         config_file = (argc == 2) ? argv[1] : "configs/default.conf";
         signal(SIGINT, signalHandler);
         config.parseConfig(config_file);
         config.printAll();
-        //config.parseConfig(config_file);
+		
+		Server server(config);
 		if (server.createSocket()== - 1)
 			return(-1);
         if (server.runServer()== - 1)

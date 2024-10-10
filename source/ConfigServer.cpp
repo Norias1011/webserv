@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigServer.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 09:38:18 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 13:27:45 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -302,3 +302,5 @@ std::string ConfigServer::getServerNames()
     }
     return serverNames;
 }
+
+
