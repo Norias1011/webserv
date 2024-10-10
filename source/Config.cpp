@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 17:17:10 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 09:57:51 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,7 +151,7 @@ void Config::printAll()
             std::cout << "Server name: ";
             for (size_t j = 0; j < it->second[i].getServerNames().size(); j++)
             {
-                std::cout << it->second[i].getServerNames()[j] << " ";
+                std::cout << it->second[i].getServerNames()[j];
             }
             std::cout << std::endl;
             std::cout << "Root: " << it->second[i].getRoot() << std::endl;
@@ -169,9 +169,11 @@ void Config::printAll()
             }
             std::cout << std::endl;
             std::cout << "Client max body size: " << it->second[i].getMaxBodySize() << std::endl;
-            std::cout << " ******* Locations: " << std::endl;
+            int k = 1;
+            //std::cout << " ******* Locations: " << std::endl;
             for (size_t j = 0; j < it->second[i].getLocations().size(); j++)
             {
+                std::cout << " ******* Locations " << k << ": " << std::endl;
                 std::cout << "Path: " << it->second[i].getLocations()[j].getPath() << std::endl;
                 std::cout << "Root: " << it->second[i].getLocations()[j].getRoot() << std::endl;
                 std::cout << "Upload path: " << it->second[i].getLocations()[j].getUploadPath() << std::endl;
@@ -192,6 +194,7 @@ void Config::printAll()
                     std::cout << "Methods: " << it->second[i].getLocations()[j].getMethods()[k] << std::endl;
                 }
                 std::cout << "Rewrite: " << it->second[i].getLocations()[j].getRewrite().first << " " << it->second[i].getLocations()[j].getRewrite().second << std::endl;
+                k++;
             }
         }
         i++;

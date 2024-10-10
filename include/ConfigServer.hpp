@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 17:42:04 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 09:43:20 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,11 @@ class ConfigServer
         std::string getServerNames();
         const std::map<std::string, ConfigListen> &getListens() const { return this->_listens; };
 
-        std::string getRoot() { return this->_root; };
-        std::vector<std::string> getIndex() { return this->_index; };
-        std::map<int, std::string> getErrorPages() { return this->_errorPages; };
-        unsigned long long getMaxBodySize() { return this->_maxBodySize; };
-        std::vector<ConfigLocation> getLocations() { return this->_locations; };
+        const std::string &getRoot() const { return this->_root; };
+        const std::vector<std::string> &getIndex() const { return this->_index; };
+        const std::map<int, std::string> &getErrorPages() const { return this->_errorPages; };
+        const unsigned long long &getMaxBodySize() const { return _maxBodySize; };
+        const std::vector<ConfigLocation> &getLocations() const { return this->_locations; };
     protected:
 
     private:
@@ -62,5 +62,6 @@ class ConfigServer
         std::map<std::string, int> _doubleInformation;
         std::map<std::string, ConfigListen> _listens;
 };
+
 
 #endif

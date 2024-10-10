@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 17:29:06 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 09:38:18 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ ConfigServer &ConfigServer::operator=(ConfigServer const &src)
         this->_joinIpPort = src._joinIpPort;
         this->_errorPages = src._errorPages;
         this->_maxBodySize = src._maxBodySize;
+        this->_listens = src._listens;
     }
     return *this;
 }
@@ -116,6 +117,7 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
     defaultValues();
     checkDoubleLocation();
     pathsClean();
+    getListens();
     return (*this);
 }
 

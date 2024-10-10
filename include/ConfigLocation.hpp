@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:11 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 11:35:49 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 09:52:29 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,15 +32,15 @@ class ConfigLocation
         const std::string &getPath() const { return _path; };
         void setPath(const std::string &path) { _path = path; };
 
-        std::string getRoot() { return this->_root; };
-        std::string getUploadPath() { return this->_uploadPath; };
-        std::string getAlias() { return this->_alias; };
-        bool getAutoindex() { return this->_autoindex; };
-        std::string getFilename() { return this->_filename; };
-        std::vector<std::string> getIndex() { return this->_index; };
-        std::map<std::string, std::string> getCgi() { return this->_cgi; };
-        std::pair<int, std::string> getRewrite() { return this->_rewrite; };
-        std::vector<std::string> getMethods() { return this->_methods; };
+        const std::string &getRoot() const { return this->_root; };
+        const std::string &getUploadPath() const { return this->_uploadPath; };
+        const std::string &getAlias() const { return this->_alias; };
+        const bool &getAutoindex() const { return this->_autoindex; };
+        const std::string &getFilename() const { return this->_filename; };
+        const std::vector<std::string> &getIndex() const { return this->_index; };
+        const std::map<std::string, std::string> &getCgi() const { return this->_cgi; };
+        const std::pair<int, std::string> &getRewrite() const { return this->_rewrite; };
+        const std::vector<std::string> &getMethods() const { return this->_methods; };
     protected:
 
     private:
