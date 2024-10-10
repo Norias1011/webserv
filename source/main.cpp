@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 11:10:40 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/10 11:15:08 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
        // Config config;
 		Server server;
         Config config;
-        config_file = (argc == 2) ? argv[1] : "default.conf";
+        config_file = (argc == 2) ? argv[1] : "configs/default.conf";
         signal(SIGINT, signalHandler);
         config.parseConfig(config_file);
         config.printAll();
