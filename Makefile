@@ -7,8 +7,8 @@ OBJ_DIR = obj
 
 SRCS = 	$(SRC_DIR)/main.cpp \
 		$(SRC_DIR)/Server.cpp \
-		$(SRC_DIR)/Client.cpp
-
+		$(SRC_DIR)/Client.cpp \
+		$(SRC_DIR)/Request.cpp \
 
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
