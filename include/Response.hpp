@@ -19,7 +19,6 @@ class Response
         Response(Response const &copy);
         Response& operator=(Response const &src);
         
-
         Request* getRequest() const;
 
 
