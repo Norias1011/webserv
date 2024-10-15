@@ -35,18 +35,19 @@ class Server
 		long getEpollFd() const;
 
 		int createSocket();
+		void BindandListen();
 		int runServer();
-		void handleConnection(int fd);
+		void handleConnection(int fd, int epollfd);
 		void handleDc(int fd);
-		void handleEvent(epoll_event &event);
+		void handleEvent(epoll_event &event, int fd , int epollfd);
 		void addSocket(int epollFd, int socketFd, uint32_t flags);
 		
 	private:
 		Config _config;
+		std::map<int, struct sockaddr_in> _sockets;
 		std::map<int,Client*> _clients;
-		struct sockaddr_in _addr;
-		long	_socketFd;
-		long 	_epollFd;
+		std::map<std::string, std::vector<ConfigServer> > _serv_list;
+		std::vector<ConfigServer> new_server;
 	
 };
 

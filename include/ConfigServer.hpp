@@ -6,7 +6,7 @@
 /*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 13:27:44 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/10 15:10:48 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ class ConfigServer
         void checkDoubleLocation();
         void pathsClean();
         std::string getServerNames();
+
         const std::map<std::string, ConfigListen> &getListens() const { return this->_listens; };
 
         const std::string &getRoot() const { return this->_root; };
@@ -45,6 +46,8 @@ class ConfigServer
         const std::map<int, std::string> &getErrorPages() const { return this->_errorPages; };
         const unsigned long long &getMaxBodySize() const { return _maxBodySize; };
         const std::vector<ConfigLocation> &getLocations() const { return this->_locations; };
+		const std::string &getIp() const { return _ip; };
+		const unsigned int &getPort() const { return _port; };
     protected:
 
     private:

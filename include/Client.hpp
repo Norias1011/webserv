@@ -5,7 +5,6 @@
 #include "Server.hpp"
 #include "Request.hpp"
 
-
 #define CLIENT_BUFFER 1024
 
 class Request;

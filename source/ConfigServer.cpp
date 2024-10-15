@@ -6,7 +6,7 @@
 /*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 13:27:45 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/10 15:09:23 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,6 +289,8 @@ void ConfigServer::addListen(std::string &ipLine)
     }
     std::cout << "********* Listen : " << listen.get_IpAndPort() << std::endl;
     _listens[listen.get_IpAndPort()] = listen;
+	_port = listen.get_Port();
+	_ip = listen.get_IP();
 }
 
 std::string ConfigServer::getServerNames()
