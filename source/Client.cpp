@@ -94,7 +94,11 @@ void Client::handleRequest()
 
 void Client::sendResponse()
 {
-    
+    if (this->_response->giveAnswer() == -1)
+    {
+        std::cerr << "Error: Unable to send response" << std::endl;
+        return ;
+    }
 }
 
 const char* Client::DecoExc::what() const throw()
