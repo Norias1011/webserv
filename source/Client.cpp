@@ -86,10 +86,15 @@ void Client::handleRequest()
     //this->sendResponse(std::string(buffer)); 
 }
 
-void Client::sendResponse(const std::string &response) // to REDO
+/*void Client::sendResponse(const std::string &response) // to REDO
 {
     //if (this->_response->buildResponse() == -1)
     send(this->_fd, response.c_str(), response.size(), 0);
+}*/
+
+void Client::sendResponse()
+{
+    
 }
 
 const char* Client::DecoExc::what() const throw()

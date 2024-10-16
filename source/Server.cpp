@@ -59,6 +59,11 @@ int Server::createSocket()
 				std::cerr << "Error: Unable to create socket" << std::endl;
 				return (-1);
 			}
+			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+			{
+				std::cerr << "Error: Unable to set socket options" << std::endl;
+				return (-1);
+			}
 			std::cout << "[DEBUG] - success creating the socket" << std::endl;
 
 			struct sockaddr_in addr;
@@ -133,7 +138,7 @@ void Server::handleEvent(epoll_event &event, int fd, int epollfd)
 {
 	try
 	{
-		if (event.events & (EPOLLOUT | EPOLLET | EPOLLHUP)) // TOCHECK: check the flags
+		if (event.events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) // TOCHECK: check the flags
 			throw Client::DecoExc();
 		if (event.events & EPOLLIN)
 		{
@@ -143,8 +148,11 @@ void Server::handleEvent(epoll_event &event, int fd, int epollfd)
 			else
 				this->_clients[event.data.fd]->handleRequest(); // TODO
 		}
-		//if (event.events & EPOLLOUT)
-		//	this->_clients[event.data.fd]->sendResponse("Hi"); //->sendResponse(event.data.fd)
+		if (event.events & EPOLLOUT) // check the CGI here
+		{
+			if (this->_clients[event.data.fd]->getRequest())
+				this->_clients[event.data.fd]->sendResponse(); //->sendResponse(event.data.fd)
+		}
 	}
 	catch (Client::DecoExc &e)
 	{

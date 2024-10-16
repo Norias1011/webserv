@@ -4,6 +4,7 @@
 #include "Request.hpp"
 #include <map>
 #include <string>
+#include <sys/stat.h>
 #include <algorithm> // remove
 #include <sstream> // stringstream
 
@@ -20,6 +21,18 @@ class Response
         Response& operator=(Response const &src);
         
         Request* getRequest() const;
+        int giveAnswer();
+
+        void manageGetRequest();
+        void managePostRequest();
+        void managePutRequest();
+        void manageDeleteRequest();
+        void handleLocation();
+
+        std::vector<std::string> getFullPaths();
+
+        bool checkFileExist(std::string const &path);
+        std::string FullResponse(std::string path, std::string root);
 
 
     private:

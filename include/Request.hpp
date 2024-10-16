@@ -28,6 +28,9 @@ class Request
         std::string getPath() const;
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
+        Client* getClient() const { return _client; };
+        ConfigServer* getConfigServer() const { return _configServer; };
+        ConfigLocation* getConfigLocation() const { return _configLocation; };
 
 		void parseFirstLine(std::string const &line);
         void parseHeader();
@@ -38,6 +41,8 @@ class Request
     private:
 
         Client* _client;
+        ConfigServer* _configServer;
+        ConfigLocation* _configLocation;
 		std::string _request;
 		std::string _path;
         std::string _method;
