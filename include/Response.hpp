@@ -2,9 +2,13 @@
 #define RESPONSE_HPP
 
 #include "Request.hpp"
+#include "Client.hpp"
+#include "ErrorPage.hpp"
+#include <iostream>
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <algorithm> // remove
 #include <sstream> // stringstream
 
@@ -33,12 +37,15 @@ class Response
 
         bool checkFileExist(std::string const &path);
         std::string FullResponse(std::string path, std::string root);
-
+        void pathClean(std::string &path);
+        std::string responsePage(std::vector<std::string> listFiles, std::string path, std::string root);
+        bool checkLargeFile(std::string const &path);
 
     private:
 
         Request* _request;
 		std::string _response;
+        ErrorPage _errorPage;
 
 		//void handleGetRequest();
 		//void handlePostRequest();
