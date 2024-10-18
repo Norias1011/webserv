@@ -51,6 +51,9 @@
 		"optional": "cpp",
 		"iomanip": "cpp",
 		"ranges": "cpp",
-		"sstream": "cpp"
+		"sstream": "cpp",
+		"filesystem": "cpp",
+		"codecvt": "cpp",
+		"ratio": "cpp"
 	}
 }

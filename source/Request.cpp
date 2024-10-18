@@ -112,7 +112,7 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
             parseMultipartFormData(_body, boundary);
             std::cout << "[DEBUG] - body is: " << _body << std::endl;
 		}
-		else // Handle non-multipart POST the GET does not have body ?
+		else // Handle non-multipart POST
 		{
 			size_t b_start = _request.find("\r\n\r\n");
 			if(b_start != std::string::npos)
@@ -120,7 +120,8 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 		}
 	}
 	_isParsed = true;
-	std::cout << "[DEBUG] - boy is: " <<  _body << std::endl;
+	//PARSER LE BODY
+	std::cout << "[DEBUG] - body is: " <<  _body << std::endl;
 	return 0;
 }
 
@@ -140,62 +141,78 @@ std::string Request::isMethod(std::string const &method)
 	return "WRONG METHOD";
 }
 
-void Request::parseMultipartFormData(const std::string& body, const std::string& boundary) {
+void Request::parseMultipartFormData(std::string& body, const std::string& boundary) {
     size_t pos = 0;
 
-    // Split the body by the boundary
     std::string delimiter = "--" + boundary;
-    while ((pos = body.find(delimiter)) != std::string::npos) {
+    while ((pos = body.find(delimiter)) != std::string::npos) 
+	{
         std::string part = body.substr(0, pos);
-        // Skip the first part, which is before the first boundary
         body.erase(0, pos + delimiter.length());
-        // Ignore empty parts (in case of trailing newlines)
-        if (part.empty()) continue;
+        if (part.empty() || part == "\r\n") continue;
 
-        // Now, we need to parse the headers and content
         size_t header_end = part.find("\r\n\r\n");
-        if (header_end == std::string::npos) continue; // Invalid part
+        if (header_end == std::string::npos) continue; 
 
-        // Extract headers
         std::string headers = part.substr(0, header_end);
-        std::string content = part.substr(header_end + 4); // Skip "\r\n\r\n"
+        std::string content = part.substr(header_end + 4);
 
-        // Process headers
+		 _postHeaders.clear();
         std::istringstream header_stream(headers);
         std::string header_line;
-        std::string content_disposition;
-        std::string content_type;
-        while (std::getline(header_stream, header_line)) {
-            if (header_line.find("Content-Disposition:") != std::string::npos) {
-                content_disposition = header_line;
-            } else if (header_line.find("Content-Type:") != std::string::npos) {
-                content_type = header_line;
-            }
+        while (std::getline(header_stream, header_line))  //est ce que ca ajoute a la fin de la map ?
+		{
+			size_t pos2 = header_line.find("Content-Disposition:");
+			size_t pos3 = header_line.find("Content-Type:");
+
+			if (pos2 != std::string::npos) 
+			{
+				std::string key = "Content-Disposition";
+				std::string value = header_line.substr(pos2 + std::string("Content-Disposition:").length());
+				_postHeaders[key] = value;
+			} 
+			else if (pos3 != std::string::npos) 
+			{
+				std::string key = "Content-Type";
+				std::string value = header_line.substr(pos3 + std::string("Content-Type:").length());
+				_postHeaders[key] = value;
+			}
         }
 
-        // Extract field name and filename
+		// dans les header de post il y a les nom et le file name a recuperer
         std::string field_name;
-        std::string filename;
-        size_t name_start = content_disposition.find("name=\"") + 6;
-        size_t name_end = content_disposition.find("\"", name_start);
+        std::string file_name;
+        size_t name_start = _postHeaders["Content-Disposition"].find("name=\"") + 6;
+        size_t name_end = _postHeaders["Content-Disposition"].find("\"", name_start);
         if (name_start != std::string::npos && name_end != std::string::npos) {
-            field_name = content_disposition.substr(name_start, name_end - name_start);
+            field_name = _postHeaders["Content-Disposition"].substr(name_start, name_end - name_start);
         }
 
-        size_t filename_start = content_disposition.find("filename=\"") + 10;
-        size_t filename_end = content_disposition.find("\"", filename_start);
+        size_t filename_start = _postHeaders["Content-Disposition"].find("filename=\"") + 10;
+        size_t filename_end = _postHeaders["Content-Disposition"].find("\"", filename_start);
         if (filename_start != std::string::npos && filename_end != std::string::npos) {
-            filename = content_disposition.substr(filename_start, filename_end - filename_start);
+            file_name = _postHeaders["Content-Disposition"].substr(filename_start, filename_end - filename_start);
         }
-
-        // Save the file if filename is provided
-        if (!filename.empty()) {
-            std::ofstream file("uploads/" + filename, std::ios::binary);
-            file.write(content.data(), content.size());
-            file.close();
-            std::cout << "[DEBUG] File uploaded: " << filename << std::endl;
-        } else {
-            // Handle form field (text input)
+		std::cout << "[DEBUG] - file name is: " <<  file_name << std::endl;
+		std::cout << "[DEBUG] - field name is: " <<  field_name << std::endl;
+        // Save the file if filename is provided meaning there is a file to upload
+        if (!file_name.empty()) 
+		{
+			std::string file_path = "uploads/" + file_name;
+			std::ofstream file(file_path.c_str(), std::ios::binary);
+			if (!file) 
+                std::cerr << "[ERROR] Failed to open file: " << file_path << std::endl;
+			else 
+			{
+                file.write(content.data(), content.size());
+                if (!file) 
+                    std::cerr << "[ERROR] Failed to write to file: " << file_path << std::endl;
+				else 
+                    std::cout << "[DEBUG] File uploaded: " << file_name << std::endl;
+            }
+        } 
+		else 
+		{
             std::cout << "[DEBUG] Field: " << field_name << ", Value: " << content << std::endl;
         }
     }

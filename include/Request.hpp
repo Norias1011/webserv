@@ -6,6 +6,8 @@
 #include <string>
 #include <algorithm> // remove
 #include <sstream> // stringstream
+#include <filesystem> 
+#include <bits/fs_ops.h>
 
 class Client;
 
@@ -28,7 +30,7 @@ class Request
         std::string getBody() const;
 
         int parseRequest(std::string const &request);
-        void parseMultipartFormData(const std::string& body, const std::string& boundary);
+        void parseMultipartFormData(std::string& body, const std::string& boundary);
 
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
@@ -41,6 +43,8 @@ class Request
         std::string _method;
         std::string _httpVersion;
 		std::map<std::string, std::string> _headers;
+        std::map<std::string, std::string> _postHeaders;
+        std::map<std::string, std::map<std::string, std::string> > _fileHeaders;
 		std::string _body;
         bool _isParsed;
 };
