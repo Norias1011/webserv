@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webserv 42 - Test Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    form { margin: 20px 0; }
+    label { display: block; margin: 10px 0 5px; }
+    button { margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Webserv 42 - Antho & Elo</h1>
+
+  <h2>Test GET Method</h2>
+
+  <!-- Link to test GET method -->
+  <a href="http://localhost:8002/index.html">Click here to send GET request</a><br>
+  <a href="http://localhost:8002/test1.html">Test 1</a><br>
+  
+  <!-- POST Method -->
+  <h2>Test POST Method</h2>
+     <!-- POST Method -->
+     <form id="post-form" action="http://localhost:8002/index.html" method="POST">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="message">Message:</label>
+      <input type="text" id="message" name="message" required>
+      
+      <button type="submit">Send POST Request</button>
+  </form>
+  <div id="post-result"></div>
+
+
+  <!-- DELETE Method -->
+  <h2>Test DELETE Method</h2>
+  <button onclick="testDelete()">Send DELETE Request</button>
+  <div id="delete-result"></div>
+
+  <script>
+    // Function to test DELETE method
+    function testDelete() {
+      fetch('http://localhost:8002/index.html', {
+        method: 'DELETE'
+      })
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('delete-result').innerHTML = `<p>DELETE Response: ${data}</p>`;
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+
+</body>
+</html>

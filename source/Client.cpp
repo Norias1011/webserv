@@ -61,26 +61,30 @@ void Client::handleRequest()
     // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
     std::string method = _request->getMethod();
     std::string path = _request->getPath();
-    std::string httpVersion = _request->getHttpVersion(); // a tester dans request directly
-    std::ostringstream response;
-    if (method == "GET")
+    std::string httpVersion = _request->getHttpVersion(); 
+    std::string filePath = "docs" + path;
+    std::ifstream file(filePath.c_str());
+    if (file)
     {
-            response << httpVersion << " 200 OK\r\n";
-            response << "Content-Type: text/plain\r\n";
-            response << "Content-Length: 13\r\n";
-            response << "\r\n";
-            response << "SALUT KIKOO";
+        std::ostringstream response;
+        response << "HTTP/1.1 200 OK\r\n";
+        response << "Content-Type: text/html\r\n";
+        response << "Connection: close\r\n";
+        response << "\r\n";
+        response << file.rdbuf();
+        std::string responseStr = response.str();
+        send(_fd, responseStr.c_str(), responseStr.size(), 0);
     }
     else
     {
-            response << httpVersion << " 400 Bad Request\r\n";
-            response << "Content-Type: text/plain\r\n";
-            response << "Content-Length: 11\r\n";
-            response << "\r\n";
-            response << "Bad Request";
-        }
-        std::string responseStr = response.str();
+        std::ostringstream response;
+        response << "HTTP/1.1 404 Not Found\r\n";
+        response << "Content-Length: 0\r\n";
+        response << "Connection: close\r\n";
+        response << "\r\n";
+       std::string responseStr = response.str();
         send(_fd, responseStr.c_str(), responseStr.size(), 0);
+    }
     // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
     //this->_response->generateResponse();
     //this->sendResponse(std::string(buffer)); 

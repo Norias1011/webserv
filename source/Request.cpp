@@ -1,10 +1,10 @@
 #include "../include/Request.hpp"
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion("")
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _isParsed(false)
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion("")
+Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _isParsed(false)
 {
 }
 
@@ -33,26 +33,24 @@ Request &Request::operator=(Request const &src)
 		this->_method = src._method;
 		this->_path = src._path;
         this->_httpVersion = src._httpVersion;
+		this->_isParsed = src._isParsed;
 	}
 	return *this;
 }
 
 int Request::parseRequest(std::string const &raw_request) // ajouter la root serveR avec le Parsing de Antho - getRootpath?
 {
+	if (this->_isParsed == true)
+	{
+		std::cerr << "Error: request already parsed" << std::endl;
+		return -1;
+	}
 	// NEED TO ADD THE POST REQUEST PARSED OPTION TODO
 	_request = raw_request;
 	std::string extracted = raw_request.substr(0,raw_request.find("\n"));
 	if (extracted.empty())
 		return -1;
-	//ajouter le bloc d'upload dûn fichier, then on passe a la requete HTTP
-	//si HTTP est absend on prend le path du fichier
-	//we can have this as a first line parse yes 
-	if (extracted.find("HTTP") == std::string::npos)
-	{
-		_method = "GET";
-		//_path = "/upload" 
-		return -1;
-	}
+
 	extracted.erase(std::remove(extracted.begin(), extracted.end(), '\r'), extracted.end());
 	std::stringstream ss(extracted);
 	std::string object;
@@ -63,22 +61,29 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	}
 	if (objects.size() != 3)
 	{
-		std::cerr << "Error: invalid request" << std::endl;
+		std::cerr << "[ERROR] invalid request" << std::endl;
 		return -1;
 	}
-	_method = objects[0];
+	_method = isMethod(objects[0]);
+	if (_method == "WRONG METHOD")
+	{
+		std::cerr << "[ERROR]: invalid method" << std::endl;
+		return -1;
+	}
 	_path = objects[1];
+	if (!isHttpVersionValid(objects[2]))
+	{
+		std::cerr << "[ERROR]: invalid http version" << std::endl;
+		return -1;
+	}
 	_httpVersion = objects[2];
 	std::cout << "[DEBUG] - method is: " <<  _method << std::endl;
 	std::cout << "[DEBUG] - path is : " << _path << std::endl;
 	std::cout << "[DEBUG] - version is : " << _httpVersion << std::endl;
 	std::cout << "[DEBUG] - starting to parse the headers" << std::endl;
-	// then header - start = fin de la premiere ligne deja parse et ensuite double saut = fin des headers
-	//extraction sous forme de chaine + creation flux pour lire les headers
+
 	size_t start = _request.find("\r\n") + 2; 
-	std::cout << "[DEBUG] - start of the headers is : " <<  start << std::endl;
 	size_t end = _request.find("\r\n\r\n", start);
-	std::cout << "[DEBUG] - end of the headers is " <<  end << std::endl;
 	std::string all_headers = _request.substr(start, end - start);
 	std::cout << "[DEBUG] - headers are: " <<  all_headers << std::endl;
 	std::stringstream headers_stream(all_headers);
@@ -95,40 +100,103 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 		std::string value = header.substr(pos + 1);
 		_headers[key] = value;
 	}
-	// then the body
-	size_t b_start = _request.find("\r\n\r\n");
-	if(b_start != std::string::npos)
-		_body = _request.substr(b_start + 4);
+	std::cout << "[DEBUG] - headers are: " <<  all_headers << std::endl;
+	
+	if (_method == "POST")
+	{
+		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
+		{
+            std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
+            size_t b_start = _request.find("\r\n\r\n") + 4;
+            _body = _request.substr(b_start);
+            parseMultipartFormData(_body, boundary);
+            std::cout << "[DEBUG] - body is: " << _body << std::endl;
+		}
+		else // Handle non-multipart POST the GET does not have body ?
+		{
+			size_t b_start = _request.find("\r\n\r\n");
+			if(b_start != std::string::npos)
+			_body = _request.substr(b_start + 4);
+		}
+	}
+	_isParsed = true;
+	std::cout << "[DEBUG] - boy is: " <<  _body << std::endl;
 	return 0;
 }
-
-/*void Request::parseFirstLine(std::string const &line)
-{
-	std::cout << line << std::endl;
-	size_t methodEnd = line.find(' ');
-    if (methodEnd == std::string::npos) {
-       	std::cerr << "Error: no method" << std::endl;
-        return;
-    }
-
-    size_t uriEnd = line.find(' ', methodEnd + 1);
-    if (uriEnd == std::string::npos) {
-        std::cerr << "Error: no uri" << std::endl;
-        return;
-    }
-
-	std::cout << _method << std::endl;
-    _method = line.substr(0, methodEnd);
-    _uri = line.substr(methodEnd + 1, uriEnd - methodEnd - 1);
-    _httpVersion = line.substr(uriEnd + 1);
-
-	std::cout << "[DEBUG] parsing method uri and http version:"<< std::endl;
-	std::cout << "method:"<< _method << std::endl;
-	std::cout << "uri:"<<_uri << std::endl;
-	std::cout << "http version:"<<_httpVersion << std::endl;
-}*/
 
 bool Request::isHttpVersionValid(std::string const &version)
 {
     return (version == "HTTP/1.1");
+}
+
+std::string Request::isMethod(std::string const &method)
+{
+	if (method == "GET")
+		return "GET";
+	if (method == "POST")
+		return "POST";
+	if (method == "DELETE")
+		return "DELETE";
+	return "WRONG METHOD";
+}
+
+void Request::parseMultipartFormData(const std::string& body, const std::string& boundary) {
+    size_t pos = 0;
+
+    // Split the body by the boundary
+    std::string delimiter = "--" + boundary;
+    while ((pos = body.find(delimiter)) != std::string::npos) {
+        std::string part = body.substr(0, pos);
+        // Skip the first part, which is before the first boundary
+        body.erase(0, pos + delimiter.length());
+        // Ignore empty parts (in case of trailing newlines)
+        if (part.empty()) continue;
+
+        // Now, we need to parse the headers and content
+        size_t header_end = part.find("\r\n\r\n");
+        if (header_end == std::string::npos) continue; // Invalid part
+
+        // Extract headers
+        std::string headers = part.substr(0, header_end);
+        std::string content = part.substr(header_end + 4); // Skip "\r\n\r\n"
+
+        // Process headers
+        std::istringstream header_stream(headers);
+        std::string header_line;
+        std::string content_disposition;
+        std::string content_type;
+        while (std::getline(header_stream, header_line)) {
+            if (header_line.find("Content-Disposition:") != std::string::npos) {
+                content_disposition = header_line;
+            } else if (header_line.find("Content-Type:") != std::string::npos) {
+                content_type = header_line;
+            }
+        }
+
+        // Extract field name and filename
+        std::string field_name;
+        std::string filename;
+        size_t name_start = content_disposition.find("name=\"") + 6;
+        size_t name_end = content_disposition.find("\"", name_start);
+        if (name_start != std::string::npos && name_end != std::string::npos) {
+            field_name = content_disposition.substr(name_start, name_end - name_start);
+        }
+
+        size_t filename_start = content_disposition.find("filename=\"") + 10;
+        size_t filename_end = content_disposition.find("\"", filename_start);
+        if (filename_start != std::string::npos && filename_end != std::string::npos) {
+            filename = content_disposition.substr(filename_start, filename_end - filename_start);
+        }
+
+        // Save the file if filename is provided
+        if (!filename.empty()) {
+            std::ofstream file("uploads/" + filename, std::ios::binary);
+            file.write(content.data(), content.size());
+            file.close();
+            std::cout << "[DEBUG] File uploaded: " << filename << std::endl;
+        } else {
+            // Handle form field (text input)
+            std::cout << "[DEBUG] Field: " << field_name << ", Value: " << content << std::endl;
+        }
+    }
 }

@@ -17,8 +17,6 @@ class Request
         ~Request();
         Request(Request const &copy);
         Request& operator=(Request const &src);
-        
-        int parseRequest(std::string const &request);
 
         //Client* getClient() const;
 
@@ -29,11 +27,11 @@ class Request
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
 
-		void parseFirstLine(std::string const &line);
-        void parseHeader();
-        void parseBody();
+        int parseRequest(std::string const &request);
+        void parseMultipartFormData(const std::string& body, const std::string& boundary);
 
 		bool isHttpVersionValid(std::string const &version);
+        std::string isMethod(std::string const &method);
     
     private:
 
@@ -44,6 +42,7 @@ class Request
         std::string _httpVersion;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
+        bool _isParsed;
 };
 
 #endif //REQUEST_HPP
