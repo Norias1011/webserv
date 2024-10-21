@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
-Response::Response() : _request(NULL) 
+Response::Response() : _request(NULL) , _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
 
-Response::Response(Client* client) : _request(client->getRequest())
+Response::Response(Client* client) : _request(client->getRequest()) , _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
@@ -26,22 +26,22 @@ int Response::giveAnswer()
     if (_request->getMethod() == "GET")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - GET method" << std::endl;
-        //handleGetRequest();
+        manageGetRequest();
     }
     else if (_request->getMethod() == "POST")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - POST method" << std::endl;
-        //handlePostRequest();
+        managePostRequest();
     }
     else if (_request->getMethod() == "PUT")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - PUT method" << std::endl;
-        //handlePutRequest();
+        managePutRequest();
     }
     else if (_request->getMethod() == "DELETE")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - DELETE method" << std::endl;
-        //handleDeleteRequest();
+        manageDeleteRequest();
     }
     else
     {
@@ -51,20 +51,92 @@ int Response::giveAnswer()
     return 0;
 }
 
+void Response::manageDeleteRequest()
+{
+    
+    std::string body = "{\n";
+    body += "\"method\": \"DELETE\",\n";
+    body += "\"path\": \"" + _request->getPath() + "\",\n";
+    body += "\"info\": \"File deleted\",\n";
+    body += "}\n";
+    _response = "HTTP/1.1 200 OK\r\n";
+    _response += "Content-Type: application/html\r\n";
+    _response += "Content-Length: " + numberToString(body.size()) +"\r\n";
+    _response += "\r\n";
+    _response += body;
+}
+
+
+void Response::managePutRequest()
+{
+    std::string body = "{\n";
+    body += "\"method\": \"PUT\",\n";
+    body += "\"path\": \"" + _request->getPath() + "\",\n";
+    body += "\"info\": \"File uploaded\",\n";
+    body += "}\n";
+    _response = "HTTP/1.1 200 OK\r\n";
+    _response += "Content-Type: application/html\r\n";
+    _response += "Content-Length: " + numberToString(body.size()) +"\r\n";
+    _response += "\r\n";
+    _response += body;
+}
+
+
+void Response::managePostRequest()
+{
+    std::string body = "{\n";
+    body += "\"method\": \"POST\",\n";
+    body += "\"path\": \"" + _request->getPath() + "\",\n";
+    body += "\"info\": \"File uploaded\",\n";
+    body += "}\n";
+    _response = "HTTP/1.1 200 OK\r\n";
+    _response += "Content-Type: application/html\r\n";
+    _response += "Content-Length: " + numberToString(body.size()) +"\r\n";
+    _response += "\r\n";
+    _response += body;
+}
+
 void Response::manageGetRequest()
 {
     if (this->_request->getConfigLocation() != NULL)
     {
         std::cout << "[DEBUG] - Response::manageGetRequest - location found" << std::endl;
-        //handleLocation();
+        handleLocation();
     }
     else
     {
         std::cout << "[DEBUG] - Response::manageGetRequest - location not found" << std::endl;
-        //handleRoot();
+        handleRoot();
     }
 }
 
+void Response::handleRoot()
+{
+    std::string path = "";
+    std::vector<std::string> FullServerPaths = getFullPathsServer();
+    for (std::vector<std::string>::iterator it = FullServerPaths.begin(); it != FullServerPaths.end(); it++)
+    {
+        if (checkFileExist(*it))
+        {
+            path = *it;
+            return ;
+        }
+    }
+    if (path.empty())
+    {
+        std::string notFound = _request->getConfigServer()->getRoot();
+        struct stat buffer;
+        if (stat(notFound.c_str(), &buffer) == 0)
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+        else
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+        return ;
+    }
+    if (checkLargeFile(path))
+        chunkedResponse(path);
+    else
+        normalResponse(path);
+}
 
 void Response::handleLocation()
 {
@@ -107,14 +179,112 @@ void Response::handleLocation()
         return ;
     }
     if (checkLargeFile(path))
+        chunkedResponse(path);
+    else
+        normalResponse(path);
+}
+
+
+void Response::normalResponse(std::string &path)
+{
+    std::cout << "[DEBUG] - Response::normalResponse - path: " << path << std::endl;
+    std::ifstream file(path.c_str());
+    if (file.is_open())
     {
-        
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        _response = "HTTP/1.1 200 OK\r\n";
+        _response += "Content-Type: text/html\r\n";
+        _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
+        _response += "\r\n";
+        _response += buffer.str();
+        file.close();
     }
     else
     {
-        
+        std::cerr << "Error: Unable to open file" << std::endl;
+        struct stat buffer;
+        if (stat(path.c_str(), &buffer) == 0)
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+        else
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+    }
+}
+
+void Response::chunkedResponse(std::string &path)
+{
+    if (_newFd == -1)
+    {
+        chunkedHeader(path);
     }
 
+    char buf[1024];
+    int ret = read(_newFd, buf, 1024);
+    if (ret == -1)
+    {
+        std::cerr << "Error: Unable to read file" << std::endl; // throw error
+        struct stat buffer;
+        if (stat(path.c_str(), &buffer) == 0)
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+        else
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+    }
+    else if (ret == 0)
+    {
+        close(_newFd);
+        _newFd = -1;
+        _response += "0\r\n\r\n";
+    }
+    else
+    {
+        std::cout << "[DEBUG] - Response::chunkedResponse - ret: " << ret << std::endl;
+        std::string size = setIntToHexa(ret) + "\r\n";
+        std::string chunk = std::string(buf, ret) + "\r\n";
+        _response += size + chunk;
+    }
+}
+
+
+void Response::chunkedHeader(std::string &path)
+{
+    struct stat buffer;
+    if (stat(path.c_str(), &buffer) == 0)
+    {
+        std::string header = "HTTP/1.1 200 OK\r\n";
+        header += "Content-Type: text/html\r\n";
+        header += "Transfer-Encoding: chunked\r\n";
+        header += "\r\n";
+        _response = header;
+        _newFd = open(path.c_str(), O_RDONLY);
+        if (_newFd == -1)
+        {
+            std::cerr << "Error: Unable to open file" << std::endl;
+            struct stat buffer;
+            if (stat(path.c_str(), &buffer) == 0)
+                _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+            else
+                _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+        }
+    }
+    else
+    {
+        std::cerr << "Error: Unable to open file" << std::endl;
+        struct stat buffer;
+        if (stat(path.c_str(), &buffer) == 0)
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+        else
+            _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+    }
+}
+
+
+std::string Response::setIntToHexa(int number)
+{
+    std::string result;
+    std::ostringstream convert;
+    convert << std::hex << number;
+    result = convert.str();
+    return result;
 }
 
 std::string Response::FullResponse(std::string path, std::string root)
@@ -213,11 +383,37 @@ bool Response::checkFileExist(std::string const &path)
     return (stat(path.c_str(), &buffer) == 0);
 }
 
-std::vector<std::string> Response::getFullPaths()
+
+std::vector<std::string> Response::getFullPathsServer()
 {
     std::string pathRequest = _request->getPath();
     std::string root = _request->getConfigServer()->getRoot();
     std::vector<std::string> allIndex = _request->getConfigServer()->getIndex();
+    std::vector<std::string> FullPaths;
+
+    if (pathRequest[pathRequest.size() - 1] == '/')
+    {
+        for (std::vector<std::string>::iterator it = allIndex.begin(); it != allIndex.end(); it++)
+        {
+            std::string index = *it;
+            std::string tmpPath = pathRequest;
+            if (pathRequest == "/")
+                pathRequest = root + "/" + index;
+            else
+                pathRequest = root + pathRequest + index;
+            FullPaths.push_back(pathRequest);
+            pathRequest = tmpPath;
+        }
+    }
+    else
+        FullPaths.push_back(root + pathRequest);
+}
+
+std::vector<std::string> Response::getFullPaths()
+{
+    std::string pathRequest = _request->getPath();
+    std::string root = _request->getConfigLocation()->getRoot();
+    std::vector<std::string> allIndex = _request->getConfigLocation()->getIndex();
     std::vector<std::string> FullPaths;
 
     if (pathRequest[pathRequest.size() - 1] == '/')
@@ -249,4 +445,13 @@ bool Response::checkLargeFile(std::string const &path)
     }
     std::cout << "File is not large" << std::endl;
     return false;
+}
+
+std::string Response::numberToString(int number)
+{
+    std::string result;
+    std::ostringstream convert;
+    convert << number;
+    result = convert.str();
+    return result;
 }

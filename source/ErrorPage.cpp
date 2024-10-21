@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/17 13:25:21 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/17 14:47:58 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/21 10:38:54 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,3 +146,4 @@ std::string ErrorPage::numberToString(int number)
     result = convert.str();
     return result;
 }
+
