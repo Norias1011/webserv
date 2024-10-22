@@ -5,11 +5,11 @@
 #define MAX_CO 10
 #define BUFFER 1024
 
-Server::Server() : _config(), _done(false), _working(false)
+Server::Server() : _config(), _done(false), _working(false), _break(false), _epollFd(-1)
 {
 }
 
-Server::Server(const Config &config) : _config(config), _done(false), _working(false)
+Server::Server(const Config &config) : _config(config), _done(false), _working(false), _break(false), _epollFd(-1)
 {
 }
 
@@ -38,6 +38,7 @@ Server &Server::operator=(Server const &rhs)
 		new_server = rhs.new_server;
 		_done = rhs._done;
 		_working = rhs._working;
+		_break = rhs._break;
 	}
 	return *this;
 }
@@ -47,6 +48,12 @@ Server &Server::operator=(Server const &rhs)
 int Server::createSocket()
 {
 	_serv_list = _config.getConfigServer();
+	_epollFd = epoll_create1(EPOLL_CLOEXEC);
+	if (_epollFd == -1)
+	{
+		std::cerr << "epoll_create1 fail" << std::endl;
+		return -1;
+	}
 	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = _serv_list.begin(); it != _serv_list.end(); it++)
 	{
 		std::cout << "[DEBUG] - before first it" << std::endl;
@@ -75,9 +82,12 @@ int Server::createSocket()
 			addr.sin_addr.s_addr = INADDR_ANY;
 			bzero(&(addr.sin_zero),8);
 			_sockets[new_socket] = addr;
+			this->addSocket(_epollFd,new_socket, EPOLLIN);
+			std::cout << "[DEBUG] - success creating the epoll instance" << std::endl;
 		}
 	}
 	BindandListen();
+	_done = true;
 	return 0;
 }
 //AREVOIR LE REINTERPRET cast
@@ -102,29 +112,46 @@ void Server::BindandListen()
 
 int Server::runServer()
 {
-	for (std::map<int, struct sockaddr_in>::iterator it = _sockets.begin(); it != _sockets.end(); it++)
+	if (!_done)
 	{
-		epoll_event events[MAX_CO];
-		int epollFd = epoll_create1(EPOLL_CLOEXEC);
-		if (epollFd == -1)
+		std::cerr << "Error: Server not ready" << std::endl;
+		return -1;
+	}
+	_working = true;
+	epoll_event events[MAX_CO];
+	time_t before_loop_time = time(0);
+	while (this->_working)
+	{
+		std::cout << "Epoll wait for loop" << std::endl;
+		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1); 
+		std::cout << "num fds:" << num_fds << std::endl;
+		if (num_fds == -1)
 		{
-			std::cerr << "epoll_create1 fail" << std::endl;
+			std::cerr << "epoll_wait fail" << std::endl;
 			return -1;
 		}
-		std::cout << "[DEBUG] - success creating the epoll instance" << std::endl;
-		this->addSocket(epollFd,it->first, EPOLLIN);
-		while (true)
+		for (int i = 0; i < num_fds; i++)
+			handleEvent(events[i], _epollFd);
+		time_t now = time(0);
+		if (now - before_loop_time > 10)
 		{
-			std::cout << "Epoll wait for loop" << std::endl;
-			int num_fds = epoll_wait(epollFd, events, MAX_CO, -1); 
-			std::cout << "num fds:" << num_fds << std::endl;
-			if (num_fds == -1)
+			std::map<int, Client*>::iterator it = _clients.begin();
+			while (it != this->_clients.end())
 			{
-				std::cerr << "epoll_wait fail" << std::endl;
-				return -1;
+				it->second->getRequest()->timeoutChecker();
+				if (now - it->second->getLastRequestTime() > 10)
+				{
+					std::cout << "Client timeout: " << NumberToString(it->first) << std::endl;
+					epoll_event ev;
+					ev.data.fd = it->first;
+					epoll_ctl(_epollFd, EPOLL_CTL_DEL, it->first, &ev);
+					delete it->second;
+					_clients.erase(it++);
+				}
+				else
+					it++;
 			}
-			for (int i = 0; i < num_fds; i++)
-				handleEvent(events[i], it->first ,epollFd);
+			before_loop_time = now;
 		}
 	}
 	return 0;
@@ -136,24 +163,28 @@ int Server::runServer()
 // check if the event is on the client socket
 // will handle the request 
 
-void Server::handleEvent(epoll_event &event, int fd, int epollfd)
+void Server::handleEvent(epoll_event &event, int epollfd)
 {
 	try
 	{
-		if (event.events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP)) // TOCHECK: check the flags
+		if (event.events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
 			throw Client::DecoExc();
 		if (event.events & EPOLLIN)
 		{
-			std::cout << "[DEBUG] - event data fd:" << event.data.fd << "fd: " << fd << std::endl;
-			if (event.data.fd == fd) 
+			std::cout << "[DEBUG] - event data fd:" << event.data.fd << "fd: " << std::endl;
+			if (this->_clients.find(event.data.fd) == this->_clients.end())
 				this->handleConnection(event.data.fd, epollfd); 
 			else
-				this->_clients[event.data.fd]->handleRequest(); // TODO
+			{
+				this->_clients[event.data.fd]->setLastRequestTime(time(0));
+				this->_clients[event.data.fd]->handleRequest(); 
+			}
 		}
 		if (event.events & EPOLLOUT) // check the CGI here
 		{
+			this->_clients[event.data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event.data.fd]->getRequest())
-				this->_clients[event.data.fd]->sendResponse(); //->sendResponse(event.data.fd)
+				this->_clients[event.data.fd]->sendResponse(this->_epollFd);
 		}
 	}
 	catch (Client::DecoExc &e)
@@ -194,6 +225,9 @@ void Server::handleConnection(int fd, int epollfd) // TODO -> mettre try catch a
 
 void Server::handleDc(int fd)
 {
+	epoll_event ev;
+	ev.data.fd = fd;
+	epoll_ctl(_epollFd, EPOLL_CTL_DEL, fd, &ev);
 	close(fd);
 	delete _clients[fd];
 	_clients.erase(fd);

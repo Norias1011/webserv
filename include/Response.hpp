@@ -23,6 +23,9 @@ class Response
         ~Response();
         Response(Response const &copy);
         Response& operator=(Response const &src);
+        bool _done;
+        bool _working;
+        bool _break;
         
         Request* getRequest() const;
         int giveAnswer();
@@ -36,6 +39,7 @@ class Response
 
         std::vector<std::string> getFullPaths();
         std::vector<std::string> getFullPathsServer();
+        std::string getResponse() const { return _response; };
 
         bool checkFileExist(std::string const &path);
         std::string FullResponse(std::string path, std::string root);
@@ -55,8 +59,6 @@ class Response
 		std::string _response;
         ErrorPage _errorPage;
         int _newFd;
-        bool _done;
-        bool _working;
 
 		//void handleGetRequest();
 		//void handlePostRequest();

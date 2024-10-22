@@ -1,10 +1,10 @@
 #include "../include/Request.hpp"
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _done(false), _working(false)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _done(false), _working(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _done(false), _working(false)
+Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _done(false), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -44,6 +44,7 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	// NEED TO ADD THE POST REQUEST PARSED OPTION TODO
 	_request = raw_request;
 	std::string extracted = raw_request.substr(0,raw_request.find("\n"));
+	this->_lastRequestTime = time(0) + 10;
 	if (extracted.empty())
 		return -1;
 	//ajouter le bloc d'upload dûn fichier, then on passe a la requete HTTP
@@ -133,4 +134,17 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 bool Request::isHttpVersionValid(std::string const &version)
 {
     return (version == "HTTP/1.1");
+}
+
+void Request::timeoutChecker()
+{
+	if (_lastRequestTime == 0 || _done == true)
+		return;
+	time_t now = time(0);
+	if (now > _lastRequestTime + 10)
+	{
+		_done = true;
+		std::cout << "Timeout" << std::endl;
+		_serverCode = 408;
+	}
 }

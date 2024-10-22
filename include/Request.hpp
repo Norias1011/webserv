@@ -31,6 +31,9 @@ class Request
         Client* getClient() const { return _client; };
         ConfigServer* getConfigServer() const { return _configServer; };
         ConfigLocation* getConfigLocation() const { return _configLocation; };
+        time_t getLastRequestTime() const { return _lastRequestTime; };
+
+        void timeoutChecker();
 
 		void parseFirstLine(std::string const &line);
         void parseHeader();
@@ -51,6 +54,8 @@ class Request
 		std::string _body;
         bool _done;
         bool _working;
+        time_t _lastRequestTime;
+        int _serverCode;
 };
 
 #endif //REQUEST_HPP

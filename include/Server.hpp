@@ -39,7 +39,7 @@ class Server
 		int runServer();
 		void handleConnection(int fd, int epollfd);
 		void handleDc(int fd);
-		void handleEvent(epoll_event &event, int fd , int epollfd);
+		void handleEvent(epoll_event &event, int epollfd);
 		void addSocket(int epollFd, int socketFd, uint32_t flags);
 		
 	private:
@@ -50,6 +50,8 @@ class Server
 		std::vector<ConfigServer> new_server;
 		bool _done;
 		bool _working;
+		bool _break;
+		int _epollFd;
 	
 };
 
