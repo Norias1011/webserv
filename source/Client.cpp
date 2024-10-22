@@ -15,9 +15,12 @@ Client::Client(const Client &copy)
 
 Client::~Client()
 {
-	delete _request;
-	//delete _response;
-    close(_fd);
+    if (_request)
+	    delete _request;
+    if (_response)
+	    delete _response;
+    if (_fd != -1)
+        close(_fd);
 }
 
 Client &Client::operator=(Client const &src)
@@ -90,10 +93,42 @@ void Client::handleRequest()
     //this->sendResponse(std::string(buffer)); 
 }
 
-void Client::sendResponse(const std::string &response) // to REDO
+/*void Client::sendResponse(const std::string &response) // to REDO
 {
     //if (this->_response->buildResponse() == -1)
     send(this->_fd, response.c_str(), response.size(), 0);
+}*/
+
+void Client::sendResponse(int fd)
+{
+    if (this->_response->giveAnswer() == -1)
+    {
+        std::cerr << "Error: Unable to send response" << std::endl;
+        return ;
+    }
+    int sendResponse = -1;
+    if (_fd != -1)
+        sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
+
+    if (sendResponse < 0)
+    {
+        std::cerr << "Error: Unable to send response" << std::endl; // throw une erreur ici
+        return ;
+    }
+    else
+        std::cout << "Response sent" << std::endl;
+    if (this->getResponse()->_done == true)
+    {
+        std::cout << "[DEBUG] - response is done" << std::endl;
+        delete this->_request;
+        delete this->_response;
+        this->_request = new Request(this);
+        this->_response = new Response(this);
+        epoll_event ev;
+        ev.events = EPOLLIN;
+        ev.data.fd = _fd;
+        epoll_ctl(fd, EPOLL_CTL_MOD, _fd, &ev);
+    }
 }
 
 const char* Client::DecoExc::what() const throw()

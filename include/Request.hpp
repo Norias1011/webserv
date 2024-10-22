@@ -28,6 +28,12 @@ class Request
         std::string getPath() const;
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
+        Client* getClient() const { return _client; };
+        ConfigServer* getConfigServer() const { return _configServer; };
+        ConfigLocation* getConfigLocation() const { return _configLocation; };
+        time_t getLastRequestTime() const { return _lastRequestTime; };
+
+        void timeoutChecker();
 
         int parseRequest(std::string const &request);
         void parseMultipartFormData(std::string& body, const std::string& boundary);
@@ -38,6 +44,8 @@ class Request
     private:
 
         Client* _client;
+        ConfigServer* _configServer;
+        ConfigLocation* _configLocation;
 		std::string _request;
 		std::string _path;
         std::string _method;
@@ -46,6 +54,10 @@ class Request
         std::map<std::string, std::string> _postHeaders;
         std::map<std::string, std::map<std::string, std::string> > _fileHeaders;
 		std::string _body;
+        bool _done;
+        bool _working;
+        time_t _lastRequestTime;
+        int _serverCode;
         bool _isParsed;
 };
 
