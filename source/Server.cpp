@@ -5,11 +5,11 @@
 #define MAX_CO 10
 #define BUFFER 1024
 
-Server::Server() : _config()
+Server::Server() : _config(), _done(false), _working(false)
 {
 }
 
-Server::Server(const Config &config) : _config(config)
+Server::Server(const Config &config) : _config(config), _done(false), _working(false)
 {
 }
 
@@ -36,6 +36,8 @@ Server &Server::operator=(Server const &rhs)
 		_config = rhs._config;
 		_serv_list = rhs._serv_list;
 		new_server = rhs.new_server;
+		_done = rhs._done;
+		_working = rhs._working;
 	}
 	return *this;
 }

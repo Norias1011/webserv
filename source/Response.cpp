@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
-Response::Response() : _request(NULL) , _newFd(-1)
+Response::Response() : _request(NULL) , _newFd(-1) , _done(false) , _working(false)
 {
     _errorPage = ErrorPage();
 }
 
-Response::Response(Client* client) : _request(client->getRequest()) , _newFd(-1)
+Response::Response(Client* client) : _request(client->getRequest()) , _newFd(-1) , _done(false) , _working(false)
 {
     _errorPage = ErrorPage();
 }

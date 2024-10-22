@@ -1,10 +1,10 @@
 #include "../include/Request.hpp"
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion("")
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _done(false), _working(false)
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion("")
+Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _done(false), _working(false)
 {
 }
 
@@ -33,6 +33,8 @@ Request &Request::operator=(Request const &src)
 		this->_method = src._method;
 		this->_path = src._path;
         this->_httpVersion = src._httpVersion;
+		this->_done = src._done;
+		this->_working = src._working;
 	}
 	return *this;
 }

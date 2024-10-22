@@ -55,6 +55,8 @@ class Response
 		std::string _response;
         ErrorPage _errorPage;
         int _newFd;
+        bool _done;
+        bool _working;
 
 		//void handleGetRequest();
 		//void handlePostRequest();

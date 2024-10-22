@@ -49,6 +49,8 @@ class Request
         std::string _httpVersion;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
+        bool _done;
+        bool _working;
 };
 
 #endif //REQUEST_HPP
