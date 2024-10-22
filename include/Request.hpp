@@ -54,11 +54,11 @@ class Request
         std::map<std::string, std::string> _postHeaders;
         std::map<std::string, std::map<std::string, std::string> > _fileHeaders;
 		std::string _body;
+        int _serverCode;
+        bool _isParsed;
         bool _done;
         bool _working;
         time_t _lastRequestTime;
-        int _serverCode;
-        bool _isParsed;
 };
 
 #endif //REQUEST_HPP

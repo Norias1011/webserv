@@ -68,11 +68,6 @@ int Server::createSocket()
 				std::cerr << "Error: Unable to create socket" << std::endl;
 				return (-1);
 			}
-			if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
-			{
-				std::cerr << "Error: Unable to set socket options" << std::endl;
-				return (-1);
-			}
 			std::cout << "[DEBUG] - success creating the socket" << std::endl;
 
 			struct sockaddr_in addr;

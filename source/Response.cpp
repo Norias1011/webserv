@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
-Response::Response() : _request(NULL) , _newFd(-1) , _done(false) , _working(false)
+Response::Response() :  _done(false) , _working(false), _request(NULL), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
 
-Response::Response(Client* client) : _request(client->getRequest()) , _newFd(-1) , _done(false) , _working(false)
+Response::Response(Client* client) : _done(false) , _working(false), _request(client->getRequest()), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
@@ -323,6 +323,7 @@ std::string Response::FullResponse(std::string path, std::string root)
 
 std::string Response::responsePage(std::vector<std::string> listFiles, std::string path, std::string root)
 {
+    (void)root;
     std::string answer = "<!DOCTYPE html> <html><head><title>Index of " + path + "</title></head><body>";
     answer += "<h1>Index of " + path + "</h1>";
     answer += "<ul>";
@@ -407,6 +408,7 @@ std::vector<std::string> Response::getFullPathsServer()
     }
     else
         FullPaths.push_back(root + pathRequest);
+    return FullPaths;
 }
 
 std::vector<std::string> Response::getFullPaths()

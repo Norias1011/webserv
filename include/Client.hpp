@@ -22,7 +22,7 @@ class Client
 		Client &operator=(Client const &src);
 
 		int getFd() const;
-		Request* getRequest() const;
+		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };

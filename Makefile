@@ -12,7 +12,9 @@ SRCS = 	$(SRC_DIR)/main.cpp \
 		$(SRC_DIR)/Config.cpp \
 		$(SRC_DIR)/ConfigLocation.cpp \
 		$(SRC_DIR)/ConfigServer.cpp \
-		$(SRC_DIR)/ConfigListen.cpp
+		$(SRC_DIR)/ConfigListen.cpp \
+		$(SRC_DIR)/ErrorPage.cpp \
+		$(SRC_DIR)/Response.cpp 
 
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
