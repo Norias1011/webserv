@@ -160,7 +160,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		 _postHeaders.clear();
         std::istringstream header_stream(headers);
         std::string header_line;
-        while (std::getline(header_stream, header_line))  //est ce que ca ajoute a la fin de la map ?
+        while (std::getline(header_stream, header_line))
 		{
 			size_t pos2 = header_line.find("Content-Disposition:");
 			size_t pos3 = header_line.find("Content-Type:");
