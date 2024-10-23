@@ -32,6 +32,7 @@ class Request
         ConfigServer* getConfigServer() const { return _configServer; };
         ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
+        bool getRequestStatus() const { return _isParsed; };
 
         void timeoutChecker();
 
@@ -40,6 +41,7 @@ class Request
 
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+
     
     private:
 
@@ -56,7 +58,7 @@ class Request
 		std::string _body;
         int _serverCode;
         bool _isParsed;
-        bool _done;
+        bool _init;
         bool _working;
         time_t _lastRequestTime;
 };

@@ -13,6 +13,8 @@ Response::Response(Client* client) : _done(false) , _working(false), _request(cl
 
 Response::~Response()
 {
+    if (_newFd != -1)
+        close(_newFd);
 }
 
 int Response::giveAnswer()

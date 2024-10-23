@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 09:57:51 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/23 15:32:09 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,16 +48,12 @@ void Config::parseConfig(const std::string &filename)
     int num_file = 0;
 
     if (!fileConfig.is_open())
-    {
-        // On peut mettre un throw ici si on fait un try catch dans le main
-        std::cerr << "Error: Could not open file " << _filename << std::endl;
-        exit(1);
-    }
+        throw Config::ErrorException("Could not open file " + _filename);
     while (getline(fileConfig, line))
     {
         //int num_file = 0; // Pour connaitre le numero de la ligne dans le config file
         num_file++;
-        if (line.empty() || line[0] == '#') // || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+        if (line.empty() || line[0] == '#')
             continue;
         serverLines = split(line, " "); // Split the line by space
         for (std::vector<std::string>::iterator it = serverLines.begin(); it != serverLines.end(); it++)
@@ -68,10 +64,7 @@ void Config::parseConfig(const std::string &filename)
             _servers.push_back(server.parseServer(fileConfig));
         }
         else
-        {
-            std::cerr << "Error: Invalid syntax in config file at line " << num_file << std::endl; // on peut throw une erreur ici
-            exit(1);
-        }
+            throw Config::ErrorException("Invalid syntax in config file at line " + numberToString(num_file));
     }
     checkDoubleServerName();
     configBlock();
@@ -121,10 +114,7 @@ void Config::checkDoubleServerName()
                     for (size_t l = 0; l < this->_servers[k].getServerNames().size(); l++)
                     {
                         if (this->_servers[i].getServerNames()[j] == this->_servers[k].getServerNames()[l])
-                        {
-                            std::cerr << "Error: Duplicate server name" << std::endl; //throw une error ici
-                            exit(1);
-                        }
+                            throw Config::ErrorException("Duplicate server name");
                     }
                 }
             }
@@ -199,4 +189,13 @@ void Config::printAll()
         }
         i++;
     }
+}
+
+std::string Config::numberToString(int number)
+{
+    std::string result;
+    std::ostringstream convert;
+    convert << number;
+    result = convert.str();
+    return result;
 }

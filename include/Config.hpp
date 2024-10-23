@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
+/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 14:02:34 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/23 16:20:34 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <map>
 #include <algorithm>
+#include <exception>
 #include "ConfigServer.hpp"
 #include "ConfigLocation.hpp"
 #include "ConfigListen.hpp"
@@ -39,8 +40,25 @@ class Config
         void checkDoubleServerName();
         void configBlock();
         void printAll();
+        std::string numberToString(int number);
 
     	std::map<std::string, std::vector<ConfigServer> > getConfigServer() { return _serverConfigs; }
+
+        class ErrorException : public std::exception
+		{
+			private:
+				std::string _error_message;
+			public:
+				ErrorException(std::string error_message) throw()
+				{
+					_error_message = "[ERROR] Config Parsing Error: " + error_message;
+				}
+				virtual const char *what() const throw()
+				{
+					return (_error_message.c_str());
+				}
+				virtual ~ErrorException() throw() {}
+		};
     
 	protected:
 

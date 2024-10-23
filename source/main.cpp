@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
+/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 13:43:27 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/23 15:46:53 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,32 +15,43 @@
 #include "../include/Client.hpp"
 #include <signal.h>
 
-//Server *global_server;
+Server *global_server = NULL;
 
 void signalHandler(int signum)
 {
-	//if (global_server)
-	//	delete global_server;
+	if (global_server)
+    {
+        global_server->closeServer(); // TO DO
+        delete global_server;
+        global_server = NULL;
+    }
     std::cout << "Interrupt signal (" << signum << ") received." << std::endl;
     exit(signum);
 }
 
 int main(int argc, char *argv[])
 {
+    //signal(SIGINT, signalHandler);
     if (argc == 2 || argc == 1)
     {
-        std::string config_file;
-        Config config;
-        config_file = (argc == 2) ? argv[1] : "configs/default.conf";
-        signal(SIGINT, signalHandler);
-        config.parseConfig(config_file);
-        config.printAll();
+        try
+        {
+            std::string config_file;
+            Config config;
+            config_file = (argc == 2) ? argv[1] : "configs/default.conf";
+            signal(SIGINT, signalHandler);
+            config.parseConfig(config_file);
+            config.printAll();
 		
-		Server server(config);
-		if (server.createSocket()== - 1)
-			return(-1);
-        if (server.runServer()== - 1)
-			return(-1);
+		    global_server= new Server(config);
+		    global_server->createSocket();
+            global_server->runServer();
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            return (1);
+        }
     }
     else
     {

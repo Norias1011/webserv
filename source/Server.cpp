@@ -25,6 +25,13 @@ Server::~Server()
 		delete it->second;
 	}
 	this->_clients.clear();
+	for (std::map<int, struct sockaddr_in>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
+	{
+		close(it->first);
+	}
+	this->_sockets.clear();
+	if (_epollFd != -1)
+		close(_epollFd);
 }
 
 Server &Server::operator=(Server const &rhs)
@@ -45,15 +52,12 @@ Server &Server::operator=(Server const &rhs)
 
 
 // Creation du server socket, bind, listen to incoming connection
-int Server::createSocket()
+void Server::createSocket()
 {
 	_serv_list = _config.getConfigServer();
 	_epollFd = epoll_create1(EPOLL_CLOEXEC);
 	if (_epollFd == -1)
-	{
-		std::cerr << "epoll_create1 fail" << std::endl;
-		return -1;
-	}
+		throw Server::ErrorException("epoll_create1 fail");
 	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = _serv_list.begin(); it != _serv_list.end(); it++)
 	{
 		std::cout << "[DEBUG] - before first it" << std::endl;
@@ -64,10 +68,7 @@ int Server::createSocket()
 			std::cout << "[DEBUG] - success creating the socket" << std::endl;
 			int new_socket = socket(AF_INET, SOCK_STREAM, 0);
 			if (new_socket == -1)
-			{
-				std::cerr << "Error: Unable to create socket" << std::endl;
-				return (-1);
-			}
+				throw Server::ErrorException("Unable to create socket");
 			std::cout << "[DEBUG] - success creating the socket" << std::endl;
 
 			struct sockaddr_in addr;
@@ -83,7 +84,6 @@ int Server::createSocket()
 	}
 	BindandListen();
 	_done = true;
-	return 0;
 }
 //AREVOIR LE REINTERPRET cast
 void Server::BindandListen()
@@ -105,28 +105,22 @@ void Server::BindandListen()
 // and the epoll wait will return an event indicating the server socket is ready to read.
 // -1 corresponding to timeout  - to see if we add one.
 
-int Server::runServer()
+void Server::runServer()
 {
 	if (!_done)
-	{
-		std::cerr << "Error: Server not ready" << std::endl;
-		return -1;
-	}
+		throw Server::ErrorException("Server not ready");
 	_working = true;
 	epoll_event events[MAX_CO];
 	time_t before_loop_time = time(0);
 	while (this->_working)
 	{
 		std::cout << "Epoll wait for loop" << std::endl;
-		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1); 
+		int num_fds = epoll_wait(_epollFd, events, MAX_CO, 500); 
 		std::cout << "num fds:" << num_fds << std::endl;
 		if (num_fds == -1)
-		{
-			std::cerr << "epoll_wait fail" << std::endl;
-			return -1;
-		}
+			throw Server::ErrorException("epoll_wait fail");
 		for (int i = 0; i < num_fds; i++)
-			handleEvent(events[i], _epollFd);
+			handleEvent(&events[i]);
 		time_t now = time(0);
 		if (now - before_loop_time > 10)
 		{
@@ -149,7 +143,6 @@ int Server::runServer()
 			before_loop_time = now;
 		}
 	}
-	return 0;
 }
 
 // this will handle the event on the server socket
@@ -158,33 +151,33 @@ int Server::runServer()
 // check if the event is on the client socket
 // will handle the request 
 
-void Server::handleEvent(epoll_event &event, int epollfd)
+void Server::handleEvent(epoll_event *event)
 {
 	try
 	{
-		if (event.events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
+		if (event->events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
 			throw Client::DecoExc();
-		if (event.events & EPOLLIN)
+		if (event->events & EPOLLIN)
 		{
-			std::cout << "[DEBUG] - event data fd:" << event.data.fd << "fd: " << std::endl;
-			if (this->_clients.find(event.data.fd) == this->_clients.end())
-				this->handleConnection(event.data.fd, epollfd); 
+			std::cout << "[DEBUG] - event data fd:" << event->data.fd << "fd: " << std::endl;
+			if (this->_clients.find(event->data.fd) == this->_clients.end())
+				this->handleConnection(event->data.fd); 
 			else
 			{
-				this->_clients[event.data.fd]->setLastRequestTime(time(0));
-				this->_clients[event.data.fd]->handleRequest(); 
+				this->_clients[event->data.fd]->setLastRequestTime(time(0));
+				this->_clients[event->data.fd]->handleRequest(); 
 			}
 		}
-		if (event.events & EPOLLOUT) // check the CGI here
+		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			this->_clients[event.data.fd]->setLastRequestTime(time(0));
-			if (this->_clients[event.data.fd]->getRequest())
-				this->_clients[event.data.fd]->sendResponse(this->_epollFd);
+			this->_clients[event->data.fd]->setLastRequestTime(time(0));
+			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequest()->getRequestStatus() == true)
+				this->_clients[event->data.fd]->sendResponse(_epollFd);
 		}
 	}
 	catch (Client::DecoExc &e)
 	{
-		this->handleDc(event.data.fd);
+		this->handleDc(event->data.fd);
 	}
 };
 
@@ -194,7 +187,7 @@ void Server::handleEvent(epoll_event &event, int epollfd)
 // put the client socket in non blocking mode - if the fcntl fails we need to clear the client 
 // F_GETL to get  the flag and then block the socket with O_NONBLOCK
 
-void Server::handleConnection(int fd, int epollfd) // TODO -> mettre try catch avec exception dans cette fonction
+void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception dans cette fonction
 {
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(struct sockaddr);
@@ -215,7 +208,7 @@ void Server::handleConnection(int fd, int epollfd) // TODO -> mettre try catch a
 	}
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		this->handleDc(client_fd);
-	this->addSocket(epollfd, client_fd, EPOLLIN);
+	this->addSocket(_epollFd, client_fd, EPOLLIN);
 }
 
 void Server::handleDc(int fd)
@@ -238,4 +231,10 @@ void Server::addSocket(int epollFd, int fd, uint32_t flags)
 		std::cerr << "epoll_ctl fail" << std::endl;
 		close(fd);
 	}
+}
+
+void Server::closeServer()
+{
+	_working = false;
+	_break = true;
 }

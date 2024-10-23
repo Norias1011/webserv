@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigServer.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
+/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/10 15:09:23 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/23 15:45:41 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,13 +76,13 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
         int i = 0;
         while (isspace(line[i]))
             line.erase(i, 1);
-        if (line.empty() || line[0] == '#') // || line.find_first_not_of(" \n\t\v\f\r") != std::string::npos)
+        if (line.empty() || line[0] == '#')
             continue;
         if (line[line.length() - 1] != ';' && line.find("}") == std::string::npos && line.find("{") == std::string::npos)
         {
             std::cout << "Line : " << line << "|" << std::endl;
             std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Server Error: Missing ; at the end of the line");
         }
         else if (line[line.length() - 1] == ';')
             line.erase(line.size() - 1);
@@ -105,13 +105,13 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
         {
             std::cout << "Line : " << line << std::endl;
             std::cout << "Error: Invalid server configuration" << std::endl; // on peut throw une erreur ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Server Error: Invalid server configuration");
         }
     }
     if (index == 0 && is_empty(fileConfig))
     {
         std::cerr << "Error: Missing closing bracket for server" << std::endl; // on peut throw une erreur ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Server Error: Missing closing bracket for server");
     }
     checkDoubleInformation();
     defaultValues();
@@ -138,20 +138,6 @@ void ConfigServer::pathsClean()
         if (!it->second.empty() && it->second[it->second.size() - 1] == '/')
             it->second = it->second.substr(0, it->second.size() - 1);
     }
-    /*for (size_t i = 0; i < this->_locations.size(); i++)
-    {
-        if (this->_locations[i].getPath().back() == '/')
-            this->_locations[i].setPath(this->_locations[i].getPath().substr(0, this->_locations[i].getPath().size() - 1));
-    }
-
-    if (this->_root.back() == '/')
-        this->_root = this->_root.substr(0, this->_root.size() - 1);
-
-    for (std::map<int, std::string>::iterator it = this->_errorPages.begin(); it != this->_errorPages.end(); it++)
-    {
-        if (it->second.back() == '/')
-            it->second = it->second.substr(0, it->second.size() - 1);
-    }*/
 }
 
 void ConfigServer::checkDoubleLocation()
@@ -163,7 +149,7 @@ void ConfigServer::checkDoubleLocation()
             if (this->_locations[i].getPath() == this->_locations[j].getPath())
             {
                 std::cerr << "Error: Duplicate location" << std::endl; //throw une error ici
-                exit(1);
+                throw std::runtime_error("[ERROR] Config Server Error: Duplicate location");
             }
         }
     }
@@ -190,7 +176,7 @@ void ConfigServer::checkDoubleInformation()
         if (it->second > 1)
         {
             std::cerr << "Error: Duplicate information in location" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Server Error: Duplicate information in location");
         }
     }
 }
@@ -236,7 +222,7 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
             if (this->_serverNames[i] == serverLine[1])
             {
                 std::cerr << "Error: Duplicate server name" << std::endl; //throw une error ici
-                exit(1);
+                throw std::runtime_error("[ERROR] Config Server Error: Duplicate server name");
             }
         }
         this->_serverNames.push_back(serverLine[1]);
@@ -262,7 +248,7 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
         if (std::atoi(serverLine[1].c_str()) < 400 || std::atoi(serverLine[1].c_str()) > 599)
         {
             std::cerr << "Error: Invalid status code for error_page" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Server Error: Invalid status code for error_page");
         }
         this->_errorPages[std::atoi(serverLine[1].c_str())] = serverLine[2];
         return true;
@@ -285,7 +271,7 @@ void ConfigServer::addListen(std::string &ipLine)
     if (_listens.find(listen.get_IpAndPort()) != _listens.end())
     {
         std::cerr << "Error: Ip and port already taken" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Server Error: Ip and port already taken");
     }
     std::cout << "********* Listen : " << listen.get_IpAndPort() << std::endl;
     _listens[listen.get_IpAndPort()] = listen;

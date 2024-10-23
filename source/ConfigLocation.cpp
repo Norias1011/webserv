@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 13:41:02 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/23 15:44:38 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ ConfigLocation ConfigLocation::parseLocation(std::ifstream &fileConfig, std::str
         {
             std::cout << "Line : " << line << "|" << std::endl;
             std::cerr << "Error: Missing ; at the end of the line : " << line << std::endl;
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Location Error: Missing ; at the end of the line");
         }
         else if (line[line.length() - 1] == ';')
             line.erase(line.size() - 1);
@@ -111,13 +111,13 @@ ConfigLocation ConfigLocation::parseLocation(std::ifstream &fileConfig, std::str
         else
         {
             std::cerr << "Error: Invalid location line: " << line << std::endl; //throw une error ici 
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Location Error: Invalid location line");
         }
     }
     if (index == 0 && is_empty(fileConfig))
     {
         std::cerr << "Error: Missing closing bracket for location" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Location Error: Missing closing bracket for location");
     }
     checkDoubleInformation();
     defaultValue();
@@ -129,14 +129,14 @@ void ConfigLocation::checkDoubleInformation()
     if (this->_root != "" && this->_alias != "")
     {
         std::cerr << "Error: Cannot have both root and alias in the same location" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Location Error: Cannot have both root and alias in the same location");
     }
     for (std::map<std::string, int>::iterator it = this->_doubleInformation.begin(); it != this->_doubleInformation.end(); it++)
     {
         if (it->second > 1)
         {
             std::cerr << "Error: Duplicate information in location" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Location Error: Duplicate information in location");
         }
     }
 }
@@ -209,7 +209,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
         if (this->_rewrite.first < 300 || this->_rewrite.first > 399)
         {
             std::cerr << "Error: Invalid status code for rewrite" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Location Error: Invalid status code for rewrite");
         }
         this->_rewrite.second = locationLine[2];
         return true;
@@ -245,7 +245,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
             if (std::find(this->_allowedMethods.begin(), this->_allowedMethods.end(), locationLine[i]) == this->_allowedMethods.end())
             {
                 std::cerr << "Error: Invalid method in allow_methods" << std::endl; //throw une error ici
-                exit(1);
+                throw std::runtime_error("[ERROR] Config Location Error: Invalid method in allow_methods");
             }
             this->_methods.push_back(locationLine[i]);
         }
@@ -257,7 +257,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
         if (_cgi.find(locationLine[1]) != _cgi.end())
         {
             std::cerr << "Error: Duplicate cgi extension" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Location Error: Duplicate cgi extension");
         }
         this->_cgi[locationLine[1]] = locationLine[2];
         return true;

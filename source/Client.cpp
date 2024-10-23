@@ -1,10 +1,10 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(-1),  _request(new Request(this)) //_response(NULL)
+Client::Client() : _fd(-1),  _request(new Request(this)) , _response(new Response(this)), _lastRequestTime(0)
 {
 }
 
-Client::Client(int fd) : _fd(fd), _request(new Request(this)) 
+Client::Client(int fd) : _fd(fd), _request(new Request(this)), _response(new Response(this)), _lastRequestTime(0)
 {    
 }
 
@@ -15,9 +15,9 @@ Client::Client(const Client &copy)
 
 Client::~Client()
 {
-    if (_request)
+    if (_request != NULL)
 	    delete _request;
-    if (_response)
+    if (_response != NULL)
 	    delete _response;
     if (_fd != -1)
         close(_fd);
@@ -50,19 +50,24 @@ void Client::handleRequest()
         std::cout << "[DEBUG] number of bytes received from client: " << bytes << std::endl;
         buffer[bytes] = '\0';
     }
+    else if (bytes < 0)
+        throw std::runtime_error("Error: Unable to receive data from client");
     else
-    {
         throw DecoExc();
-    }
-    std::string request(buffer);
+    std::string request(buffer, bytes);
     std::cout << "[DEBUG] Beginning parsing of the request." << request << std::endl;
+    if (this->_request->getRequestStatus() == true)
+    {
+        std::cerr << "Error: Request already parsed" << std::endl;
+        return ;
+    }
     if (this->_request->parseRequest(request) == -1)
 	{
 		std::cerr << "Request is wrong " << std::endl;
 		close(_fd);
 	}
     // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
-    std::string method = _request->getMethod();
+    /*std::string method = _request->getMethod();
     std::string path = _request->getPath();
     std::string httpVersion = _request->getHttpVersion(); 
     std::string filePath = "docs" + path;
@@ -87,7 +92,7 @@ void Client::handleRequest()
         response << "\r\n";
        std::string responseStr = response.str();
         send(_fd, responseStr.c_str(), responseStr.size(), 0);
-    }
+    }*/
     // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
     //this->_response->generateResponse();
     //this->sendResponse(std::string(buffer)); 
@@ -113,12 +118,14 @@ void Client::sendResponse(int fd)
     if (sendResponse < 0)
     {
         std::cerr << "Error: Unable to send response" << std::endl; // throw une erreur ici
-        return ;
+        throw std::runtime_error("Error: Unable to send response");
     }
     else
         std::cout << "Response sent" << std::endl;
     if (this->getResponse()->_done == true)
     {
+        if (this->_request->getRequestStatus() != true)
+            throw DecoExc();
         std::cout << "[DEBUG] - response is done" << std::endl;
         delete this->_request;
         delete this->_response;

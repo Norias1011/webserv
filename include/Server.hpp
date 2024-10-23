@@ -15,6 +15,7 @@
 #include <string.h>
 #include <map>
 #include <fcntl.h>
+#include <exception>
 #include "../include/Config.hpp"
 #include "../include/Client.hpp"
 
@@ -34,13 +35,30 @@ class Server
 		long getSocketFd() const;
 		long getEpollFd() const;
 
-		int createSocket();
+		void createSocket();
 		void BindandListen();
-		int runServer();
-		void handleConnection(int fd, int epollfd);
+		void runServer();
+		void handleConnection(int fd);
 		void handleDc(int fd);
-		void handleEvent(epoll_event &event, int epollfd);
+		void handleEvent(epoll_event *event);
 		void addSocket(int epollFd, int socketFd, uint32_t flags);
+		void closeServer();
+
+		class ErrorException : public std::exception
+		{
+			private:
+				std::string _error_message;
+			public:
+				ErrorException(std::string error_message) throw()
+				{
+					_error_message = "[ERROR] Server Error: " + error_message;
+				}
+				virtual const char *what() const throw()
+				{
+					return (_error_message.c_str());
+				}
+				virtual ~ErrorException() throw() {}
+		};
 		
 	private:
 		Config _config;

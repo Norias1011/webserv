@@ -1,10 +1,10 @@
 #include "../include/Request.hpp"
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _isParsed(false), _done(false), _working(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _isParsed(false), _done(false), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -34,7 +34,7 @@ Request &Request::operator=(Request const &src)
 		this->_path = src._path;
         this->_httpVersion = src._httpVersion;
 		this->_isParsed = src._isParsed;
-		this->_done = src._done;
+		this->_init = src._init;
 		this->_working = src._working;
 	}
 	return *this;
@@ -45,6 +45,11 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	if (this->_isParsed == true)
 	{
 		std::cerr << "Error: request already parsed" << std::endl;
+		return 1;
+	}
+	if (raw_request.empty())
+	{
+		std::cerr << "Error: empty request" << std::endl;
 		return -1;
 	}
 	// NEED TO ADD THE POST REQUEST PARSED OPTION TODO
@@ -135,12 +140,12 @@ bool Request::isHttpVersionValid(std::string const &version)
 
 void Request::timeoutChecker()
 {
-	if (_lastRequestTime == 0 || _done == true)
+	if (_lastRequestTime == 0 || _isParsed == true)
 		return;
 	time_t now = time(0);
 	if (now > _lastRequestTime + 10)
 	{
-		_done = true;
+		_isParsed = true;
 		std::cout << "Timeout" << std::endl;
 		_serverCode = 408;
 	}

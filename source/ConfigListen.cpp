@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 13:57:40 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/08 14:45:49 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/23 15:46:49 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
         if (ipPort[0].empty())
         {
             std::cerr << "Error: Invalid ip or port" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Listen Error: Invalid ip or port");
         }
         if (ipPort[0].find(".") != std::string::npos)
         {
@@ -46,7 +46,7 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
         if (ipPort[0].empty() || ipPort[1].empty())
         {
             std::cerr << "Error: Invalid ip or port" << std::endl; //throw une error ici
-            exit(1);
+            throw std::runtime_error("[ERROR] Config Listen Error: Invalid ip or port");
         }
         _ip = ipPort[0];
         _port = std::atoi(ipPort[1].c_str());
@@ -54,18 +54,18 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
     else
     {
         std::cerr << "Error: Invalid ip or port" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Listen Error: Invalid ip or port");
     }
     _IpAndPort = _ip + ":" + NumberToString(_port); //::to_string(this->_port);
     if (this->_port > 65535)
     {
         std::cerr << "Error: Invalid port" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Listen Error: Invalid port");
     }
     if (!goodIp())
     {
         std::cerr << "Error: Invalid ip" << std::endl; //throw une error ici
-        exit(1);
+        throw std::runtime_error("[ERROR] Config Listen Error: Invalid ip");
     }
 }
 
