@@ -54,6 +54,7 @@
 		"sstream": "cpp",
 		"filesystem": "cpp",
 		"codecvt": "cpp",
-		"ratio": "cpp"
+		"ratio": "cpp",
+		"chrono": "cpp"
 	}
 }

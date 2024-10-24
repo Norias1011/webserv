@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploaded File</title>
+</head>
+<body>
+    <h1>Uploaded File</h1>
+    <div id="file-info"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileName = urlParams.get('fileName');
+            const fileContent = urlParams.get('fileContent');
+
+            if (fileName && fileContent) {
+                const fileInfoDiv = document.getElementById('file-info');
+                fileInfoDiv.innerHTML = `
+                    <p>File Name: ${fileName}</p>
+                    <p>File Content:</p>
+                    <pre>${fileContent}</pre>
+                `;
+            } else {
+                document.getElementById('file-info').innerText = 'No file uploaded.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -28,12 +28,16 @@ class Request
         std::string getPath() const;
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
+		std::string getHeaders(const std::string& headername);
 
         int parseRequest(std::string const &request);
         void parseMultipartFormData(std::string& body, const std::string& boundary);
 
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+
+		void printHeaders() const;
+		void printPostHeaders() const;
     
     private:
 

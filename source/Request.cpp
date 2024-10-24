@@ -100,28 +100,31 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 		std::string value = header.substr(pos + 1);
 		_headers[key] = value;
 	}
-	std::cout << "[DEBUG] - headers are: " <<  all_headers << std::endl;
 	
 	if (_method == "POST")
 	{
+		std::cout << "[DEBUG] - headers POST Lenght are: " <<  getHeaders("Content-lenght") << std::endl;
+		//handle les upload
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
             std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
             size_t b_start = _request.find("\r\n\r\n") + 4;
             _body = _request.substr(b_start);
             parseMultipartFormData(_body, boundary);
-            std::cout << "[DEBUG] - body is: " << _body << std::endl;
+            std::cout << "[DEBUG] - body of POST is: " << _body << std::endl;
 		}
-		else // Handle non-multipart POST
+		else // Handleles autres requetes (i.e formulaire)
 		{
 			size_t b_start = _request.find("\r\n\r\n");
 			if(b_start != std::string::npos)
 			_body = _request.substr(b_start + 4);
+			std::cout << "[DEBUG] - body of POST is (should be names): " << _body << std::endl;
 		}
 	}
 	_isParsed = true;
-	//PARSER LE BODY
-	std::cout << "[DEBUG] - body is: " <<  _body << std::endl;
+	printHeaders();
+	printPostHeaders();
+	std::cout << "[DEBUG] - body  is: (should be nil) " <<  _body << std::endl;
 	return 0;
 }
 
@@ -216,4 +219,28 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
             std::cout << "[DEBUG] Field: " << field_name << ", Value: " << content << std::endl;
         }
     }
+}
+
+std::string Request::getHeaders(const std::string& headername)
+{
+	std::map<std::string,std::string> ::const_iterator it = _headers.find(headername);
+	if (it != _headers.end())
+		return it->second;
+	return "";
+}
+
+void Request::printHeaders() const
+{
+	for (std::map<std::string, std::string >::const_iterator it = _headers.begin(); it != _headers.end(); it++)
+	{
+        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
+	}
+}
+
+void Request::printPostHeaders() const
+{
+	for (std::map<std::string, std::string >::const_iterator it = _postHeaders.begin(); it != _postHeaders.end(); it++)
+	{
+        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
+	}
 }
