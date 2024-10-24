@@ -4,6 +4,8 @@
 
 #include "Server.hpp"
 #include "Request.hpp"
+#include "Log.hpp"
+#include <bits/basic_string.h>
 
 #define CLIENT_BUFFER 1024
 

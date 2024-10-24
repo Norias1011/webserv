@@ -56,5 +56,6 @@
 		"codecvt": "cpp",
 		"ratio": "cpp",
 		"chrono": "cpp"
-	}
+	},
+	"C_Cpp.errorSquiggles": "disabled"
 }
