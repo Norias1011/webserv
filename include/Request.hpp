@@ -33,6 +33,7 @@ class Request
         ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
         bool getRequestStatus() const { return _isParsed; };
+        int getServerCode() const { return _serverCode; };
 
         void timeoutChecker();
 
@@ -41,6 +42,8 @@ class Request
 
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+
+        void setServerCode(int code) { _serverCode = code; };
 
     
     private:

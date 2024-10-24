@@ -29,6 +29,7 @@ class Response
         
         Request* getRequest() const;
         int giveAnswer();
+        bool checkRewrite();
 
         void manageGetRequest();
         void managePostRequest();

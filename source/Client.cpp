@@ -66,6 +66,7 @@ void Client::handleRequest()
 		std::cerr << "Request is wrong " << std::endl;
 		close(_fd);
 	}
+    std::cout << "[DEBUG] Request parsed" << std::endl;
     // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
     /*std::string method = _request->getMethod();
     std::string path = _request->getPath();
@@ -106,6 +107,7 @@ void Client::handleRequest()
 
 void Client::sendResponse(int fd)
 {
+    std::cout << "[DEBUG] Sending response to client: " << this->_fd << std::endl;
     if (this->_response->giveAnswer() == -1)
     {
         std::cerr << "Error: Unable to send response" << std::endl;

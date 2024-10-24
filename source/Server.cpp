@@ -78,7 +78,7 @@ void Server::createSocket()
 			addr.sin_addr.s_addr = INADDR_ANY;
 			bzero(&(addr.sin_zero),8);
 			_sockets[new_socket] = addr;
-			this->addSocket(_epollFd,new_socket, EPOLLIN);
+			this->addSocket(_epollFd, new_socket, EPOLLIN);
 			std::cout << "[DEBUG] - success creating the epoll instance" << std::endl;
 		}
 	}
@@ -93,7 +93,7 @@ void Server::BindandListen()
 		if (bind(it->first, reinterpret_cast<const struct sockaddr*>(&it->second), sizeof(struct sockaddr)) == -1) 
 			std::cerr << "Error: Unable to bind socket" << std::endl;
 		std::cout << "[DEBUG] - success binding the socket to" << it->second.sin_port << std::endl;
-		if (listen(it->first,MAX_CO) == -1)
+		if (listen(it->first, MAX_CO) == -1)
 			std::cerr << "Error: Unable to listen" << std::endl;
 		std::cout << "[DEBUG] - success listenning to port"  << std::endl;
 	}
@@ -115,9 +115,9 @@ void Server::runServer()
 	while (this->_working)
 	{
 		std::cout << "Epoll wait for loop" << std::endl;
-		int num_fds = epoll_wait(_epollFd, events, MAX_CO, 500); 
+		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1); 
 		std::cout << "num fds:" << num_fds << std::endl;
-		if (num_fds == -1)
+		if (num_fds < 0)
 			throw Server::ErrorException("epoll_wait fail");
 		for (int i = 0; i < num_fds; i++)
 			handleEvent(&events[i]);
@@ -155,7 +155,7 @@ void Server::handleEvent(epoll_event *event)
 {
 	try
 	{
-		if (event->events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
+		if (event->events & (EPOLLHUP | EPOLLERR | !(EPOLLIN)))
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
@@ -170,10 +170,12 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
+			std::cout << "[DEBUG] - entering the response part" << std::endl;
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
-			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequest()->getRequestStatus() == true)
+			if (this->_clients[event->data.fd]->getRequest()) //&& this->_clients[event->data.fd]->getRequest()->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
 		}
+		std::cout << "[DEBUG] - event handled" << std::endl;
 	}
 	catch (Client::DecoExc &e)
 	{
@@ -200,7 +202,7 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 	}
 	std::cout << "[DEBUG] - success accepting connection with client fd" << client_fd << std::endl;
 	this->_clients[client_fd] = new Client(client_fd);
-	int flags = fcntl(client_fd, F_GETFL, 0);// TOCHECK: verifier les diff parametres
+	int flags = fcntl(client_fd, F_SETFL, O_NONBLOCK);// TOCHECK: verifier les diff parametres
 	if (flags == -1) 
 	{	
 		std::cerr << "fcntl fail" << std::endl;
@@ -209,10 +211,12 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		this->handleDc(client_fd);
 	this->addSocket(_epollFd, client_fd, EPOLLIN);
+	std::cout << "[DEBUG] - success adding the client to the epoll instance" << std::endl;
 }
 
 void Server::handleDc(int fd)
 {
+	std::cout << "[DEBUG] - Client disconnected: " << NumberToString(fd) << std::endl;
 	epoll_event ev;
 	ev.data.fd = fd;
 	epoll_ctl(_epollFd, EPOLL_CTL_DEL, fd, &ev);

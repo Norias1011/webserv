@@ -25,6 +25,18 @@ int Response::giveAnswer()
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
         _response.clear();
     }
+    if (_request->getServerCode() != 200)
+    {
+        std::cout << "[DEBUG] - Response::giveAnswer - server code is not 200" << std::endl;
+        _response = _errorPage.getConfigErrorPage(_request->getConfigServer()->getErrorPages(), _request->getServerCode());
+        return 0;
+    }
+    if (checkRewrite())
+    {
+        std::cout << "[DEBUG] - Response::giveAnswer - checkRewrite" << std::endl;
+        return 0;
+    }
+
     if (_request->getMethod() == "GET")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - GET method" << std::endl;
@@ -48,9 +60,41 @@ int Response::giveAnswer()
     else
     {
         std::cerr << "Error: Method not implemented" << std::endl;
+        _request->setServerCode(405);
         return -1;
     }
     return 0;
+}
+
+bool Response::checkRewrite()
+{
+    if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
+    {
+        std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();
+        _response = "HTTP/1.1 " + numberToString(rewrite.first) + " " + _errorPage.getErrorMessages(rewrite.first) + "\r\n";
+        _response += "Location: " + rewrite.second + "\r\n";
+        _response += "Content-Length: 0\r\n";
+        _response += "\r\n";
+        return true;
+    }
+    std::string root;
+    if (this->_request->getConfigLocation() && !this->_request->getConfigLocation()->getRoot().empty())
+        root = this->_request->getConfigLocation()->getRoot();
+    else
+        root = this->_request->getConfigServer()->getRoot();
+    std::string tmpPath = _request->getPath();
+    if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
+        return false;
+    if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
+    {
+        std::string tmpHeader = _request->getHeaders()["Host"];
+        _response = "HTTP/1.1 301 Moved Permanently\r\n";
+        _response += "Location: " + tmpHeader + tmpPath + "/\r\n";
+        _response += "Content-Length: 0\r\n";
+        _response += "\r\n";
+        return true;
+    }
+    return false;
 }
 
 void Response::manageDeleteRequest()
