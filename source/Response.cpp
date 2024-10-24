@@ -165,7 +165,7 @@ void Response::handleRoot()
         if (checkFileExist(*it))
         {
             path = *it;
-            return ;
+            break;
         }
     }
     if (path.empty())
