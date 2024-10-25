@@ -32,14 +32,21 @@ class Request
         ConfigServer* getConfigServer() const { return _configServer; };
         ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
-
         void timeoutChecker();
+		std::string getHeaders(const std::string& headername);
 
-        int parseRequest(std::string const &request);
+        int parseRequestHeaders(std::string const &headers);
+		void parseBody();
         void parseMultipartFormData(std::string& body, const std::string& boundary);
 
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+
+		void printHeaders() const;
+		void printPostHeaders() const;
+
+		void setRequest(const std::string& request) {_request = request;}
+		void setBody(const std::string& body) {_body = body;}
     
     private:
 
@@ -47,6 +54,7 @@ class Request
         ConfigServer* _configServer;
         ConfigLocation* _configLocation;
 		std::string _request;
+		std::string _rawHeaders;
 		std::string _path;
         std::string _method;
         std::string _httpVersion;

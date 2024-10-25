@@ -47,11 +47,11 @@ class Server
 		std::map<int, struct sockaddr_in> _sockets;
 		std::map<int,Client*> _clients;
 		std::map<std::string, std::vector<ConfigServer> > _serv_list;
-		std::vector<ConfigServer> new_server;
 		bool _done;
 		bool _working;
 		bool _break;
 		int _epollFd;
+		std::vector<ConfigServer> _new_server;
 	
 };
 
