@@ -1,8 +1,10 @@
+#ifndef LOG_HPP
+#define LOG_HPP
+
 #include <iostream>
 #include <sstream>
 #include <string>
 
-// Définir les codes de couleurs ANSI
 #define RESET   "\033[0m"
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
@@ -53,3 +55,5 @@ private:
         return message;
     }
 };
+
+#endif // LOG_HPP

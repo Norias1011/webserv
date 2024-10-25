@@ -18,6 +18,7 @@
 #include <exception>
 #include "../include/Config.hpp"
 #include "../include/Client.hpp"
+#include "Log.hpp"
 
 class Client; 
 class Config; 

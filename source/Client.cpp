@@ -117,46 +117,9 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
-	this->_request-> // voir si le page est valide ou non
-	// A ce moment la j'ai parsé toute la requete normalement COMPLETE!
-    std::string method = _request->getMethod();
-    std::string path = _request->getPath();
-    std::string httpVersion = _request->getHttpVersion(); 
-    std::string filePath = "docs" + path;
-    std::ifstream file(filePath.c_str());
-    if (file)
-    {
-        std::ostringstream response;
-        response << "HTTP/1.1 200 OK\r\n";
-        response << "Content-Type: text/html\r\n";
-        response << "Connection: close\r\n";
-        response << "\r\n";
-        response << file.rdbuf();
-        std::string responseStr = response.str();
-        send(_fd, responseStr.c_str(), responseStr.size(), 0);
-    }
-    else
-    {
-        std::ostringstream response;
-        response << "HTTP/1.1 404 Not Found\r\n";
-        response << "Content-Length: 0\r\n";
-        response << "Connection: close\r\n";
-        response << "\r\n";
-       std::string responseStr = response.str();
-        send(_fd, responseStr.c_str(), responseStr.size(), 0);
-    }*/
-    // TO IMPLEMENT THE RESPONSE CLASS THIS IS JUST A TEST
-    //this->_response->generateResponse();
-    //this->sendResponse(std::string(buffer)); 
 }
 
 
-
-/*void Client::sendResponse(const std::string &response) // to REDO
-{
-    //if (this->_response->buildResponse() == -1)
-    send(this->_fd, response.c_str(), response.size(), 0);
-}*/
 
 void Client::sendResponse(int fd)
 {
