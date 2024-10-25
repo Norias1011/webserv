@@ -68,6 +68,7 @@ int Response::giveAnswer()
 
 bool Response::checkRewrite()
 {
+	std::cout << "[DEBUG] - ca rentre dans le checkRewrite: " << std::endl;	
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();

@@ -57,8 +57,8 @@ class Request
     private:
 
         Client* _client;
-        ConfigServer* _configServer;
-        ConfigLocation* _configLocation;
+        ConfigServer* _configServer; // TODO cehcker le bon serv avec le Host
+        ConfigLocation* _configLocation; // TODO checker la location avec le path
 		std::string _request;
 		std::string _rawHeaders;
 		std::string _path;

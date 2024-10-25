@@ -119,8 +119,6 @@ void Client::handleRequest()
 	}
 }
 
-
-
 void Client::sendResponse(int fd)
 {
     std::cout << "[DEBUG] Sending response to client: " << this->_fd << std::endl;

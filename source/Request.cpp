@@ -1,11 +1,11 @@
 #include "../include/Request.hpp"
 #include <bits/basic_string.h>
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -70,18 +70,21 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 	if (objects.size() != 3)
 	{
 		std::cerr << "[ERROR] invalid request" << std::endl;
+		_serverCode = 400;
 		return -1;
 	}
 	_method = isMethod(objects[0]);
 	if (_method == "WRONG METHOD")
 	{
 		std::cerr << "[ERROR]: invalid method" << std::endl;
+		_serverCode = 405;
 		return -1;
 	}
 	_path = objects[1];
 	if (!isHttpVersionValid(objects[2]))
 	{
 		std::cerr << "[ERROR]: invalid http version" << std::endl;
+		_serverCode = 505;
 		return -1;
 	}
 	_httpVersion = objects[2];
