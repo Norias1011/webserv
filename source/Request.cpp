@@ -270,6 +270,7 @@ void Request::findConfigServer()
 {
     Config config;
     std::string host = getHeaders("Host");
+	Log::logVar(Log::DEBUG, "le host est : {}", host);
     std::map<std::string, std::vector<ConfigServer> > serverConfigs = config.getConfigServer();
 
   	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
@@ -278,6 +279,7 @@ void Request::findConfigServer()
         for (std::vector<ConfigServer>::iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
 			Log::logVar(Log::DEBUG, "le host est : {}", host);
+			Log::logVar(Log::DEBUG, "le it2->getServerNames() est : {}", it2->getServerNames());
             if (it2->getServerNames().find(host) != std::string::npos)
             {
                 _configServer = &(*it2);

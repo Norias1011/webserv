@@ -117,6 +117,8 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
+	//Status
+	
 }
 
 void Client::sendResponse(int fd)
