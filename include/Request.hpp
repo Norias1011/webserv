@@ -42,6 +42,8 @@ class Request
 		void parseBody();
         void parseMultipartFormData(std::string& body, const std::string& boundary);
 
+		void findConfigServer();
+		void findConfigLocation();
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
 

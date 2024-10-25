@@ -265,3 +265,41 @@ void Request::printPostHeaders() const
         std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
 	}
 }
+
+void Request::findConfigServer()
+{
+    Config config;
+    std::string host = getHeaders("Host");
+    std::map<std::string, std::vector<ConfigServer> > serverConfigs = config.getConfigServer();
+
+  	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
+    {
+        std::vector<ConfigServer> servers = it->second;
+        for (std::vector<ConfigServer>::iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
+        {
+            if (it2->getServerNames().find(host) != std::string::npos)
+            {
+                _configServer = &(*it2);
+                return;
+            }
+        }
+    }
+}
+
+/*void Request::findConfigLocation() 
+{
+    std::map<std::string, std::vector<ConfigLocation> > locationConfigs = _configServer->getConfigLocation();
+
+  	for (std::map<std::string, std::vector<ConfigLocation> >::iterator it = locationConfigs.begin(); it != locationConfigs.end(); ++it)
+    {
+        std::vector<ConfigLocation> locations = it->second;
+        for (std::vector<ConfigLocation>::iterator it2 = servers.begin(); it2 != locations.end(); ++it2)
+        {
+            if (it2->getPath.find(_path) != std::string::npos)
+            {
+                _configLocation = &(*it2);
+                return;
+            }
+        }
+    }
+}*/
