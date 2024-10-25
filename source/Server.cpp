@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 //#define IP 1270001  //  to link to parsing
 //#define PORT 8001 // to link to parsing
@@ -42,7 +43,7 @@ Server &Server::operator=(Server const &rhs)
 		_clients = rhs._clients;
 		_config = rhs._config;
 		_serv_list = rhs._serv_list;
-		new_server = rhs.new_server;
+		_new_server = rhs._new_server;
 		_done = rhs._done;
 		_working = rhs._working;
 		_break = rhs._break;
@@ -60,12 +61,10 @@ void Server::createSocket()
 		throw Server::ErrorException("epoll_create1 fail");
 	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = _serv_list.begin(); it != _serv_list.end(); it++)
 	{
-		std::cout << "[DEBUG] - before first it" << std::endl;
-		new_server = it->second;
+		_new_server = it->second;
 		//for (std::map<int, struct sockaddr_in>::iterator it2 = _sockets.begin(); it2 != _sockets.end(); it2++)
-		for (size_t i = 0; i < new_server.size(); i++)
+		for (size_t i = 0; i < _new_server.size(); i++)
 		{
-			std::cout << "[DEBUG] - success creating the socket" << std::endl;
 			int new_socket = socket(AF_INET, SOCK_STREAM, 0);
 			if (new_socket == -1)
 				throw Server::ErrorException("Unable to create socket");
@@ -73,8 +72,8 @@ void Server::createSocket()
 
 			struct sockaddr_in addr;
 			addr.sin_family = AF_INET;
-			addr.sin_port =  htons(new_server[i].getPort());
-			std::cout << "[DEBUG] - success creating the socket" << new_server[i].getPort() << std::endl;
+			addr.sin_port =  htons(_new_server[i].getPort());
+			Log::logVar(Log::DEBUG, "sucess creation the socket for the port number:{}", _new_server[i].getPort());
 			addr.sin_addr.s_addr = INADDR_ANY;
 			bzero(&(addr.sin_zero),8);
 			_sockets[new_socket] = addr;
@@ -197,15 +196,14 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 	int client_fd = accept(fd,(struct sockaddr *) &addr, &addrlen);
 	if (client_fd == -1)
 	{
-		std::cerr << "accepting the client fail" << std::endl;
+		Log::log(Log::ERROR, "Failing accept() the client");
 		this->handleDc(client_fd);
 	}
-	std::cout << "[DEBUG] - success accepting connection with client fd" << client_fd << std::endl;
 	this->_clients[client_fd] = new Client(client_fd);
 	int flags = fcntl(client_fd, F_SETFL, O_NONBLOCK);// TOCHECK: verifier les diff parametres
 	if (flags == -1) 
 	{	
-		std::cerr << "fcntl fail" << std::endl;
+		Log::log(Log::ERROR, "Fcntl fail");
 		this->handleDc(client_fd);
 	}
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
@@ -232,7 +230,7 @@ void Server::addSocket(int epollFd, int fd, uint32_t flags)
 	ev.data.fd = fd;
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &ev) == -1)
 	{
-		std::cerr << "epoll_ctl fail" << std::endl;
+		Log::log(Log::ERROR, "Epollctl fail when adding Socket");
 		close(fd);
 	}
 }

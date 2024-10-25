@@ -1,4 +1,5 @@
 #include "../include/Request.hpp"
+#include <bits/basic_string.h>
 
 Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
@@ -40,9 +41,9 @@ Request &Request::operator=(Request const &src)
 	return *this;
 }
 
-int Request::parseRequest(std::string const &raw_request) // ajouter la root serveR avec le Parsing de Antho - getRootpath?
+int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la root serveR avec le Parsing de Antho - getRootpath?
 {
-	if (this->_isParsed == true)
+	/*if (this->_isParsed == true)
 	{
 		std::cerr << "Error: request already parsed" << std::endl;
 		return 1;
@@ -51,10 +52,9 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	{
 		std::cerr << "Error: empty request" << std::endl;
 		return -1;
-	}
-	// NEED TO ADD THE POST REQUEST PARSED OPTION TODO
-	_request = raw_request;
-	std::string extracted = raw_request.substr(0,raw_request.find("\n"));
+	}*/
+	_rawHeaders = raw_headers;
+	std::string extracted = raw_headers.substr(0,raw_headers.find("\n"));
 	this->_lastRequestTime = time(0) + 10;
 	if (extracted.empty())
 		return -1;
@@ -88,12 +88,9 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 	std::cout << "[DEBUG] - method is: " <<  _method << std::endl;
 	std::cout << "[DEBUG] - path is : " << _path << std::endl;
 	std::cout << "[DEBUG] - version is : " << _httpVersion << std::endl;
-	std::cout << "[DEBUG] - starting to parse the headers" << std::endl;
-
-	size_t start = _request.find("\r\n") + 2; 
-	size_t end = _request.find("\r\n\r\n", start);
-	std::string all_headers = _request.substr(start, end - start);
-	std::cout << "[DEBUG] - headers are: " <<  all_headers << std::endl;
+	size_t start = _rawHeaders.find("\r\n") + 2; 
+	size_t end = _rawHeaders.find("\r\n\r\n", start);
+	std::string all_headers = _rawHeaders.substr(start, end - start);
 	std::stringstream headers_stream(all_headers);
 	std::string header;
 	while(std::getline(headers_stream, header, '\n'))
@@ -107,30 +104,28 @@ int Request::parseRequest(std::string const &raw_request) // ajouter la root ser
 		std::string key = header.substr(0, pos);
 		std::string value = header.substr(pos + 1);
 		_headers[key] = value;
+		 std::cout << "[DEBUG] Parsed header: " << key << " = " << value << std::endl;
 	}
-	std::cout << "[DEBUG] - headers are: " <<  all_headers << std::endl;
-	
+	return (0);
+}
+
+void Request::parseBody()
+{
 	if (_method == "POST")
 	{
+		//handle les upload
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
-            std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
-            size_t b_start = _request.find("\r\n\r\n") + 4;
-            _body = _request.substr(b_start);
-            parseMultipartFormData(_body, boundary);
-            std::cout << "[DEBUG] - body is: " << _body << std::endl;
+			std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
+			boundary.erase(0,boundary.find_first_not_of("\t\n\r",1));
+			boundary.erase(boundary.find_last_not_of(" \t\n\r") + 1);
+			Log::logVar(Log::INFO,"Le boundary {}", boundary );
+			Log::logVar(Log::INFO,"Le body {}", _body );
+			parseMultipartFormData(_body, boundary);
 		}
-		else // Handle non-multipart POST
-		{
-			size_t b_start = _request.find("\r\n\r\n");
-			if(b_start != std::string::npos)
-			_body = _request.substr(b_start + 4);
-		}
+		//else if pour fichier python ou CGI ici a parse
 	}
-	_isParsed = true;
-	//PARSER LE BODY
-	std::cout << "[DEBUG] - body is: " <<  _body << std::endl;
-	return 0;
+	printPostHeaders();
 }
 
 bool Request::isHttpVersionValid(std::string const &version)
@@ -162,14 +157,17 @@ std::string Request::isMethod(std::string const &method)
 	return "WRONG METHOD";
 }
 
-void Request::parseMultipartFormData(std::string& body, const std::string& boundary) {
+void Request::parseMultipartFormData(std::string& body, const std::string& boundary) 
+{
     size_t pos = 0;
-
-    std::string delimiter = "--" + boundary;
-    while ((pos = body.find(delimiter)) != std::string::npos) 
+	Log::log(Log::DEBUG," Entering into the parsing of the body for multipartform data ");
+	Log::logVar(Log::INFO," boundary: {} ", boundary);
+	Log::logVar(Log::INFO," body: {} ", body);
+	Log::logVar(Log::INFO," pos: {} ", body.find(boundary));
+    while ((pos = body.find(boundary)) != std::string::npos) 
 	{
         std::string part = body.substr(0, pos);
-        body.erase(0, pos + delimiter.length());
+        body.erase(0, pos + boundary.length());
         if (part.empty() || part == "\r\n") continue;
 
         size_t header_end = part.find("\r\n\r\n");
@@ -191,50 +189,76 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 				std::string key = "Content-Disposition";
 				std::string value = header_line.substr(pos2 + std::string("Content-Disposition:").length());
 				_postHeaders[key] = value;
+				Log::logVar(Log::DEBUG, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
 			} 
-			else if (pos3 != std::string::npos) 
+			else if (pos3 != std::string::npos) // pas besoin mais c'est parsed quand meme
 			{
 				std::string key = "Content-Type";
 				std::string value = header_line.substr(pos3 + std::string("Content-Type:").length());
 				_postHeaders[key] = value;
+				Log::logVar(Log::DEBUG, "Content-Type: {}",_postHeaders["Content-Type"]);
 			}
         }
 
-		// dans les header de post il y a les nom et le file name a recuperer
-        std::string field_name;
-        std::string file_name;
+		// dans les header de post il y a le file name a recuperer
+        std::string name;
+        std::string filename;
         size_t name_start = _postHeaders["Content-Disposition"].find("name=\"") + 6;
-        size_t name_end = _postHeaders["Content-Disposition"].find("\"", name_start);
+        size_t name_end = _postHeaders["Content-Disposition"].find("\"", name_start);// OSEF du name je pense a delete a la fin si vraiment pas besoin
         if (name_start != std::string::npos && name_end != std::string::npos) {
-            field_name = _postHeaders["Content-Disposition"].substr(name_start, name_end - name_start);
+            name = _postHeaders["Content-Disposition"].substr(name_start, name_end - name_start);
         }
 
         size_t filename_start = _postHeaders["Content-Disposition"].find("filename=\"") + 10;
         size_t filename_end = _postHeaders["Content-Disposition"].find("\"", filename_start);
         if (filename_start != std::string::npos && filename_end != std::string::npos) {
-            file_name = _postHeaders["Content-Disposition"].substr(filename_start, filename_end - filename_start);
+            filename = _postHeaders["Content-Disposition"].substr(filename_start, filename_end - filename_start);
         }
-		std::cout << "[DEBUG] - file name is: " <<  file_name << std::endl;
-		std::cout << "[DEBUG] - field name is: " <<  field_name << std::endl;
-        // Save the file if filename is provided meaning there is a file to upload
-        if (!file_name.empty()) 
+		Log::logVar(Log::DEBUG, "name is : {}", name); 
+		Log::logVar(Log::DEBUG, "filename is : {}", filename);
+        if (!filename.empty()) 
 		{
-			std::string file_path = "uploads/" + file_name;
+			//std::string file_path = ConfigLocation.getUploadPath()+ "/"+ name; TO ADD WITH PARSER le path
+			std::string file_path = "docs/uploads/" + filename;
 			std::ofstream file(file_path.c_str(), std::ios::binary);
-			if (!file) 
-                std::cerr << "[ERROR] Failed to open file: " << file_path << std::endl;
+			if (!file)
+				Log::logVar(Log::ERROR, " Failed to open file: {}", file_path);
 			else 
 			{
                 file.write(content.data(), content.size());
                 if (!file) 
-                    std::cerr << "[ERROR] Failed to write to file: " << file_path << std::endl;
+					Log::logVar(Log::ERROR, " Failed to write to file: {}", file_path);
 				else 
-                    std::cout << "[DEBUG] File uploaded: " << file_name << std::endl;
+					Log::logVar(Log::INFO, " File uploaded: {}", file_path);
             }
         } 
 		else 
-		{
-            std::cout << "[DEBUG] Field: " << field_name << ", Value: " << content << std::endl;
-        }
+            Log::log(Log::DEBUG, "there is no file to upload");
     }
+}
+
+// check path/location
+
+std::string Request::getHeaders(const std::string& headername)
+{
+	std::map<std::string,std::string> ::const_iterator it = _headers.find(headername);
+	if (it != _headers.end())
+		return it->second;
+	return "";
+}
+
+void Request::printHeaders() const
+{
+	for (std::map<std::string, std::string >::const_iterator it = _headers.begin(); it != _headers.end(); it++)
+	{
+        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
+	}
+}
+
+void Request::printPostHeaders() const
+{
+	for (std::map<std::string, std::string >::const_iterator it = _postHeaders.begin(); it != _postHeaders.end(); it++)
+	{
+        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
+	}
 }
