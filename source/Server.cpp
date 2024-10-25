@@ -210,7 +210,7 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 	}
     if (fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		this->handleDc(client_fd);
-	this->addSocket(_epollFd, client_fd, EPOLLIN);
+	this->addSocket(_epollFd, client_fd, EPOLLIN | EPOLLOUT);
 	std::cout << "[DEBUG] - success adding the client to the epoll instance" << std::endl;
 }
 
