@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 //#define IP 1270001  //  to link to parsing
 //#define PORT 8001 // to link to parsing
