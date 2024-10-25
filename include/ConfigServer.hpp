@@ -6,7 +6,7 @@
 /*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/25 15:54:19 by ehamm            ###   ########.fr       */
+/*   Updated: 2024/10/25 16:06:14 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,6 @@ class ConfigServer
         void pathsClean();
         std::string getServerNames();
 
-		//std::map<std::string, std::vector<ConfigLocation> > getConfigLocation() { return _serverConfigs; } TO SEE with Antho
         const std::map<std::string, ConfigListen> &getListens() const { return this->_listens; };
 
         const std::string &getRoot() const { return this->_root; };
