@@ -38,6 +38,7 @@ int Client::getFd() const
     return _fd;
 }
 
+
 void Client::handleRequest()
 {
 	std::string request;
@@ -71,16 +72,31 @@ void Client::handleRequest()
 					Log::log(Log::ERROR,"Error in the parsing of the Headers.");
 				Log::log(Log::DEBUG,"Headers are OK.");
 				Log::logVar(Log::INFO,"Raw Request append {}",buffer);
+
 				// j'ai la len du message alors j'attend que ce soit = ou > et je parse le body
 				std::string content_length = this->_request->getHeaders("Content-Length");
 				Log::logVar(Log::INFO,"Content-Length is {}.", content_length);
 				if (!content_length.empty())
 				{
-					std::stringstream ss(content_length);
-					ss >> len;
-					if (ss.fail() || !ss.eof()) 
-					Log::log(Log::ERROR,"Invalid content length format.");
+					bool valid = true;
+					for (std::string::iterator it = content_length.begin(); it != content_length.end(); ++it)
+					{
+						if (!std::isdigit(*it))
+						{
+							valid = false;
+							break;
+						}
+					}
+					if (valid)
+					{
+						std::stringstream ss(content_length);
+						ss >> len;
+						if (ss.fail() || !ss.eof()) 
+						Log::log(Log::ERROR,"Invalid content length format.");
+					}
 				}
+				else
+					Log::logVar(Log::ERROR, "Content-Length contains non-digit characters: ", content_length);
 			}
 		}
 		if (headers_received && len > 0)
@@ -98,6 +114,7 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
+	this->_request-> // voir si le page est valide ou non
 	// A ce moment la j'ai parsé toute la requete normalement COMPLETE!
     std::string method = _request->getMethod();
     std::string path = _request->getPath();

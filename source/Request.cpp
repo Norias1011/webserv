@@ -98,13 +98,11 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 		_headers[key] = value;
 		 std::cout << "[DEBUG] Parsed header: " << key << " = " << value << std::endl;
 	}
-	printHeaders();
 	return (0);
 }
 
 void Request::parseBody()
 {
-	// si la method cest post car pas de Body dans le GET 
 	if (_method == "POST")
 	{
 		//handle les upload
@@ -121,7 +119,6 @@ void Request::parseBody()
 	}
 	printPostHeaders();
 }
-
 
 bool Request::isHttpVersionValid(std::string const &version)
 {
@@ -182,11 +179,11 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 			}
         }
 
-		// dans les header de post il y a les nom et le file name a recuperer
+		// dans les header de post il y a le file name a recuperer
         std::string name;
         std::string filename;
         size_t name_start = _postHeaders["Content-Disposition"].find("name=\"") + 6;
-        size_t name_end = _postHeaders["Content-Disposition"].find("\"", name_start);
+        size_t name_end = _postHeaders["Content-Disposition"].find("\"", name_start);// OSEF du name je pense a delete a la fin si vraiment pas besoin
         if (name_start != std::string::npos && name_end != std::string::npos) {
             name = _postHeaders["Content-Disposition"].substr(name_start, name_end - name_start);
         }
@@ -196,7 +193,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
         if (filename_start != std::string::npos && filename_end != std::string::npos) {
             filename = _postHeaders["Content-Disposition"].substr(filename_start, filename_end - filename_start);
         }
-		Log::logVar(Log::DEBUG, "name is : {}", name);
+		Log::logVar(Log::DEBUG, "name is : {}", name); 
 		Log::logVar(Log::DEBUG, "filename is : {}", filename);
         if (!filename.empty()) 
 		{
@@ -218,6 +215,8 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
             Log::log(Log::DEBUG, "there is no file to upload");
     }
 }
+
+// check path/location
 
 std::string Request::getHeaders(const std::string& headername)
 {

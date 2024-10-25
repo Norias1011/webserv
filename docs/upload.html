@@ -3,28 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploaded File</title>
+    <title>Uploaded Files</title>
 </head>
 <body>
-    <h1>Uploaded File</h1>
-    <div id="file-info"></div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const fileName = urlParams.get('fileName');
-            const fileContent = urlParams.get('fileContent');
-
-            if (fileName && fileContent) {
-                const fileInfoDiv = document.getElementById('file-info');
-                fileInfoDiv.innerHTML = `
-                    <p>File Name: ${fileName}</p>
-                    <p>File Content:</p>
-                    <pre>${fileContent}</pre>
-                `;
-            } else {
-                document.getElementById('file-info').innerText = 'No file uploaded.';
-            }
-        });
-    </script>
+    <h1>Uploaded Files</h1>
+    <ul id="file-list">
+        <li>
+            file1.txt
+            <form action="/delete/file1.txt" method="POST" style="display: inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+        <li>
+            file2.jpg
+            <form action="/delete/file2.jpg" method="POST" style="display: inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+        <li>
+            file3.pdf
+            <form action="/delete/file3.pdf" method="POST" style="display: inline;">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+    </ul>
+    <a href="/">Upload More Files</a>
 </body>
 </html>

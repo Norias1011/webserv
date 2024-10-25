@@ -47,7 +47,7 @@ class Server
 		std::map<int, struct sockaddr_in> _sockets;
 		std::map<int,Client*> _clients;
 		std::map<std::string, std::vector<ConfigServer> > _serv_list;
-		std::vector<ConfigServer> new_server;
+		std::vector<ConfigServer> _new_server;
 	
 };
 
