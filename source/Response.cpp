@@ -19,6 +19,9 @@ Response::~Response()
 
 int Response::giveAnswer()
 {
+	_request->findConfigServer();
+	std::cout << "[DEBUG] - Config serv done" << std::endl;
+	//_request->findConfigLocation();
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
     if (!_response.empty())
     {
