@@ -59,28 +59,28 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 	}
 	if (objects.size() != 3)
 	{
-		std::cerr << "[ERROR] invalid request" << std::endl;
+		Log::log(Log::ERROR, "Invalid request");
 		_serverCode = 400;
 		return -1;
 	}
 	_method = isMethod(objects[0]);
 	if (_method == "WRONG METHOD")
 	{
-		std::cerr << "[ERROR]: invalid method" << std::endl;
+		Log::log(Log::ERROR, "Invalid method");
 		_serverCode = 405;
 		return -1;
 	}
 	_path = objects[1];
 	if (!isHttpVersionValid(objects[2]))
 	{
-		std::cerr << "[ERROR]: invalid http version" << std::endl;
+		Log::log(Log::ERROR, "Invalid http version");
 		_serverCode = 505;
 		return -1;
 	}
 	_httpVersion = objects[2];
-	std::cout << "[DEBUG] - method is: " <<  _method << std::endl;
-	std::cout << "[DEBUG] - path is : " << _path << std::endl;
-	std::cout << "[DEBUG] - version is : " << _httpVersion << std::endl;
+	Log::logVar(Log::DEBUG, "method is:", _method);
+	Log::logVar(Log::DEBUG, "path is :", _path);
+	Log::logVar(Log::DEBUG, "version is", _httpVersion);
 	size_t start = _rawHeaders.find("\r\n") + 2; 
 	size_t end = _rawHeaders.find("\r\n\r\n", start);
 	std::string all_headers = _rawHeaders.substr(start, end - start);
@@ -91,7 +91,7 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 		size_t pos = header.find(": ");
 		if (pos == std::string::npos)
 		{
-			std::cerr << "Error: invalid header" << std::endl;
+			Log::log(Log::ERROR, "Invalid header");
 			return -1;
 		}
 		std::string key = header.substr(0, pos);
@@ -252,7 +252,7 @@ void Request::printPostHeaders() const
 	}
 }
 
-void Request::findConfigServer() //we can check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
+void Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
 	std::string host = getHeaders("Host");
 	if (host.empty())
@@ -283,10 +283,12 @@ void Request::findConfigServer() //we can check here the range of usable port - 
             Log::logVar(Log::DEBUG, "Server Name de la config : {}", server_name_config);
 			Log::logVar(Log::DEBUG, "Server Port de la config : {}", server_port_config);
 			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
-			if (server_name_config.find(server_name) != std::string::npos && server_port_config == server_port)
+			if (server_name_config == server_name && server_port_config == server_port)
             {
-				Log::log(Log::INFO, "Config server done");
+				Log::log(Log::INFO, "Config server done \u2713");
                 _configServer = &(*it2);
+				_configServer->print(); //DEBUG
+				this->findConfigLocation();
                 return;
             }
         }
@@ -295,7 +297,7 @@ void Request::findConfigServer() //we can check here the range of usable port - 
 
 void Request::findConfigLocation() 
 {
-	if (_configServer == NULL) 
+	if (_configServer == NULL)
 	{
     	Log::log(Log::ERROR, "_configServer is NULL	");
 		_serverCode = 500;
@@ -303,21 +305,19 @@ void Request::findConfigLocation()
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
 	std::vector<ConfigLocation> locations = this->_configServer->getLocations();
-	Log::logVar(Log::DEBUG, "le path dans la requete : {}", locations.size());
 
 	for (std::vector<ConfigLocation>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
-		Log::logVar(Log::DEBUG, "le path dans la requete : {}", it->getPath());
-		Log::logVar(Log::DEBUG, "le path dans la config : {}", this->getPath());
-		if (it->getPath().find(_path) != std::string::npos)
+		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
+		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
+		if (it->getPath() == _path)
 		{
 			_configLocation = &(*it);
+			Log::log(Log::INFO, "Config location done \u2713");
+			_configLocation->print(); //DEBUG
 			return;
 		}
-		else
-		{
-			Log::log(Log::ERROR, "No location found");
-			_serverCode = 404;
-		}
+		Log::log(Log::ERROR, "No location found");
+		_serverCode = 404;
 	}
 }

@@ -279,7 +279,7 @@ void ConfigServer::addListen(std::string &ipLine)
 	_ip = listen.get_IP();
 }
 
-std::string ConfigServer::getServerNames()
+std::string ConfigServer::getServerNames() const
 {
     std::string serverNames = "";
     for (size_t i = 0; i < this->_serverNames.size(); i++)
@@ -291,4 +291,13 @@ std::string ConfigServer::getServerNames()
     return serverNames;
 }
 
-
+void ConfigServer::print() const 
+{
+    Log::log(Log::PRINT, "Here is the config server :");
+    Log::logVar(Log::PRINT, "Server Name: ", this->getServerNames());
+    Log::logVar(Log::PRINT, "Server Port: ", this->getPort());
+    Log::logVar(Log::PRINT, "Number of Locations: ", this->getLocations().size());
+    for (size_t i = 0; i < this->getLocations().size(); ++i) {
+        Log::logVar(Log::PRINT, "Location: ", this->getLocations()[i].getPath());
+    }
+}

@@ -20,7 +20,6 @@ Response::~Response()
 int Response::giveAnswer()
 {
 	_request->findConfigServer();
-	_request->findConfigLocation();
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
     if (!_response.empty())
     {

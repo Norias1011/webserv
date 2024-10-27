@@ -10,6 +10,8 @@
 #define GREEN   "\033[32m"
 #define YELLOW  "\033[33m"
 #define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+
 
 class Log {
 public:
@@ -17,22 +19,26 @@ public:
         DEBUG,
         INFO,
         WARNING,
-        ERROR
+        ERROR,
+        PRINT
     };
 
     static void  log(LogLevel level, const std::string &message) {
         switch (level) {
             case DEBUG:
-                std::cout << BLUE << "[DEBUG] " << message << RESET << std::endl;
+                std::cout << BLUE << "[DEBUG] " << RESET << message << std::endl;
                 break;
             case INFO:
-                std::cout << GREEN << "[INFO] " << message << RESET << std::endl;
+                std::cout << GREEN << "[INFO] " << RESET << message << std::endl;
                 break;
             case WARNING:
-                std::cout << YELLOW << "[WARNING] " << message << RESET << std::endl;
+                std::cout << YELLOW << "[WARNING] " << RESET << message << std::endl;
                 break;
             case ERROR:
-                std::cout << RED << "[ERROR] " << message << RESET << std::endl;
+                std::cout << RED << "[ERROR] " << RESET << message  << std::endl;
+                break;
+            case PRINT:
+                std::cout << MAGENTA << "[PRINT] " << RESET << message  << std::endl;
                 break;
         }
     }
