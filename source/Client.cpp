@@ -1,12 +1,13 @@
 #include "Client.hpp"
+#include "Server.hpp"
 #include <bits/basic_string.h>
 #include <stdexcept>
 
-Client::Client() : _fd(-1),  _request(new Request(this)) , _response(new Response(this)), _lastRequestTime(0)
+/*Client::Client() : _fd(-1),_request(new Request(this)) , _response(new Response(this)), _server(new Server()), _lastRequestTime(0), _requestStatus(false)
 {
-}
+}*/
 
-Client::Client(int fd) : _fd(fd), _request(new Request(this)), _response(new Response(this)), _lastRequestTime(0)
+Client::Client(int fd, Server* server) : _fd(fd), _server(server),_request(new Request(this)), _response(new Response(this)), _lastRequestTime(0), _requestStatus(false)
 {    
 }
 
@@ -30,8 +31,11 @@ Client &Client::operator=(Client const &src)
     if (this != &src)
     {
         this->_fd = src._fd;
+		//this->_server = new Server();
         this->_request = new Request(this);
-        //this->_response = src._response;
+        this->_response = new Response(this);
+		this->_lastRequestTime = src._lastRequestTime;
+		this->_requestStatus = src._requestStatus;
     }
     return *this;
 }
@@ -64,7 +68,6 @@ void Client::handleRequest()
 
 		if (!headers_received)
 		{
-			// je check que je recois d'abord tous les headers et je les parse
 			size_t pos = request.find("\r\n\r\n");
 			if (pos != std::string::npos)
 			{
@@ -76,7 +79,7 @@ void Client::handleRequest()
 				Log::log(Log::DEBUG,"Headers are OK.");
 				Log::logVar(Log::INFO,"Raw Request append {}",buffer);
 
-				// j'ai la len du message alors j'attend que ce soit = ou > et je parse le body
+				//Content-Length
 				std::string content_length = this->_request->getHeaders("Content-Length");
 				Log::logVar(Log::INFO,"Content-Length is {}.", content_length);
 				if (!content_length.empty())
@@ -98,10 +101,11 @@ void Client::handleRequest()
 						Log::log(Log::ERROR,"Invalid content length format.");
 					}
 				}
-				else
+				else if (this->_request->getMethod() == "POST")
 					Log::logVar(Log::ERROR, "Content-Length contains non-digit characters: ", content_length);
 			}
 		}
+		// Body
 		if (headers_received && len > 0)
 		{
 			size_t body_p = request.find("\r\n\r\n") + 4;
@@ -117,6 +121,7 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
+	_requestStatus = true;
 }
 
 void Client::sendResponse(int fd)

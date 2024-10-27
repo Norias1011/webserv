@@ -16,6 +16,7 @@
 #include "Config.hpp"
 #include "ConfigLocation.hpp"
 #include "ConfigListen.hpp"
+#include "Log.hpp"
 
 class ConfigLocation;
 class ConfigListen;
@@ -37,10 +38,11 @@ class ConfigServer
         void defaultValues();
         void checkDoubleLocation();
         void pathsClean();
-        std::string getServerNames();
+        void print() const;
 
         const std::map<std::string, ConfigListen> &getListens() const { return this->_listens; };
-
+        
+        std::string getServerNames() const;
         const std::string &getRoot() const { return this->_root; };
         const std::vector<std::string> &getIndex() const { return this->_index; };
         const std::map<int, std::string> &getErrorPages() const { return this->_errorPages; };

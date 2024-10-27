@@ -31,6 +31,7 @@ class ConfigLocation
         bool is_empty(std::ifstream& pFile);
         const std::string &getPath() const { return _path; };
         void setPath(const std::string &path) { _path = path; };
+        void print();
 
         const std::string &getRoot() const { return this->_root; };
         const std::string &getUploadPath() const { return this->_uploadPath; };
