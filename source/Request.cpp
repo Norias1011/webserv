@@ -1,5 +1,6 @@
 #include "../include/Request.hpp"
 #include <bits/basic_string.h>
+#include <stdexcept> 
 
 Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
@@ -41,24 +42,13 @@ Request &Request::operator=(Request const &src)
 	return *this;
 }
 
-int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la root serveR avec le Parsing de Antho - getRootpath?
+int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la root server avec le parsing.
 {
-	/*if (this->_isParsed == true)
-	{
-		std::cerr << "Error: request already parsed" << std::endl;
-		return 1;
-	}
-	if (raw_request.empty())
-	{
-		std::cerr << "Error: empty request" << std::endl;
-		return -1;
-	}*/
 	_rawHeaders = raw_headers;
 	std::string extracted = raw_headers.substr(0,raw_headers.find("\n"));
 	this->_lastRequestTime = time(0) + 10;
 	if (extracted.empty())
 		return -1;
-
 	extracted.erase(std::remove(extracted.begin(), extracted.end(), '\r'), extracted.end());
 	std::stringstream ss(extracted);
 	std::string object;
@@ -116,7 +106,6 @@ void Request::parseBody()
 {
 	if (_method == "POST")
 	{
-		//handle les upload
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
 			std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
@@ -126,9 +115,9 @@ void Request::parseBody()
 			Log::logVar(Log::INFO,"Le body {}", _body );
 			parseMultipartFormData(_body, boundary);
 		}
-		//else if pour fichier python ou CGI ici a parse
+		//else if pour fichier python ou CGI ici a parse 
 	}
-	printPostHeaders();
+	//printPostHeaders();
 }
 
 bool Request::isHttpVersionValid(std::string const &version)
@@ -194,7 +183,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 				_postHeaders[key] = value;
 				Log::logVar(Log::DEBUG, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
 			} 
-			else if (pos3 != std::string::npos) // pas besoin mais c'est parsed quand meme
+			else if (pos3 != std::string::npos) // pas besoin mais c'est parsed quand meme - to delete une fois sure
 			{
 				std::string key = "Content-Type";
 				std::string value = header_line.substr(pos3 + std::string("Content-Type:").length());
@@ -203,7 +192,6 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 			}
         }
 
-		// dans les header de post il y a le file name a recuperer
         std::string name;
         std::string filename;
         size_t name_start = _postHeaders["Content-Disposition"].find("name=\"") + 6;
@@ -240,8 +228,6 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
     }
 }
 
-// check path/location
-
 std::string Request::getHeaders(const std::string& headername)
 {
 	std::map<std::string,std::string> ::const_iterator it = _headers.find(headername);
@@ -266,22 +252,40 @@ void Request::printPostHeaders() const
 	}
 }
 
-void Request::findConfigServer()
+void Request::findConfigServer() //we can check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
-    Config config;
-    std::string host = getHeaders("Host");
-	Log::logVar(Log::DEBUG, "le host est : {}", host);
-    std::map<std::string, std::vector<ConfigServer> > serverConfigs = config.getConfigServer();
-
+	std::string host = getHeaders("Host");
+	if (host.empty())
+	{
+		Log::log(Log::ERROR, "Host is empty");
+		_serverCode = 400;
+		return;
+	}
+	
+    std::map<std::string, std::vector<ConfigServer> > serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
   	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
         std::vector<ConfigServer> servers = it->second;
         for (std::vector<ConfigServer>::iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
-			Log::logVar(Log::DEBUG, "le host est : {}", host);
-			Log::logVar(Log::DEBUG, "le it2->getServerNames() est : {}", it2->getServerNames());
-            if (it2->getServerNames().find(host) != std::string::npos)
+         	std::string server_name = host.substr(0, host.find(":"));
+            std::string port_str = host.substr(host.find(":") + 1);
+			server_name.erase(std::remove_if(server_name.begin(), server_name.end(), ::isspace), server_name.end());
+			port_str.erase(std::remove_if(port_str.begin(), port_str.end(), ::isspace), port_str.end());
+			unsigned int server_port = 0;
+			std::stringstream ss(port_str);
+			ss >> server_port;
+
+			Log::logVar(Log::DEBUG, "Server Name de la requete: {}", server_name);
+			Log::logVar(Log::DEBUG, "Server Port la requete: {}", server_port);
+			unsigned int server_port_config = it2->getPort();
+			std::string server_name_config = it2->getServerNames();
+            Log::logVar(Log::DEBUG, "Server Name de la config : {}", server_name_config);
+			Log::logVar(Log::DEBUG, "Server Port de la config : {}", server_port_config);
+			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
+			if (server_name_config.find(server_name) != std::string::npos && server_port_config == server_port)
             {
+				Log::log(Log::INFO, "Config server done");
                 _configServer = &(*it2);
                 return;
             }
@@ -289,16 +293,31 @@ void Request::findConfigServer()
     }
 }
 
-/*void Request::findConfigLocation() 
+void Request::findConfigLocation() 
 {
-	std::vector<ConfigLocation> locations = _configServer->getLocations();
+	if (_configServer == NULL) 
+	{
+    	Log::log(Log::ERROR, "_configServer is NULL	");
+		_serverCode = 500;
+    	return;
+	}
+	Log::log(Log::DEBUG, "Je rentre dans find config location");
+	std::vector<ConfigLocation> locations = this->_configServer->getLocations();
+	Log::logVar(Log::DEBUG, "le path dans la requete : {}", locations.size());
+
 	for (std::vector<ConfigLocation>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
-		Log::logVar(Log::DEBUG, "le path est : {}", getPath());
+		Log::logVar(Log::DEBUG, "le path dans la requete : {}", it->getPath());
+		Log::logVar(Log::DEBUG, "le path dans la config : {}", this->getPath());
 		if (it->getPath().find(_path) != std::string::npos)
 		{
 			_configLocation = &(*it);
 			return;
 		}
+		else
+		{
+			Log::log(Log::ERROR, "No location found");
+			_serverCode = 404;
+		}
 	}
-}*/
+}

@@ -12,21 +12,25 @@
 
 class Request;
 class Response;
+class Server; 
 
 class Client 
 {
 	public:
 		Client();
-		Client(int fd);
+		Client(int fd, Server* server);
 		Client(const Client &copy);
 		~Client();
 
 		Client &operator=(Client const &src);
 
 		int getFd() const;
+		Server* getServer() const { return _server; };
 		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
+		bool getRequestStatus() const { return _requestStatus; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
+
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };
 
 		void handleRequest();
@@ -41,10 +45,11 @@ class Client
 	
 	private:
 		int		_fd;
+		Server*		_server;
 		Request*	_request;
 		Response*	_response;
 		time_t		_lastRequestTime;
-		//Response*	_response; // to create
+		bool		_requestStatus;
 
 };
 

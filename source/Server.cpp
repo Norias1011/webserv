@@ -55,7 +55,7 @@ Server &Server::operator=(Server const &rhs)
 // Creation du server socket, bind, listen to incoming connection
 void Server::createSocket()
 {
-	_serv_list = _config.getConfigServer();
+	_serv_list = this->_config.getConfigServer();
 	_epollFd = epoll_create1(EPOLL_CLOEXEC);
 	if (_epollFd == -1)
 		throw Server::ErrorException("epoll_create1 fail");
@@ -171,7 +171,7 @@ void Server::handleEvent(epoll_event *event)
 		{
 			std::cout << "[DEBUG] - entering the response part" << std::endl;
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
-			if (this->_clients[event->data.fd]->getRequest()) //&& this->_clients[event->data.fd]->getRequest()->getRequestStatus() == true)
+			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]/*->getRequest()*/->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
 		}
 		std::cout << "[DEBUG] - event handled" << std::endl;
@@ -199,7 +199,7 @@ void Server::handleConnection(int fd) // TODO -> mettre try catch avec exception
 		Log::log(Log::ERROR, "Failing accept() the client");
 		this->handleDc(client_fd);
 	}
-	this->_clients[client_fd] = new Client(client_fd);
+	this->_clients[client_fd] = new Client(client_fd, this);  //add reference au server to check if correct
 	int flags = fcntl(client_fd, F_SETFL, O_NONBLOCK);// TOCHECK: verifier les diff parametres
 	if (flags == -1) 
 	{	
