@@ -123,7 +123,7 @@ void Server::runServer()
 			while (it != this->_clients.end())
 			{
 				it->second->getRequest()->timeoutChecker();
-				if (now - it->second->getLastRequestTime() > 10)
+				if (now - it->second->getLastRequestTime() >= 10)
 				{
 					std::cout << "Client timeout: " << NumberToString(it->first) << std::endl;
 					epoll_event ev;
