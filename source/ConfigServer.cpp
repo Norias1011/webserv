@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 15:45:41 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/28 17:15:16 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,12 +124,11 @@ ConfigServer ConfigServer::parseServer(std::ifstream &fileConfig)
 
 void ConfigServer::pathsClean()
 {
-    for (size_t i = 0; i < this->_locations.size(); i++)
+    /*for (size_t i = 0; i < this->_locations.size(); i++)
     {
-        if (!this->_locations[i].getPath().empty() && this->_locations[i].getPath()[this->_locations[i].getPath().size() - 1] == '/')
-            this->_locations[i].setPath(this->_locations[i].getPath().substr(0, this->_locations[i].getPath().size() - 1));
-    }
-
+        if (this->_locations[i].getPath() != "/" && this->_locations[i].getPath()[this->_locations[i].getPath().size() - 1] == '/')
+            this->_locations[i].getPath().erase(this->_locations[i].getPath().size() - 1);
+    }*/
     if (!this->_root.empty() && this->_root[this->_root.size() - 1] == '/')
         this->_root = this->_root.substr(0, this->_root.size() - 1);
 
@@ -296,8 +295,8 @@ void ConfigServer::print() const
     Log::log(Log::PRINT, "Here is the config server :");
     Log::logVar(Log::PRINT, "Server Name: ", this->getServerNames());
     Log::logVar(Log::PRINT, "Server Port: ", this->getPort());
-    Log::logVar(Log::PRINT, "Number of Locations: ", this->getLocations().size());
-    for (size_t i = 0; i < this->getLocations().size(); ++i) {
-        Log::logVar(Log::PRINT, "Location: ", this->getLocations()[i].getPath());
+    Log::logVar(Log::PRINT, "Number of Locations: ", this->getLocationss().size());
+    for (size_t i = 0; i < this->getLocationss().size(); ++i) {
+        Log::logVar(Log::PRINT, "Location: ", this->getLocationss()[i].getPath());
     }
 }

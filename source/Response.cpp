@@ -17,6 +17,28 @@ Response::~Response()
         close(_newFd);
 }
 
+Response::Response(Response const &copy)
+{
+    if (this != &copy)
+    {
+        *this = copy;
+    }
+}
+
+Response &Response::operator=(Response const &src)
+{
+    if (this != &src)
+    {
+        this->_done = src._done;
+        this->_working = src._working;
+        this->_request = src._request;
+        this->_newFd = src._newFd;
+        this->_errorPage = src._errorPage;
+        this->_response = src._response;
+    }
+    return *this;
+}
+
 int Response::giveAnswer()
 {
 	_request->findConfigServer();
@@ -190,17 +212,24 @@ void Response::handleLocation()
 {
     std::string root;
     std::string path = "";
+    std::cout << "[DEBUG] - Response::handleLocation - path: " << _request->getPath() << std::endl;
     if (this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigServer()->getRoot();
     else
         root = this->_request->getConfigLocation()->getRoot();
-
+    std::cout << "[DEBUG] - Response::handleLocation - root: " << root << std::endl;
     std::vector<std::string> FullPath = getFullPaths();
-    for (std::vector<std::string>::iterator it = FullPath.begin(); it != FullPath.end(); it++)
+    if (FullPath.empty())
     {
-        if (checkFileExist(*it))
+        std::cerr << "Error: Unable to get full path" << std::endl;
+        return ;
+    }
+    for (size_t i = 0; i < FullPath.size(); i++)
+    {
+        std::cout << "[DEBUG] - Response::handleLocation - FullPath: " << FullPath[i] << std::endl;
+        if (checkFileExist(FullPath[i]))
         {
-            path = *it;
+            path = FullPath[i];
             break;
         }
     }
@@ -429,7 +458,7 @@ void Response::pathClean(std::string &path)
 bool Response::checkFileExist(std::string const &path)
 {
     struct stat buffer;
-    return (stat(path.c_str(), &buffer) == 0);
+    return (stat(path.c_str(), &buffer) == 0 && S_ISREG(buffer.st_mode));
 }
 
 
@@ -461,12 +490,45 @@ std::vector<std::string> Response::getFullPathsServer()
 
 std::vector<std::string> Response::getFullPaths()
 {
-    std::string pathRequest = _request->getPath();
-    std::string root = _request->getConfigLocation()->getRoot();
-    std::vector<std::string> allIndex = _request->getConfigLocation()->getIndex();
+    bool isAlias = false;
     std::vector<std::string> FullPaths;
+    std::string pathRequest = this->_request->getPath();
+    std::string root = this->_request->getConfigLocation()->getRoot();
+    std::string alias = this->_request->getConfigLocation()->getAlias();
+    std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
 
-    if (pathRequest[pathRequest.size() - 1] == '/')
+    std::cout << "[DEBUG] - Response::getFullPaths - Je suis la " << pathRequest << std::endl;
+
+    if (this->_request->getConfigLocation() == NULL)
+        return std::vector<std::string>();
+    if (root.empty())
+        root = this->_request->getConfigServer()->getRoot();
+    if (!alias.empty())
+    {
+        isAlias = true;
+        root = alias;
+    }
+    if (pathRequest[pathRequest.size() - 1] != '/')
+    {
+        if (isAlias)
+            pathRequest = pathRequest.substr(_request->getConfigLocation()->getPath().size());
+        FullPaths.push_back(root + pathRequest);
+    }
+    for (size_t i = 0; i < allIndex.size(); i++)
+    {
+        std::string index = allIndex[i];
+        std::string tmpPath = pathRequest;
+        if (pathRequest == "/")
+            pathRequest = root + "/" + index;
+        else if (isAlias)
+            pathRequest = root + "/" + index;
+        else
+            pathRequest = root + pathRequest + index;
+        std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
+        FullPaths.push_back(pathRequest);
+        pathRequest = tmpPath;
+    }
+    /*if (pathRequest[pathRequest.size() - 1] == '/')
     {
         for (std::vector<std::string>::iterator it = allIndex.begin(); it != allIndex.end(); it++)
         {
@@ -481,7 +543,7 @@ std::vector<std::string> Response::getFullPaths()
         }
     }
     else
-        FullPaths.push_back(root + pathRequest);
+        FullPaths.push_back(root + pathRequest);*/
     return FullPaths;
 }
 

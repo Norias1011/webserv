@@ -6,13 +6,13 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 15:44:38 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/28 16:00:57 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/ConfigLocation.hpp"
 
-ConfigLocation::ConfigLocation() : _path(""), _root(""), _uploadPath(""), _methods(), _index(), _cgi(), _autoindex(false)
+ConfigLocation::ConfigLocation() : _path(""), _root(""), _uploadPath(""), _methods(), _cgi(), _autoindex(false)
 {
     this->_allowedMethods.push_back("GET");
     this->_allowedMethods.push_back("POST");
@@ -25,7 +25,7 @@ ConfigLocation::ConfigLocation() : _path(""), _root(""), _uploadPath(""), _metho
     this->_doubleInformation["allow_method"] = 0;
 }
 
-ConfigLocation::ConfigLocation(std::string filename) : _path(""), _root(""), _uploadPath(""), _methods(), _index(), _cgi(), _autoindex(false)
+ConfigLocation::ConfigLocation(std::string filename) : _path(""), _root(""), _uploadPath(""), _methods(), _cgi(), _autoindex(false)
 {
     this->_filename = filename;
     this->_allowedMethods.push_back("GET");
@@ -57,6 +57,11 @@ ConfigLocation &ConfigLocation::operator=(ConfigLocation const &src)
         this->_index = src._index;
         this->_cgi = src._cgi;
         this->_autoindex = src._autoindex;
+        this->_rewrite = src._rewrite;
+        this->_alias = src._alias;
+        this->_filename = src._filename;
+        this->_doubleInformation = src._doubleInformation;
+        this->_allowedMethods = src._allowedMethods;
     }
     return *this;
 }
@@ -149,20 +154,14 @@ bool ConfigLocation::is_empty(std::ifstream& pFile)
 
 void ConfigLocation::defaultValue()
 {
-    if (this->_root.empty())
-        this->_root = ".";
     if (this->_uploadPath.empty())
-        this->_uploadPath = ".";
-    if (this->_index.empty())
-        this->_index.push_back("index.html");
+        this->_uploadPath = "";
+    if (this->_index.size() == 0)
+        this->_index.push_back("index2.html");
     if (this->_alias.empty())
         this->_alias = "";
-    if (this->_rewrite.first == 0)
-        this->_rewrite.first = 0;
     if (this->_rewrite.second.empty())
         this->_rewrite.second = "";
-    if (this->_autoindex == false)
-        this->_autoindex = false;
     if (this->_methods.empty())
     {
         this->_methods.push_back("GET");

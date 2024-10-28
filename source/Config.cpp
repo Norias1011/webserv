@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 15:32:09 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/28 17:13:56 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,29 +161,29 @@ void Config::printAll()
             std::cout << "Client max body size: " << it->second[i].getMaxBodySize() << std::endl;
             int k = 1;
             //std::cout << " ******* Locations: " << std::endl;
-            for (size_t j = 0; j < it->second[i].getLocations().size(); j++)
+            for (size_t j = 0; j < it->second[i].getLocationss().size(); j++)
             {
                 std::cout << " ******* Locations " << k << ": " << std::endl;
-                std::cout << "Path: " << it->second[i].getLocations()[j].getPath() << std::endl;
-                std::cout << "Root: " << it->second[i].getLocations()[j].getRoot() << std::endl;
-                std::cout << "Upload path: " << it->second[i].getLocations()[j].getUploadPath() << std::endl;
-                std::cout << "Alias: " << it->second[i].getLocations()[j].getAlias() << std::endl;
-                std::cout << "Auto index: " << it->second[i].getLocations()[j].getAutoindex() << std::endl;
-                std::cout << "Filename: " << it->second[i].getLocations()[j].getFilename() << std::endl;
-                for (size_t k = 0; k < it->second[i].getLocations()[j].getIndex().size(); k++)
+                std::cout << "Path: " << it->second[i].getLocationss()[j].getPath() << std::endl;
+                std::cout << "Root: " << it->second[i].getLocationss()[j].getRoot() << std::endl;
+                std::cout << "Upload path: " << it->second[i].getLocationss()[j].getUploadPath() << std::endl;
+                std::cout << "Alias: " << it->second[i].getLocationss()[j].getAlias() << std::endl;
+                std::cout << "Auto index: " << it->second[i].getLocationss()[j].getAutoindex() << std::endl;
+                std::cout << "Filename: " << it->second[i].getLocationss()[j].getFilename() << std::endl;
+                for (size_t k = 0; k < it->second[i].getLocationss()[j].getIndex().size(); k++)
                 {
-                    std::cout << "Index: " << it->second[i].getLocations()[j].getIndex()[k] << std::endl;
+                    std::cout << "Index: " << it->second[i].getLocationss()[j].getIndex()[k] << std::endl;
                 }
-                const std::map<std::string, std::string>& cgiMap = it->second[i].getLocations()[j].getCgi();
+                const std::map<std::string, std::string>& cgiMap = it->second[i].getLocationss()[j].getCgi();
                 for (std::map<std::string, std::string>::const_iterator it2 = cgiMap.begin(); it2 != cgiMap.end(); ++it2)
                 {
                     std::cout << "Cgi: " << it2->first << " " << it2->second << std::endl;
                 }
-                for (size_t k = 0; k < it->second[i].getLocations()[j].getMethods().size(); k++)
+                for (size_t k = 0; k < it->second[i].getLocationss()[j].getMethods().size(); k++)
                 {
-                    std::cout << "Methods: " << it->second[i].getLocations()[j].getMethods()[k] << std::endl;
+                    std::cout << "Methods: " << it->second[i].getLocationss()[j].getMethods()[k] << std::endl;
                 }
-                std::cout << "Rewrite: " << it->second[i].getLocations()[j].getRewrite().first << " " << it->second[i].getLocations()[j].getRewrite().second << std::endl;
+                std::cout << "Rewrite: " << it->second[i].getLocationss()[j].getRewrite().first << " " << it->second[i].getLocationss()[j].getRewrite().second << std::endl;
                 k++;
             }
         }

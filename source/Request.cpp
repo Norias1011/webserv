@@ -6,7 +6,7 @@ Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpV
 {
 }
 
-Request::Request(Client* client): _client(client), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -38,6 +38,13 @@ Request &Request::operator=(Request const &src)
 		this->_isParsed = src._isParsed;
 		this->_init = src._init;
 		this->_working = src._working;
+		this->_lastRequestTime = src._lastRequestTime;
+		this->_serverCode = src._serverCode;
+		this->_headers = src._headers;
+		this->_body = src._body;
+		this->_rawHeaders = src._rawHeaders;
+		this->_configLocation = src._configLocation;
+		this->_configServer = src._configServer;
 	}
 	return *this;
 }
@@ -304,15 +311,15 @@ void Request::findConfigLocation()
     	return;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
-	std::vector<ConfigLocation> locations = this->_configServer->getLocations();
+	std::vector<ConfigLocation>* locations = this->_configServer->getLocations();
 
-	for (std::vector<ConfigLocation>::iterator it = locations.begin(); it != locations.end(); ++it)
+	for (std::vector<ConfigLocation>::iterator it = locations->begin(); it != locations->end(); ++it)
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
 		if (it->getPath() == _path)
 		{
-			_configLocation = &(*it);
+			this->_configLocation = &(*it);
 			Log::log(Log::INFO, "Config location done \u2713");
 			_configLocation->print(); //DEBUG
 			return;
