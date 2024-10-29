@@ -497,10 +497,6 @@ std::vector<std::string> Response::getFullPaths()
     std::string alias = this->_request->getConfigLocation()->getAlias();
     std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
 
-    std::cout << "[DEBUG] - Response::getFullPaths - Je suis la " << pathRequest << std::endl;
-    std::cout << "[DEBUG] - Response::getFullPaths - root (via ConfigLoc)" << root << std::endl;
-    std::cout << "[DEBUG] - Response::getFullPaths - alias (via ConfigLoc) " << alias << std::endl;
-
     if (this->_request->getConfigLocation() == NULL)
         return std::vector<std::string>();
     if (root.empty())

@@ -134,15 +134,17 @@ void Client::sendResponse(int fd)
     std::cout << "[DEBUG] Sending response to client: " << this->_fd << std::endl;
     if (this->_response->giveAnswer() == -1)
     {
-        std::cerr << "Error: Unable to send response" << std::endl;
+		Log::log(Log::ERROR, "Error: Unable to send response");
         return ;
     }
     int sendResponse = -1;
+	Log::logVar(Log::DEBUG, "sendResponse fd is :",_fd);
     if (_fd != -1)
         sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
-
     if (sendResponse < 0)
     {
+		Log::log(Log::ERROR, "Error: Unable to send response");
+		Log::logVar(Log::DEBUG, "sendResponse is :",sendResponse);
         std::cerr << "Error: Unable to send response" << std::endl; // throw une erreur ici
         throw std::runtime_error("Error: Unable to send response");
     }

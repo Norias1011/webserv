@@ -217,7 +217,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
         if (!filename.empty()) 
 		{
 			//std::string file_path = this->_configLocation->getUploadPath() + "/ "+ filename ;
-			Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
+			//Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
 			//mkdir(this->_configLocation->getUploadPath(), 0777);
 			std::string file_path = "docs/uploads/" + filename;
 			mkdir("docs/uploads/", 0777);
