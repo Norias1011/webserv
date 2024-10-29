@@ -22,7 +22,7 @@ class Client
 		Client(const Client &copy);
 		~Client();
 
-		Client &operator=(Client const &src);
+		//Client &operator=(Client const &src);
 
 		int getFd() const;
 		Server* getServer() const { return _server; };

@@ -47,7 +47,7 @@ class ConfigServer
         const std::vector<std::string> &getIndex() const { return this->_index; };
         const std::map<int, std::string> &getErrorPages() const { return this->_errorPages; };
         const unsigned long long &getMaxBodySize() const { return _maxBodySize; };
-        std::vector<ConfigLocation>* getLocations() { return &_locations; };
+        const std::vector<ConfigLocation> &getLocations() const { return _locations; };
         const std::vector<ConfigLocation> &getLocationss() const { return _locations; };
 		const std::string &getIp() const { return _ip; };
 		const unsigned int &getPort() const { return _port; };

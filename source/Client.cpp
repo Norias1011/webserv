@@ -21,24 +21,24 @@ Client::~Client()
     if (_request != NULL)
 	    delete _request;
     if (_response != NULL)
-	    delete _response;
+	   	delete _response;
     if (_fd != -1)
         close(_fd);
 }
 
-Client &Client::operator=(Client const &src)
+/*Client &Client::operator=(Client const &src)
 {
     if (this != &src)
     {
         this->_fd = src._fd;
-		//this->_server = new Server();
+		this->_server = new Server();
         this->_request = new Request(this);
         this->_response = new Response(this);
 		this->_lastRequestTime = src._lastRequestTime;
 		this->_requestStatus = src._requestStatus;
     }
     return *this;
-}
+}*/
 
 int Client::getFd() const
 {
@@ -77,37 +77,41 @@ void Client::handleRequest()
 				if (this->_request->parseRequestHeaders(headers) == -1)
 					Log::log(Log::ERROR,"Error in the parsing of the Headers.");
 				Log::log(Log::DEBUG,"Headers are OK.");
-				Log::logVar(Log::INFO,"Raw Request append {}",buffer);
 
 				//Content-Length
 				std::string content_length = this->_request->getHeaders("Content-Length");
 				Log::logVar(Log::INFO,"Content-Length is {}.", content_length);
 				if (!content_length.empty())
 				{
-					bool valid = true;
+					std::string filtered_length;
 					for (std::string::iterator it = content_length.begin(); it != content_length.end(); ++it)
 					{
-						if (!std::isdigit(*it))
-						{
-							valid = false;
-							break;
-						}
+						if (std::isdigit(*it))
+							filtered_length += *it;
 					}
-					if (valid)
-					{
-						std::stringstream ss(content_length);
-						ss >> len;
-						if (ss.fail() || !ss.eof()) 
+					std::stringstream ss(filtered_length);
+					ss >> len;
+					if (ss.fail() || !ss.eof()) 
 						Log::log(Log::ERROR,"Invalid content length format.");
-					}
+					Log::logVar(Log::INFO, "Len of the body is: {}", len);
 				}
 				else if (this->_request->getMethod() == "POST")
-					Log::logVar(Log::ERROR, "Content-Length contains non-digit characters: ", content_length);
+					Log::log(Log::ERROR, "Content-Length contains non-digit characters");
 			}
+		}
+		//once the heders are received, we can find the configuration
+		Log::logVar(Log::ERROR, "Len is: {}", len);
+		if (headers_received)
+		{
+			Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
+			Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
+			this->_request->findConfigServer();
+			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body...");
 		}
 		// Body
 		if (headers_received && len > 0)
 		{
+			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body2..");
 			size_t body_p = request.find("\r\n\r\n") + 4;
 			std::string body = request.substr(body_p);
 			this->_request->setBody(body);
@@ -121,6 +125,7 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
+	Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready..");
 	_requestStatus = true;
 }
 
@@ -149,8 +154,8 @@ void Client::sendResponse(int fd)
             throw DecoExc();
         std::cout << "[DEBUG] - response is done" << std::endl;
         delete this->_request;
+		this->_request = new Request(this);
         delete this->_response;
-        this->_request = new Request(this);
         this->_response = new Response(this);
         epoll_event ev;
         ev.events = EPOLLIN;

@@ -41,8 +41,8 @@ Response &Response::operator=(Response const &src)
 
 int Response::giveAnswer()
 {
-	_request->findConfigServer();
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
+    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode" << _request->getServerCode()<< std::endl;
     if (!_response.empty())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
@@ -498,6 +498,8 @@ std::vector<std::string> Response::getFullPaths()
     std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
 
     std::cout << "[DEBUG] - Response::getFullPaths - Je suis la " << pathRequest << std::endl;
+    std::cout << "[DEBUG] - Response::getFullPaths - root (via ConfigLoc)" << root << std::endl;
+    std::cout << "[DEBUG] - Response::getFullPaths - alias (via ConfigLoc) " << alias << std::endl;
 
     if (this->_request->getConfigLocation() == NULL)
         return std::vector<std::string>();

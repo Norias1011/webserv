@@ -42,7 +42,7 @@ class Config
         void printAll();
         std::string numberToString(int number);
 
-    	std::map<std::string, std::vector<ConfigServer> > getConfigServer() { return _serverConfigs; }
+    	const std::map<std::string, std::vector<ConfigServer> >& getConfigServer() const { return _serverConfigs; }
 
         class ErrorException : public std::exception
 		{

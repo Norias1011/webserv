@@ -29,8 +29,8 @@ class Request
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
         Client* getClient() const { return _client; };
-        ConfigServer* getConfigServer() const { return _configServer; };
-        ConfigLocation* getConfigLocation() const { return _configLocation; };
+        const ConfigServer* getConfigServer() const { return _configServer; };
+        const ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
         bool getRequestStatus() const { return _isParsed; };
         int getServerCode() const { return _serverCode; };
@@ -59,8 +59,8 @@ class Request
     private:
 
         Client* _client;
-        ConfigServer* _configServer;
-        ConfigLocation* _configLocation; // TODO checker la location avec le path
+        const ConfigServer* _configServer;
+        const ConfigLocation* _configLocation; // TODO checker la location avec le path
 		std::string _request;
 		std::string _rawHeaders;
 		std::string _path;

@@ -31,6 +31,8 @@ Request &Request::operator=(Request const &src)
 	if (this != &src)
 	{
 		this->_client = src._client;
+		this->_configLocation = src._configLocation;
+		this->_configServer = src._configServer;
 		this->_request = src._request;
 		this->_method = src._method;
 		this->_path = src._path;
@@ -43,8 +45,6 @@ Request &Request::operator=(Request const &src)
 		this->_headers = src._headers;
 		this->_body = src._body;
 		this->_rawHeaders = src._rawHeaders;
-		this->_configLocation = src._configLocation;
-		this->_configServer = src._configServer;
 	}
 	return *this;
 }
@@ -87,7 +87,8 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 	_httpVersion = objects[2];
 	Log::logVar(Log::DEBUG, "method is:", _method);
 	Log::logVar(Log::DEBUG, "path is :", _path);
-	Log::logVar(Log::DEBUG, "version is", _httpVersion);
+	Log::logVar(Log::DEBUG, "version is :", _httpVersion);
+	Log::logVar(Log::DEBUG, "server code is :", _serverCode);
 	size_t start = _rawHeaders.find("\r\n") + 2; 
 	size_t end = _rawHeaders.find("\r\n\r\n", start);
 	std::string all_headers = _rawHeaders.substr(start, end - start);
@@ -122,7 +123,6 @@ void Request::parseBody()
 			Log::logVar(Log::INFO,"Le body {}", _body );
 			parseMultipartFormData(_body, boundary);
 		}
-		//else if pour fichier python ou CGI ici a parse 
 	}
 	//printPostHeaders();
 }
@@ -216,8 +216,11 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		Log::logVar(Log::DEBUG, "filename is : {}", filename);
         if (!filename.empty()) 
 		{
-			//std::string file_path = ConfigLocation.getUploadPath()+ "/"+ name; TO ADD WITH PARSER le path
+			//std::string file_path = this->_configLocation->getUploadPath() + "/ "+ filename ;
+			Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
+			//mkdir(this->_configLocation->getUploadPath(), 0777);
 			std::string file_path = "docs/uploads/" + filename;
+			mkdir("docs/uploads/", 0777);
 			std::ofstream file(file_path.c_str(), std::ios::binary);
 			if (!file)
 				Log::logVar(Log::ERROR, " Failed to open file: {}", file_path);
@@ -269,11 +272,13 @@ void Request::findConfigServer() //should we check here the range of usable port
 		return;
 	}
 	
-    std::map<std::string, std::vector<ConfigServer> > serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
-  	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
+    const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
+  	Log::logVar(Log::DEBUG, "serverConfig size: {}", serverConfigs.size());
+	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
-        std::vector<ConfigServer> servers = it->second;
-        for (std::vector<ConfigServer>::iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
+        const std::vector<ConfigServer> &servers = it->second;
+		Log::logVar(Log::DEBUG, "servers size: {}", servers.size());
+        for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
          	std::string server_name = host.substr(0, host.find(":"));
             std::string port_str = host.substr(host.find(":") + 1);
@@ -311,9 +316,9 @@ void Request::findConfigLocation()
     	return;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
-	std::vector<ConfigLocation>* locations = this->_configServer->getLocations();
+	const std::vector<ConfigLocation> &locations = this->_configServer->getLocations();
 
-	for (std::vector<ConfigLocation>::iterator it = locations->begin(); it != locations->end(); ++it)
+	for (std::vector<ConfigLocation>::const_iterator it = locations.begin(); it != locations.end(); ++it)
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
@@ -321,7 +326,7 @@ void Request::findConfigLocation()
 		{
 			this->_configLocation = &(*it);
 			Log::log(Log::INFO, "Config location done \u2713");
-			_configLocation->print(); //DEBUG
+			//_configLocation->print(); //DEBUG
 			return;
 		}
 		Log::log(Log::ERROR, "No location found");

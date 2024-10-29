@@ -39,14 +39,16 @@ Server &Server::operator=(Server const &rhs)
 {
 	if (this != &rhs)
 	{
+		_config = rhs._config;
+		_serv_list = rhs._serv_list;
 		_sockets = rhs._sockets;
 		_clients = rhs._clients;
-		_config = rhs._config;
 		_serv_list = rhs._serv_list;
 		_new_server = rhs._new_server;
 		_done = rhs._done;
 		_working = rhs._working;
 		_break = rhs._break;
+		_epollFd = rhs._epollFd;
 	}
 	return *this;
 }
