@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _isConfig(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false),_isConfig(false), _lastRequestTime(0)
 {
 }
 
@@ -264,6 +264,11 @@ void Request::printPostHeaders() const
 
 void Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
+	if(_isConfig)
+	{
+		Log::log(Log::DEBUG, "Config server/locations already found");
+        return;
+	}
 	std::string host = getHeaders("Host");
 	if (host.empty())
 	{
@@ -325,6 +330,7 @@ void Request::findConfigLocation()
 		if (it->getPath() == _path)
 		{
 			this->_configLocation = &(*it);
+			_isConfig = true;
 			Log::log(Log::INFO, "Config location done \u2713");
 			//_configLocation->print(); //DEBUG
 			return;

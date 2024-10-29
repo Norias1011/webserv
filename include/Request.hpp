@@ -49,7 +49,6 @@ class Request
 
         void setServerCode(int code) { _serverCode = code; };
 
-
 		void printHeaders() const;
 		void printPostHeaders() const;
 
@@ -74,6 +73,7 @@ class Request
         bool _isParsed;
         bool _init;
         bool _working;
+        bool _isConfig;
         time_t _lastRequestTime;
 };
 
