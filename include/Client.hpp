@@ -33,8 +33,10 @@ class Client
 
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };
 
-		void handleRequest();
+		void handleRequest(int fd);
 		void sendResponse(int fd);
+
+		void changeEpoll(int fd);
 
 		void setRequestStatus(bool status) { _requestStatus = status; };
 

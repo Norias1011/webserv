@@ -320,6 +320,7 @@ void Request::findConfigLocation()
 		{
 			this->_configLocation = &(*it);
 			Log::log(Log::INFO, "Config location done \u2713");
+			_serverCode = 200;
 			//_configLocation->print(); //DEBUG
 			return;
 		}

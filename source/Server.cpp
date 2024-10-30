@@ -163,7 +163,7 @@ void Server::handleEvent(epoll_event *event)
 			else
 			{
 				this->_clients[event->data.fd]->setLastRequestTime(time(0));
-				this->_clients[event->data.fd]->handleRequest(); 
+				this->_clients[event->data.fd]->handleRequest(_epollFd); 
 			}
 		}
 		if (event->events & EPOLLOUT) // check the CGI here

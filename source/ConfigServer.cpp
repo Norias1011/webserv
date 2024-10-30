@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/28 17:15:16 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/30 13:00:01 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,7 @@ void ConfigServer::defaultValues()
     if (this->_root.empty())
         this->_root = ".";
     if (this->_index.empty())
-        this->_index.push_back("index.html");
+        this->_index.push_back("index2.html");
     if (this->_listens.empty())
     {
         ConfigListen listen("0.0.0.0:80");

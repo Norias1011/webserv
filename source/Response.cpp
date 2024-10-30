@@ -50,6 +50,7 @@ int Response::giveAnswer()
     }
     if (_request->getServerCode() != 200)
     {
+        std::cout << "server code : " << _request->getServerCode() << std::endl;
         std::cout << "[DEBUG] - Response::giveAnswer - server code is not 200" << std::endl;
         _response = _errorPage.getConfigErrorPage(_request->getConfigServer()->getErrorPages(), _request->getServerCode());
         return 0;
@@ -57,6 +58,7 @@ int Response::giveAnswer()
     if (checkRewrite())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - checkRewrite" << std::endl;
+        _done = true;
         return 0;
     }
 
@@ -70,16 +72,19 @@ int Response::giveAnswer()
     {
         std::cout << "[DEBUG] - Response::giveAnswer - POST method" << std::endl;
         managePostRequest();
+        _done = true;
     }
     else if (_request->getMethod() == "PUT")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - PUT method" << std::endl;
         managePutRequest();
+        _done = true;
     }
     else if (_request->getMethod() == "DELETE")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - DELETE method" << std::endl;
         manageDeleteRequest();
+        _done = true;
     }
     else
     {
@@ -106,7 +111,7 @@ bool Response::checkRewrite()
     if (this->_request->getConfigLocation() && !this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigLocation()->getRoot();
     else
-        root = this->_request->getConfigServer()->getRoot();
+        root = this->_request->getConfigServer()->getRoot(); // check ici car ça segfault si on se connecte a distance
     std::string tmpPath = _request->getPath();
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
         return false;

@@ -46,7 +46,7 @@ int Client::getFd() const
 }
 
 
-void Client::handleRequest()
+void Client::handleRequest(int fd)
 {
 	std::string request;
 	std::string body;
@@ -122,6 +122,15 @@ void Client::handleRequest()
 			break;
 	}
 	_requestStatus = true;
+	changeEpoll(fd);
+}
+
+void Client::changeEpoll(int fd)
+{
+	epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = _fd;
+	epoll_ctl(fd, EPOLL_CTL_MOD, _fd, &ev);
 }
 
 void Client::sendResponse(int fd)
