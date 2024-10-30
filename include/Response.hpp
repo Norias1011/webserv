@@ -23,7 +23,7 @@ class Response
         ~Response();
         Response(Response const &copy);
         Response& operator=(Response const &src);
-        bool _responseDone;
+        bool _done;
         bool _working;
         bool _break;
         
@@ -42,7 +42,7 @@ class Response
         std::vector<std::string> getFullPathsServer();
         std::string getResponse() const { return _response; };
 
-		bool setResponseStatus(bool value) {return _responseDone = value;}
+		bool setResponseStatus(bool value) {return _done = value;}
 
         bool checkFileExist(std::string const &path);
         std::string FullResponse(std::string path, std::string root);

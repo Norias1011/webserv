@@ -28,16 +28,15 @@ class Client
 		Server* getServer() const { return _server; };
 		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
-		bool getRequestFinish() const { return _requestFinish; };
+		bool getRequestStatus() const { return _requestFinish; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
 
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };
-		void setRequestFinish(bool value) { _requestFinish = value; };
 
 		void handleRequest();
 		void sendResponse(int fd);
 
-		void setRequestStatus(bool status) { _requestStatus = status; };
+		void setRequestStatus(bool status) { _requestFinish = status; };
 
 		class DecoExc: public std::exception
 		{

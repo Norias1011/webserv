@@ -187,14 +187,14 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 				std::string key = "Content-Disposition";
 				std::string value = header_line.substr(pos2 + std::string("Content-Disposition:").length());
 				_postHeaders[key] = value;
-				Log::logVar(Log::DEBUG, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
+				Log::logVar(Log::INFO, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
 			} 
 			else if (pos3 != std::string::npos) // pas besoin mais c'est parsed quand meme - to delete une fois sure
 			{
 				std::string key = "Content-Type";
 				std::string value = header_line.substr(pos3 + std::string("Content-Type:").length());
 				_postHeaders[key] = value;
-				Log::logVar(Log::DEBUG, "Content-Type: {}",_postHeaders["Content-Type"]);
+				Log::logVar(Log::INFO, "Content-Type: {}",_postHeaders["Content-Type"]);
 			}
         }
 
@@ -215,6 +215,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		Log::logVar(Log::DEBUG, "filename is : {}", filename);
         if (!filename.empty()) 
 		{
+			//location path // pas de location a gerer
 			//std::string file_path = this->_configLocation->getUploadPath() + "/ "+ filename ;
 			//Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
 			//mkdir(this->_configLocation->getUploadPath(), 0777);
@@ -301,10 +302,17 @@ void Request::findConfigServer() //should we check here the range of usable port
             {
 				Log::log(Log::INFO, "Config server done \u2713");
                 _configServer = &(*it2);
-				_configServer->print(); //DEBUG
+				_configServer->print();
 				this->findConfigLocation();
                 return;
             }
+			else
+			{
+				Log::log(Log::INFO, "Config server done with default server \u2713");
+				_configServer = &(it2[0]); // a checker si ca passe ca
+				_configServer->print();
+				this->findConfigLocation();
+			}
         }
     }
 }
@@ -328,8 +336,8 @@ void Request::findConfigLocation()
 		{
 			this->_configLocation = &(*it);
 			_isConfig = true;
+			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done \u2713");
-			//_configLocation->print(); //DEBUG
 			return;
 		}
 		Log::log(Log::ERROR, "No location found");

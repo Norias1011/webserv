@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
-Response::Response() :  _responseDone(false) , _working(false), _request(NULL), _newFd(-1)
+Response::Response() :  _done(false) , _working(false), _request(NULL), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
 
-Response::Response(Client* client) : _responseDone(false) , _working(false), _request(client->getRequest()), _newFd(-1)
+Response::Response(Client* client) : _done(false) , _working(false), _request(client->getRequest()), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
@@ -29,7 +29,7 @@ Response &Response::operator=(Response const &src)
 {
     if (this != &src)
     {
-        this->_responseDone = src._responseDone;
+        this->_done = src._done;
         this->_working = src._working;
         this->_request = src._request;
         this->_newFd = src._newFd;
@@ -70,16 +70,19 @@ int Response::giveAnswer()
     {
         std::cout << "[DEBUG] - Response::giveAnswer - POST method" << std::endl;
         managePostRequest();
+		_done = true;
     }
     else if (_request->getMethod() == "PUT")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - PUT method" << std::endl;
         managePutRequest();
+		_done = true;
     }
     else if (_request->getMethod() == "DELETE")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - DELETE method" << std::endl;
         manageDeleteRequest();
+		_done = true;
     }
     else
     {
@@ -102,6 +105,9 @@ bool Response::checkRewrite()
         return true;
     }
     std::string root;
+	Log::logVar(Log::DEBUG,"this->_request->getConfigServer()->getRoot()",this->_request->getConfigServer()->getRoot());
+	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation():",this->_request->getConfigLocation());
+	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation()->getRoot():",this->_request->getConfigLocation()->getRoot());
     if (this->_request->getConfigLocation() && !this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigLocation()->getRoot();
     else

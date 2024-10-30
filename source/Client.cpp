@@ -48,6 +48,7 @@ int Client::getFd() const
 
 void Client::handleRequest()
 {
+	Log::log(Log::DEBUG, "Entering the handle request part");
 	std::string request;
 	std::string body;
 	bool headers_received = false;
@@ -108,7 +109,6 @@ void Client::handleRequest()
 			Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 			Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
 			this->_request->findConfigServer();
-			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body...");
 		}
 		// Body
 		if (headers_received && len > 0)
@@ -154,19 +154,16 @@ void Client::sendResponse(int fd)
 	{
         std::cout << "Response sent" << std::endl;
 	}
-    if (this->getResponse()->_responseDone == true)
+    if (this->getResponse()->_done == true)
     {
-        if (this->getRequestFinish() != true)
-		std::cout << "[DEBUG] - response is done 1" << std::endl;
-        if (this->getRequestStatus() != true)
-            throw DecoExc();
-		Log::logVar(Log::DEBUG, "getRequestFinish:", this->getRequestFinish());	
-		Log::logVar(Log::DEBUG, "getResponse() _done ? : ", this->getResponse()->_responseDone);	
-		Log::log(Log::DEBUG, "the response is sent we need to reset:");	
+		std::cout << "[DEBUG] - Response is done ... request and response are reseting.. " << std::endl;
+       	if (this->getRequestStatus() != true)
+            throw DecoExc();	
         delete this->_request;
 		this->_request = new Request(this);
         delete this->_response;
         this->_response = new Response(this);
+		this->setRequestStatus(false);
         epoll_event ev;
         ev.events = EPOLLIN;
         ev.data.fd = _fd;

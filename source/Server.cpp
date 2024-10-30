@@ -166,21 +166,18 @@ void Server::handleEvent(epoll_event *event)
 			}
 			else
 			{
-				Log::log(Log::DEBUG, "Entering the handle request part");
 				this->_clients[event->data.fd]->setLastRequestTime(time(0));
 				this->_clients[event->data.fd]->handleRequest(); 
 			}
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			//Log::log(Log::DEBUG, "Entering in the response part");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
 			}
 		}
 		//Log::logVar(Log::DEBUG, "Event Handled with fd: {}", event->data.fd);
-	}
 	catch (Client::DecoExc &e)
 	{
 		this->handleDc(event->data.fd);
