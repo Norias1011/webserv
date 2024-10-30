@@ -1,1 +1,6 @@
 checker les leak quand SIGINT
+
+a voir avec Antho:
+
+- get request statut - corrigé
+- response send to check les flag - WIP

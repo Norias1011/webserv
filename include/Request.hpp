@@ -32,7 +32,6 @@ class Request
         const ConfigServer* getConfigServer() const { return _configServer; };
         const ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
-        bool getRequestStatus() const { return _isParsed; };
         int getServerCode() const { return _serverCode; };
 
         void timeoutChecker();
@@ -70,7 +69,6 @@ class Request
         std::map<std::string, std::map<std::string, std::string> > _fileHeaders;
 		std::string _body;
         int _serverCode;
-        bool _isParsed;
         bool _init;
         bool _working;
         bool _isConfig;

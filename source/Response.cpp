@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
-Response::Response() :  _done(false) , _working(false), _request(NULL), _newFd(-1)
+Response::Response() :  _responseDone(false) , _working(false), _request(NULL), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
 
-Response::Response(Client* client) : _done(false) , _working(false), _request(client->getRequest()), _newFd(-1)
+Response::Response(Client* client) : _responseDone(false) , _working(false), _request(client->getRequest()), _newFd(-1)
 {
     _errorPage = ErrorPage();
 }
@@ -29,7 +29,7 @@ Response &Response::operator=(Response const &src)
 {
     if (this != &src)
     {
-        this->_done = src._done;
+        this->_responseDone = src._responseDone;
         this->_working = src._working;
         this->_request = src._request;
         this->_newFd = src._newFd;
@@ -42,7 +42,7 @@ Response &Response::operator=(Response const &src)
 int Response::giveAnswer()
 {
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
-    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode" << _request->getServerCode()<< std::endl;
+    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode is :" << _request->getServerCode()<< std::endl;
     if (!_response.empty())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
@@ -91,7 +91,6 @@ int Response::giveAnswer()
 
 bool Response::checkRewrite()
 {
-	std::cout << "[DEBUG] - ca rentre dans le checkRewrite: " << std::endl;	
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();
@@ -245,6 +244,7 @@ void Response::handleLocation()
             }
             else
                 _response = FullResponse(root + _request->getPath(), root);
+			//this->_responseDone = true;
             return ;
         }
         std::string notFound = root + _request->getPath();
@@ -258,7 +258,9 @@ void Response::handleLocation()
     if (checkLargeFile(path))
         chunkedResponse(path);
     else
+	{
         normalResponse(path);
+	}
 }
 
 

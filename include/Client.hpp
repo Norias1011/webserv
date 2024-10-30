@@ -28,10 +28,11 @@ class Client
 		Server* getServer() const { return _server; };
 		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
-		bool getRequestStatus() const { return _requestStatus; };
+		bool getRequestFinish() const { return _requestFinish; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
 
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };
+		void setRequestFinish(bool value) { _requestFinish = value; };
 
 		void handleRequest();
 		void sendResponse(int fd);
@@ -49,7 +50,7 @@ class Client
 		Request*	_request;
 		Response*	_response;
 		time_t		_lastRequestTime;
-		bool		_requestStatus;
+		bool		_requestFinish;
 
 };
 

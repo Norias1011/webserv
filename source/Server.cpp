@@ -111,7 +111,6 @@ void Server::runServer()
 	time_t before_loop_time = time(0);
 	while (this->_working)
 	{
-		Log::log(Log::INFO, "Looping for events incoming -(epoll wait)");
 		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1);
 		Log::logVar(Log::INFO, "Looping for events incoming -(epoll wait) with number fd number:{}", num_fds);
 		if (num_fds < 0)
@@ -156,23 +155,28 @@ void Server::handleEvent(epoll_event *event)
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
-			Log::log(Log::DEBUG, "Entering the connection part");
 			if (this->_clients.find(event->data.fd) == this->_clients.end())
-				this->handleConnection(event->data.fd); 
+			{
+				Log::log(Log::DEBUG, "Entering the connection part");
+				this->handleConnection(event->data.fd);
+			}
 			else
 			{
+				Log::log(Log::DEBUG, "Entering the handle request part");
 				this->_clients[event->data.fd]->setLastRequestTime(time(0));
 				this->_clients[event->data.fd]->handleRequest(); 
 			}
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			Log::log(Log::DEBUG, "Entering in the response part");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
-			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]/*->getRequest()*/->getRequestStatus() == true)
+			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestFinish() == true)
+			{
+				Log::log(Log::DEBUG, "Entering in the response part");
+
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
+			}
 		}
-		Log::logVar(Log::DEBUG, "Event Handled with fd: {}", event->data.fd);
 	}
 	catch (Client::DecoExc &e)
 	{

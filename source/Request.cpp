@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _isConfig(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isConfig(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false),_isConfig(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_isConfig(false), _lastRequestTime(0)
 {
 }
 
@@ -37,7 +37,6 @@ Request &Request::operator=(Request const &src)
 		this->_method = src._method;
 		this->_path = src._path;
         this->_httpVersion = src._httpVersion;
-		this->_isParsed = src._isParsed;
 		this->_init = src._init;
 		this->_working = src._working;
 		this->_lastRequestTime = src._lastRequestTime;
@@ -134,12 +133,12 @@ bool Request::isHttpVersionValid(std::string const &version)
 
 void Request::timeoutChecker()
 {
-	if (_lastRequestTime == 0 || _isParsed == true)
+	if (_lastRequestTime == 0 || this->_client->getRequestFinish() == true)
 		return;
 	time_t now = time(0);
 	if (now > _lastRequestTime + 10)
 	{
-		_isParsed = true;
+		this->_client->setRequestFinish(true);
 		std::cout << "Timeout" << std::endl;
 		_serverCode = 408;
 	}

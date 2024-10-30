@@ -7,7 +7,7 @@
 {
 }*/
 
-Client::Client(int fd, Server* server) : _fd(fd), _server(server),_request(new Request(this)), _response(new Response(this)), _lastRequestTime(0), _requestStatus(false)
+Client::Client(int fd, Server* server) : _fd(fd), _server(server),_request(new Request(this)), _response(new Response(this)), _lastRequestTime(0), _requestFinish(false)
 {    
 }
 
@@ -53,6 +53,8 @@ void Client::handleRequest()
 	bool headers_received = false;
 	unsigned long len = 0;
 
+	if (this->_requestFinish == true)
+		return;
 	Log::logVar(Log::DEBUG,"Handling request from client fd {}.", this->_fd);
     while (true)
 	{
@@ -111,7 +113,7 @@ void Client::handleRequest()
 		// Body
 		if (headers_received && len > 0)
 		{
-			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body2..");
+			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body for POST method..");
 			size_t body_p = request.find("\r\n\r\n") + 4;
 			std::string body = request.substr(body_p);
 			this->_request->setBody(body);
@@ -125,13 +127,13 @@ void Client::handleRequest()
 		else if (len == 0)
 			break;
 	}
-	Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready..");
-	_requestStatus = true;
+	Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready");
+	this->_requestFinish = true;
 }
 
 void Client::sendResponse(int fd)
 {
-    std::cout << "[DEBUG] Sending response to client: " << this->_fd << std::endl;
+	Log::logVar(Log::DEBUG, "Sending response to client with fd {}",_fd);
     if (this->_response->giveAnswer() == -1)
     {
 		Log::log(Log::ERROR, "Error: Unable to send response");
@@ -149,12 +151,16 @@ void Client::sendResponse(int fd)
         throw std::runtime_error("Error: Unable to send response");
     }
     else
+	{
         std::cout << "Response sent" << std::endl;
-    if (this->getResponse()->_done == true)
+	}
+    if (this->getResponse()->_responseDone == true)
     {
-        if (this->_request->getRequestStatus() != true)
+        if (this->getRequestFinish() != true)
             throw DecoExc();
-        std::cout << "[DEBUG] - response is done" << std::endl;
+		Log::logVar(Log::DEBUG, "getRequestFinish:", this->getRequestFinish());	
+		Log::logVar(Log::DEBUG, "getResponse() _done ? : ", this->getResponse()->_responseDone);	
+		Log::log(Log::DEBUG, "the response is sent we need to reset:");	
         delete this->_request;
 		this->_request = new Request(this);
         delete this->_response;
