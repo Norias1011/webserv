@@ -48,7 +48,7 @@ Request &Request::operator=(Request const &src)
 	return *this;
 }
 
-int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la root server avec le parsing.
+int Request::parseRequestHeaders(std::string const &raw_headers)
 {
 	_rawHeaders = raw_headers;
 	std::string extracted = raw_headers.substr(0,raw_headers.find("\n"));
@@ -121,6 +121,12 @@ void Request::parseBody()
 			Log::logVar(Log::INFO,"Le boundary {}", boundary );
 			Log::logVar(Log::INFO,"Le body {}", _body );
 			parseMultipartFormData(_body, boundary);
+		}
+		if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
+		{
+			std::string chunk;
+			while (std::getline(i))
+
 		}
 	}
 	//printPostHeaders();
