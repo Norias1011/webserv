@@ -28,7 +28,7 @@ class Client
 		Server* getServer() const { return _server; };
 		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
-		bool getRequestStatus() const { return _requestFinish; };
+		bool getRequestStatus() const { return _requestStatus; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
 
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };
