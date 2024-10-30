@@ -35,7 +35,7 @@ class Server
 
 		long getSocketFd() const;
 		long getEpollFd() const;
-		const Config& getConfig() const { return _config; };
+		const Config &getConfig() const { return _config; };
 
 		void createSocket();
 		void BindandListen();

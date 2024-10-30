@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isConfig(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_isConfig(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -133,12 +133,12 @@ bool Request::isHttpVersionValid(std::string const &version)
 
 void Request::timeoutChecker()
 {
-	if (_lastRequestTime == 0 || this->_client->getRequestFinish() == true)
+	if (_lastRequestTime == 0 || _client->getRequestStatus() == true)
 		return;
 	time_t now = time(0);
 	if (now > _lastRequestTime + 10)
 	{
-		this->_client->setRequestFinish(true);
+		_client->setRequestStatus(true);
 		std::cout << "Timeout" << std::endl;
 		_serverCode = 408;
 	}
@@ -277,11 +277,9 @@ void Request::findConfigServer() //should we check here the range of usable port
 	}
 	
     const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
-  	Log::logVar(Log::DEBUG, "serverConfig size: {}", serverConfigs.size());
-	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
+  	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
         const std::vector<ConfigServer> &servers = it->second;
-		Log::logVar(Log::DEBUG, "servers size: {}", servers.size());
         for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
          	std::string server_name = host.substr(0, host.find(":"));
@@ -320,7 +318,7 @@ void Request::findConfigLocation()
     	return;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
-	const std::vector<ConfigLocation> &locations = this->_configServer->getLocations();
+	const std::vector<ConfigLocation>& locations = this->_configServer->getLocations();
 
 	for (std::vector<ConfigLocation>::const_iterator it = locations.begin(); it != locations.end(); ++it)
 	{

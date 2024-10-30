@@ -37,6 +37,8 @@ class Client
 		void handleRequest();
 		void sendResponse(int fd);
 
+		void setRequestStatus(bool status) { _requestStatus = status; };
+
 		class DecoExc: public std::exception
 		{
 			public:

@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:11 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/28 17:45:17 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/30 10:52:51 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class ConfigLocation
         const std::string &getAlias() const { return this->_alias; };
         const bool &getAutoindex() const { return this->_autoindex; };
         const std::string &getFilename() const { return this->_filename; };
-        std::vector<std::string> getIndex() const { return _index; };
+        const std::vector<std::string> &getIndex() const { return _index; };
         const std::map<std::string, std::string> &getCgi() const { return this->_cgi; };
         const std::pair<int, std::string> &getRewrite() const { return this->_rewrite; };
         const std::vector<std::string> &getMethods() const { return this->_methods; };

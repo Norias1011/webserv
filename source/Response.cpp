@@ -64,6 +64,7 @@ int Response::giveAnswer()
     {
         std::cout << "[DEBUG] - Response::giveAnswer - GET method" << std::endl;
         manageGetRequest();
+        _done = true;
     }
     else if (_request->getMethod() == "POST")
     {

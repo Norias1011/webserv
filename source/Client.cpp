@@ -157,6 +157,8 @@ void Client::sendResponse(int fd)
     if (this->getResponse()->_responseDone == true)
     {
         if (this->getRequestFinish() != true)
+		std::cout << "[DEBUG] - response is done 1" << std::endl;
+        if (this->getRequestStatus() != true)
             throw DecoExc();
 		Log::logVar(Log::DEBUG, "getRequestFinish:", this->getRequestFinish());	
 		Log::logVar(Log::DEBUG, "getResponse() _done ? : ", this->getResponse()->_responseDone);	

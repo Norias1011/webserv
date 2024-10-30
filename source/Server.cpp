@@ -88,6 +88,9 @@ void Server::BindandListen()
 {
 	for (std::map<int, struct sockaddr_in>::iterator it = _sockets.begin(); it != _sockets.end(); it++)
 	{
+		int opt = 1;
+		if (setsockopt(it->first, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+			Log::log(Log::ERROR,"Error: Unable to setsockopt");
 		if (bind(it->first, reinterpret_cast<const struct sockaddr*>(&it->second), sizeof(struct sockaddr)) == -1) 
 			Log::log(Log::ERROR,"Error: Unable to bind socket");
 		if (listen(it->first, MAX_CO) == -1)
@@ -111,8 +114,9 @@ void Server::runServer()
 	time_t before_loop_time = time(0);
 	while (this->_working)
 	{
+		//Log::log(Log::INFO, "Looping for events incoming -(epoll wait)");
 		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1);
-		Log::logVar(Log::INFO, "Looping for events incoming -(epoll wait) with number fd number:{}", num_fds);
+		//Log::logVar(Log::INFO, "Looping for events incoming -(epoll wait) with number fd number:{}", num_fds);
 		if (num_fds < 0)
 			throw Server::ErrorException("epoll_wait fail");
 		for (int i = 0; i < num_fds; i++)
@@ -169,14 +173,13 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
+			//Log::log(Log::DEBUG, "Entering in the response part");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
-			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestFinish() == true)
-			{
-				Log::log(Log::DEBUG, "Entering in the response part");
-
+			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
 			}
 		}
+		//Log::logVar(Log::DEBUG, "Event Handled with fd: {}", event->data.fd);
 	}
 	catch (Client::DecoExc &e)
 	{
