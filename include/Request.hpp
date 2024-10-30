@@ -33,6 +33,7 @@ class Request
         const ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
         int getServerCode() const { return _serverCode; };
+		bool getConfigDone() const {return _configDone; };
 
         void timeoutChecker();
 		std::string getHeaders(const std::string& headername);
@@ -71,7 +72,7 @@ class Request
         int _serverCode;
         bool _init;
         bool _working;
-        bool _isConfig;
+        bool _configDone;
         time_t _lastRequestTime;
 };
 

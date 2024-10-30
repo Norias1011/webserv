@@ -95,6 +95,8 @@ int Response::giveAnswer()
 
 bool Response::checkRewrite()
 {
+	if (this->_request->getConfigDone())
+		
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();

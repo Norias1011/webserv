@@ -6,7 +6,7 @@ Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpV
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false), _lastRequestTime(0)
 {
 }
 
@@ -264,7 +264,7 @@ void Request::printPostHeaders() const
 
 void Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
-	if(_isConfig)
+	if(_configDone == true)
 	{
 		Log::log(Log::DEBUG, "Config server/locations already found");
         return;
@@ -337,7 +337,7 @@ void Request::findConfigLocation()
 		if (it->getPath() == _path)
 		{
 			this->_configLocation = &(*it);
-			_isConfig = true;
+			_configDone = true;
 			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done \u2713");
 			return;
