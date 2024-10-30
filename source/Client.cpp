@@ -145,7 +145,8 @@ void Client::sendResponse(int fd)
         std::cout << "Response sent" << std::endl;
     if (this->getResponse()->_done == true)
     {
-        if (this->_request->getRequestStatus() != true)
+		std::cout << "[DEBUG] - response is done 1" << std::endl;
+        if (this->getRequestStatus() != true)
             throw DecoExc();
         std::cout << "[DEBUG] - response is done" << std::endl;
         delete this->_request;

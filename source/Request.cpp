@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _isParsed(false), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
 {
 }
 
@@ -35,7 +35,6 @@ Request &Request::operator=(Request const &src)
 		this->_method = src._method;
 		this->_path = src._path;
         this->_httpVersion = src._httpVersion;
-		this->_isParsed = src._isParsed;
 		this->_init = src._init;
 		this->_working = src._working;
 		this->_lastRequestTime = src._lastRequestTime;
@@ -134,12 +133,12 @@ bool Request::isHttpVersionValid(std::string const &version)
 
 void Request::timeoutChecker()
 {
-	if (_lastRequestTime == 0 || _isParsed == true)
+	if (_lastRequestTime == 0 || _client->getRequestStatus() == true)
 		return;
 	time_t now = time(0);
 	if (now > _lastRequestTime + 10)
 	{
-		_isParsed = true;
+		_client->setRequestStatus(true);
 		std::cout << "Timeout" << std::endl;
 		_serverCode = 408;
 	}
@@ -269,11 +268,11 @@ void Request::findConfigServer() //should we check here the range of usable port
 		return;
 	}
 	
-    std::map<std::string, std::vector<ConfigServer> > serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
-  	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
+    const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
+  	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
-        std::vector<ConfigServer> servers = it->second;
-        for (std::vector<ConfigServer>::iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
+        const std::vector<ConfigServer> &servers = it->second;
+        for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
          	std::string server_name = host.substr(0, host.find(":"));
             std::string port_str = host.substr(host.find(":") + 1);
@@ -311,9 +310,9 @@ void Request::findConfigLocation()
     	return;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
-	std::vector<ConfigLocation>* locations = this->_configServer->getLocations();
+	const std::vector<ConfigLocation>& locations = this->_configServer->getLocations();
 
-	for (std::vector<ConfigLocation>::iterator it = locations->begin(); it != locations->end(); ++it)
+	for (std::vector<ConfigLocation>::const_iterator it = locations.begin(); it != locations.end(); ++it)
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
@@ -321,7 +320,7 @@ void Request::findConfigLocation()
 		{
 			this->_configLocation = &(*it);
 			Log::log(Log::INFO, "Config location done \u2713");
-			_configLocation->print(); //DEBUG
+			//_configLocation->print(); //DEBUG
 			return;
 		}
 		Log::log(Log::ERROR, "No location found");

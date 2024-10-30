@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 16:20:34 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/30 10:58:25 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ class Config
         void printAll();
         std::string numberToString(int number);
 
-    	std::map<std::string, std::vector<ConfigServer> > getConfigServer() { return _serverConfigs; }
+    	const std::map<std::string, std::vector<ConfigServer> >& getConfigServer() const { return _serverConfigs; }
 
         class ErrorException : public std::exception
 		{
