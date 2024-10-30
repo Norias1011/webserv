@@ -42,6 +42,8 @@ class Response
         std::vector<std::string> getFullPathsServer();
         std::string getResponse() const { return _response; };
 
+		bool setResponseStatus(bool value) {return _done = value;}
+
         bool checkFileExist(std::string const &path);
         std::string FullResponse(std::string path, std::string root);
         void pathClean(std::string &path);

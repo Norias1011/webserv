@@ -39,14 +39,16 @@ Server &Server::operator=(Server const &rhs)
 {
 	if (this != &rhs)
 	{
+		_config = rhs._config;
+		_serv_list = rhs._serv_list;
 		_sockets = rhs._sockets;
 		_clients = rhs._clients;
-		_config = rhs._config;
 		_serv_list = rhs._serv_list;
 		_new_server = rhs._new_server;
 		_done = rhs._done;
 		_working = rhs._working;
 		_break = rhs._break;
+		_epollFd = rhs._epollFd;
 	}
 	return *this;
 }
@@ -157,9 +159,11 @@ void Server::handleEvent(epoll_event *event)
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
-			Log::log(Log::DEBUG, "Entering the connection part");
 			if (this->_clients.find(event->data.fd) == this->_clients.end())
-				this->handleConnection(event->data.fd); 
+			{
+				Log::log(Log::DEBUG, "Entering the connection part");
+				this->handleConnection(event->data.fd);
+			}
 			else
 			{
 				this->_clients[event->data.fd]->setLastRequestTime(time(0));
@@ -168,13 +172,12 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			//Log::log(Log::DEBUG, "Entering in the response part");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
+			}
 		}
 		//Log::logVar(Log::DEBUG, "Event Handled with fd: {}", event->data.fd);
-	}
 	catch (Client::DecoExc &e)
 	{
 		this->handleDc(event->data.fd);

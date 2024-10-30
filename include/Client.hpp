@@ -22,13 +22,13 @@ class Client
 		Client(const Client &copy);
 		~Client();
 
-		Client &operator=(Client const &src);
+		//Client &operator=(Client const &src);
 
 		int getFd() const;
 		Server* getServer() const { return _server; };
 		Request* getRequest() const { return _request; };
 		Response* getResponse() const { return _response; };
-		bool getRequestStatus() const { return _requestStatus; };
+		bool getRequestStatus() const { return _requestFinish; };
 		time_t getLastRequestTime() const { return _lastRequestTime; };
 
 		void setLastRequestTime(time_t time) { _lastRequestTime = time; };

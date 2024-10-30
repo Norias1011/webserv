@@ -6,7 +6,7 @@ Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpV
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false), _lastRequestTime(0)
 {
 }
 
@@ -31,6 +31,8 @@ Request &Request::operator=(Request const &src)
 	if (this != &src)
 	{
 		this->_client = src._client;
+		this->_configLocation = src._configLocation;
+		this->_configServer = src._configServer;
 		this->_request = src._request;
 		this->_method = src._method;
 		this->_path = src._path;
@@ -42,8 +44,6 @@ Request &Request::operator=(Request const &src)
 		this->_headers = src._headers;
 		this->_body = src._body;
 		this->_rawHeaders = src._rawHeaders;
-		this->_configLocation = src._configLocation;
-		this->_configServer = src._configServer;
 	}
 	return *this;
 }
@@ -86,7 +86,8 @@ int Request::parseRequestHeaders(std::string const &raw_headers) // ajouter la r
 	_httpVersion = objects[2];
 	Log::logVar(Log::DEBUG, "method is:", _method);
 	Log::logVar(Log::DEBUG, "path is :", _path);
-	Log::logVar(Log::DEBUG, "version is", _httpVersion);
+	Log::logVar(Log::DEBUG, "version is :", _httpVersion);
+	Log::logVar(Log::DEBUG, "server code is :", _serverCode);
 	size_t start = _rawHeaders.find("\r\n") + 2; 
 	size_t end = _rawHeaders.find("\r\n\r\n", start);
 	std::string all_headers = _rawHeaders.substr(start, end - start);
@@ -121,7 +122,6 @@ void Request::parseBody()
 			Log::logVar(Log::INFO,"Le body {}", _body );
 			parseMultipartFormData(_body, boundary);
 		}
-		//else if pour fichier python ou CGI ici a parse 
 	}
 	//printPostHeaders();
 }
@@ -187,14 +187,14 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 				std::string key = "Content-Disposition";
 				std::string value = header_line.substr(pos2 + std::string("Content-Disposition:").length());
 				_postHeaders[key] = value;
-				Log::logVar(Log::DEBUG, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
+				Log::logVar(Log::INFO, "Content-Disposition: {}",_postHeaders["Content-Disposition"]);
 			} 
 			else if (pos3 != std::string::npos) // pas besoin mais c'est parsed quand meme - to delete une fois sure
 			{
 				std::string key = "Content-Type";
 				std::string value = header_line.substr(pos3 + std::string("Content-Type:").length());
 				_postHeaders[key] = value;
-				Log::logVar(Log::DEBUG, "Content-Type: {}",_postHeaders["Content-Type"]);
+				Log::logVar(Log::INFO, "Content-Type: {}",_postHeaders["Content-Type"]);
 			}
         }
 
@@ -215,8 +215,12 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		Log::logVar(Log::DEBUG, "filename is : {}", filename);
         if (!filename.empty()) 
 		{
-			//std::string file_path = ConfigLocation.getUploadPath()+ "/"+ name; TO ADD WITH PARSER le path
+			//location path // pas de location a gerer
+			//std::string file_path = this->_configLocation->getUploadPath() + "/ "+ filename ;
+			//Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
+			//mkdir(this->_configLocation->getUploadPath(), 0777);
 			std::string file_path = "docs/uploads/" + filename;
+			mkdir("docs/uploads/", 0777);
 			std::ofstream file(file_path.c_str(), std::ios::binary);
 			if (!file)
 				Log::logVar(Log::ERROR, " Failed to open file: {}", file_path);
@@ -260,6 +264,11 @@ void Request::printPostHeaders() const
 
 void Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
+	if(_configDone == true)
+	{
+		Log::log(Log::DEBUG, "Config server/locations already found");
+        return;
+	}
 	std::string host = getHeaders("Host");
 	if (host.empty())
 	{
@@ -293,10 +302,19 @@ void Request::findConfigServer() //should we check here the range of usable port
             {
 				Log::log(Log::INFO, "Config server done \u2713");
                 _configServer = &(*it2);
-				_configServer->print(); //DEBUG
+				_configServer->print();
 				this->findConfigLocation();
                 return;
             }
+			else if(!server_name.empty())
+			{
+				Log::log(Log::INFO, "Config server done with default server \u2713");
+				_configServer = &(it2[0]); // a checker si ca passe ca
+				_configServer->print();
+				this->findConfigLocation();
+			}
+			else
+				Log::log(Log::ERROR, "Config server not possible");
         }
     }
 }
@@ -319,6 +337,8 @@ void Request::findConfigLocation()
 		if (it->getPath() == _path)
 		{
 			this->_configLocation = &(*it);
+			_configDone = true;
+			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done \u2713");
 			_serverCode = 200;
 			//_configLocation->print(); //DEBUG

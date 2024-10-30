@@ -41,8 +41,8 @@ Response &Response::operator=(Response const &src)
 
 int Response::giveAnswer()
 {
-	_request->findConfigServer();
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
+    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode is :" << _request->getServerCode()<< std::endl;
     if (!_response.empty())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
@@ -72,19 +72,19 @@ int Response::giveAnswer()
     {
         std::cout << "[DEBUG] - Response::giveAnswer - POST method" << std::endl;
         managePostRequest();
-        _done = true;
+		_done = true;
     }
     else if (_request->getMethod() == "PUT")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - PUT method" << std::endl;
         managePutRequest();
-        _done = true;
+		_done = true;
     }
     else if (_request->getMethod() == "DELETE")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - DELETE method" << std::endl;
         manageDeleteRequest();
-        _done = true;
+		_done = true;
     }
     else
     {
@@ -97,7 +97,8 @@ int Response::giveAnswer()
 
 bool Response::checkRewrite()
 {
-	std::cout << "[DEBUG] - ca rentre dans le checkRewrite: " << std::endl;	
+	if (this->_request->getConfigDone())
+		
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();
@@ -108,6 +109,9 @@ bool Response::checkRewrite()
         return true;
     }
     std::string root;
+	Log::logVar(Log::DEBUG,"this->_request->getConfigServer()->getRoot()",this->_request->getConfigServer()->getRoot());
+	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation():",this->_request->getConfigLocation());
+	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation()->getRoot():",this->_request->getConfigLocation()->getRoot());
     if (this->_request->getConfigLocation() && !this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigLocation()->getRoot();
     else
@@ -251,6 +255,7 @@ void Response::handleLocation()
             }
             else
                 _response = FullResponse(root + _request->getPath(), root);
+			//this->_responseDone = true;
             return ;
         }
         std::string notFound = root + _request->getPath();
@@ -264,7 +269,9 @@ void Response::handleLocation()
     if (checkLargeFile(path))
         chunkedResponse(path);
     else
+	{
         normalResponse(path);
+	}
 }
 
 
@@ -502,8 +509,6 @@ std::vector<std::string> Response::getFullPaths()
     std::string root = this->_request->getConfigLocation()->getRoot();
     std::string alias = this->_request->getConfigLocation()->getAlias();
     std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
-
-    std::cout << "[DEBUG] - Response::getFullPaths - Je suis la " << pathRequest << std::endl;
 
     if (this->_request->getConfigLocation() == NULL)
         return std::vector<std::string>();

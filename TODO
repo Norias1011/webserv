@@ -1,3 +1,1 @@
 checker les leak quand SIGINT
-
-checker les leak de rewrite avec getserver et get root

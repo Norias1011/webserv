@@ -22,10 +22,9 @@ Config::~Config()
 
 Config::Config(Config const &src)
 {
-    if (this != &src)
-    {
-        *this = src;
-    }
+    _filename = src._filename;
+    _servers = src._servers;
+    _serverConfigs = src._serverConfigs;
 }
 
 Config &Config::operator=(Config const &src)

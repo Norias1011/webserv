@@ -25,60 +25,12 @@
   
   <!-- POST Method -->
   <h2>Test POST Method</h2>
-     <!-- POST Method -->
-	 <h1>Test form data </h1>
-     <form id="post-form" action="http://localhost:8002/index2.html" method="POST">
-      <label for="name">Name:</label>
-      <input type="text" id="name" name="name" required>
-      
-      <label for="message">Message:</label>
-      <input type="text" id="message" name="message" required>
-
-	  <button type="submit">Submit</button>
-	  </form>
 
 	  <h1>Test Multipart Form Data</h1>
-	  <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+	  <form id="upload-form" action="/" method="POST" enctype="multipart/form-data">
 		  
 		<label for="file">Upload File:</label>
 		<input type="file" id="file" name="file"><br><br>
-		<input type="hidden" name="redirect" value="/">
 		<button type="submit">Upload</button>
 		<br>
-	  
-		<h2>Uploaded Files</h2>
-		<div class="file-list" id="file-list">
-			<!-- Example of how to display uploaded files with delete buttons -->
-			<form action="/delete" method="POST">
-			  <input type="hidden" name="filename" value="example.txt">
-			  <input type="hidden" name="redirect" value="/">
-			  <span>example.txt</span>
-			  <button type="submit">Delete</button>
-			</form>
-		  </div>
-
-  <!-- DELETE Method -->
-  <h2>Test DELETE Method</h2>
-  <form action="http://localhost:8002/index2.html" method="POST">
-    <input type="hidden" name="_method" value="DELETE">
-    <button type="submit">Send DELETE Request</button>
-  </form>
-
-
-  <script>
-    // Function to test DELETE method
-    function testDelete() {
-      fetch('http://localhost:8002/index2.html', {
-        method: 'DELETE'
-      })
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('delete-result').innerHTML = `<p>DELETE Response: ${data}</p>`;
-      })
-      .catch(error => console.error('Error:', error));
-    }
-	document.addEventListener('DOMContentLoaded', loadFiles);
-  </script>
-
-</body>
-</html>
+	
