@@ -306,13 +306,15 @@ void Request::findConfigServer() //should we check here the range of usable port
 				this->findConfigLocation();
                 return;
             }
-			else
+			else if(!server_name.empty())
 			{
 				Log::log(Log::INFO, "Config server done with default server \u2713");
 				_configServer = &(it2[0]); // a checker si ca passe ca
 				_configServer->print();
 				this->findConfigLocation();
 			}
+			else
+				Log::log(Log::ERROR, "Config server not possible");
         }
     }
 }
