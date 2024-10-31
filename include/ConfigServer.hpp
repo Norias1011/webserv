@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:43:16 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/30 10:58:24 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/31 14:23:46 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ class ConfigServer
         const std::vector<ConfigLocation> &getLocationss() const { return _locations; };
 		const std::string &getIp() const { return _ip; };
 		const unsigned int &getPort() const { return _port; };
+        const std::vector<std::string> &getNewServerNames() const { return _serverNames; };
+        bool checkDoubleServerName(std::vector<std::string>& doubleServerNames);
     protected:
 
     private:

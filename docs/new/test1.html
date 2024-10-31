@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funny Cat Page</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #fff8dc;
+            text-align: center;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #ff4500;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        img {
+            width: 400px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #32cd32;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #228b22;
+        }
+        #joke {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6347;
+        }
+        footer {
+            margin-top: 40px;
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to the Funny Cat Page!</h1>
+    <img src="https://placekitten.com/400/300" alt="Funny Cat" />
+    <p>Why did the cat sit on the computer?</p>
+    <p>Because it wanted to keep an eye on the mouse!</p>
+
+    <button onclick="changeContent()">Click for More Cat Jokes!</button>
+
+    <div id="joke"></div>
+
+    <footer>
+        <p>&copy; 2024 Cat Lovers Inc.</p>
+    </footer>
+
+    <script>
+        const jokes = [
+            "What do you call a pile of cats? A meowtain!",
+            "How do cats end a fight? They hiss and make up!",
+            "What do you get when you cross a cat with a dark horse? Kitty Perry!",
+            "Why was the cat sitting on the computer? It wanted to keep an eye on the mouse!",
+            "Why don't cats play poker in the jungle? Too many cheetahs!"
+        ];
+
+        function changeContent() {
+            const randomIndex = Math.floor(Math.random() * jokes.length);
+            document.getElementById('joke').innerText = jokes[randomIndex];
+        }
+    </script>
+
+</body>
+</html>
