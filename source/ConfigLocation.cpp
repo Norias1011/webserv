@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/28 16:00:57 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/31 14:05:54 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,6 +261,14 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
         this->_cgi[locationLine[1]] = locationLine[2];
         return true;
     }
+    else if (line == "client_body_buffer_size") // FOR THE TESTER, TO DELETE
+    {
+        std::cout << "Client body buffer size" << std::endl;
+        return true;
+    }
+    else if (line == "{")
+        return true;
+    else
     return false;
 }
 

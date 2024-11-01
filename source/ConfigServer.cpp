@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/30 13:00:01 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/31 14:25:13 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,6 +258,11 @@ bool ConfigServer::checkServerLine(std::vector<std::string>& serverLine, std::st
         this->_doubleInformation["client_max_body_size"]++;
         return true;
     }
+    else if (line == "allow_methods") // JUST FOR THE TESTER, TO DELETE
+    {
+        std::cout << "Allow Methods" << std::endl;
+        return true;
+    }
     else
         return false; 
 }
@@ -299,4 +304,22 @@ void ConfigServer::print() const
     for (size_t i = 0; i < this->getLocationss().size(); ++i) {
         Log::logVar(Log::PRINT, "Location: ", this->getLocationss()[i].getPath());
     }
+}
+
+bool ConfigServer::checkDoubleServerName(std::vector<std::string>& doubleServerNames)
+{
+    for (size_t i = 0; i < doubleServerNames.size(); i++)
+    {
+        for (size_t j = i + 1; j < _serverNames.size(); j++)
+        {
+            if (doubleServerNames[i] == _serverNames[j])
+            {
+                doubleServerNames.clear();
+                doubleServerNames.push_back(_serverNames[j]);
+                doubleServerNames.push_back(_listens.begin()->first);
+                return true;
+            }
+        }
+    }
+    return false;
 }

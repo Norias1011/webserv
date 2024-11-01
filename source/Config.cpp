@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/28 17:13:56 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/10/31 14:26:22 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,21 +102,13 @@ void Config::configBlock()
 
 void Config::checkDoubleServerName()
 {
-    for (size_t i = 0; i < this->_servers.size(); i++)
+    for (size_t i = 0; i < _servers.size(); i++)
     {
-        for (size_t j = 0; j < this->_servers[i].getServerNames().size(); j++)
+        std::vector<std::string> serverNames = _servers[i].getNewServerNames();
+        for (size_t j = i + 1; j < _servers.size(); j++)
         {
-            for (size_t k = 0; k < this->_servers.size(); k++)
-            {
-                if (i != k)
-                {
-                    for (size_t l = 0; l < this->_servers[k].getServerNames().size(); l++)
-                    {
-                        if (this->_servers[i].getServerNames()[j] == this->_servers[k].getServerNames()[l])
-                            throw Config::ErrorException("Duplicate server name");
-                    }
-                }
-            }
+            if (_servers[j].checkDoubleServerName(serverNames))
+                throw Config::ErrorException("Duplicate server name");
         }
     }
 }

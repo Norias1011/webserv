@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webserv Project - Elodie & Anthony</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f4f4f9;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+      text-align: center;
+    }
+    p {
+      line-height: 1.6;
+      color: #555;
+    }
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      background-color: #444;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 15px;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    /* Section Styles */
+    section {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .features, .team {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .feature, .member {
+      flex-basis: 48%;
+      margin-bottom: 20px;
+    }
+    /* Button */
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background-color: #555;
+    }
+    /* Footer */
+    footer {
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Webserv Project</h1>
+    <p>Developed by Elodie & Anthony at School 42</p>
+  </header>
+
+  <nav>
+    <a href="#overview">Overview</a>
+    <a href="#features">Features</a>
+    <a href="#team">Meet the Team</a>
+    <a href="#demo">Demo</a>
+  </nav>
+
+  <main class="container">
+    <!-- Overview Section -->
+    <section id="overview">
+      <h2>Project Overview</h2>
+      <p>The Webserv project is a custom HTTP server created as part of School 42's curriculum. Inspired by Nginx, it allows handling HTTP requests and responses, supporting various HTTP methods, and mimicking real-world server configurations.</p>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+      <h2>Key Features</h2>
+      <div class="features">
+        <div class="feature">
+          <h3>HTTP 1.1 Compliance</h3>
+          <p>Fully compliant with the HTTP/1.1 protocol, enabling standard request and response handling.</p>
+        </div>
+        <div class="feature">
+          <h3>Configurable Server</h3>
+          <p>Customizable configuration files to set up server blocks, ports, root directories, and more.</p>
+        </div>
+        <div class="feature">
+          <h3>Error Handling</h3>
+          <p>Handles HTTP errors gracefully with custom error pages for enhanced user experience.</p>
+        </div>
+        <div class="feature">
+          <h3>Multi-threaded Processing</h3>
+          <p>Supports multi-threaded request handling to manage concurrent connections efficiently.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Meet the Team Section -->
+    <section id="team">
+      <h2>Meet the Team</h2>
+      <div class="team">
+        <div class="member">
+          <h3>Elodie</h3>
+          <p>A dedicated coder and creative problem-solver, Elodie specializes in backend architecture and loves tackling complex systems.</p>
+        </div>
+        <div class="member">
+          <h3>Anthony</h3>
+          <p>An enthusiast of network protocols, Anthony brings his expertise in server management and code optimization to the project.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo">
+      <h2>Project Demo</h2>
+      <p>Check out our project demo or explore the source code on GitHub to see Webserv in action.</p>
+      <a href="https://github.com/Norias1011/webserv" class="btn" target="_blank">View on GitHub</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2023 Elodie & Anthony | Webserv Project at School 42</p>
+  </footer>
+
+</body>
+</html>

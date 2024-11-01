@@ -534,7 +534,7 @@ std::vector<std::string> Response::getFullPaths()
         else if (isAlias)
             pathRequest = root + "/" + index;
         else
-            pathRequest = root + pathRequest + index;
+            pathRequest = root + pathRequest + "/" + index;
         std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
