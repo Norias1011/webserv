@@ -288,18 +288,20 @@ void Request::findConfigServer() //should we check here the range of usable port
         return;
 	}
 	std::string host = getHeaders("Host");
-	if (host.empty())
+	/*if (host.empty())
 	{
 		Log::log(Log::ERROR, "Host is empty");
 		_serverCode = 400;
 		return;
-	}
+	}/*/
     const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
   	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
         const std::vector<ConfigServer> &servers = it->second;
         for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
         {
+			Log::logVar(Log::DEBUG, "_configServerd default: {}", _configServer);
+			std::string host = getHeaders("Host");
          	std::string server_name = host.substr(0, host.find(":"));
             std::string port_str = host.substr(host.find(":") + 1);
 			server_name.erase(std::remove_if(server_name.begin(), server_name.end(), ::isspace), server_name.end());
@@ -317,7 +319,7 @@ void Request::findConfigServer() //should we check here the range of usable port
 			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
 			if (server_name_config == server_name && server_port_config == server_port && !server_name.empty() && !server_name_config.empty())
             {
-				Log::log(Log::INFO, "Config server done \u2713");
+				Log::log(Log::INFO, "Config server done witth the match server \u2713");
                 _configServer = &(*it2);
 				_configServer->print();
 				this->findConfigLocation();
