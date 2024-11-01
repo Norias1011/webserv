@@ -124,9 +124,7 @@ void Request::parseBody()
 		}
 		if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
 		{
-			std::string chunk;
-			while (std::getline(i))
-
+			parseChunkedBody();
 		}
 	}
 	//printPostHeaders();
@@ -323,6 +321,30 @@ void Request::findConfigServer() //should we check here the range of usable port
 				Log::log(Log::ERROR, "Config server not possible");
         }
     }
+}
+
+void Request::parseChunkedBody()
+{
+	std::istringstream ss(_body);
+	std::string chunk_size;
+	std::string chunk;
+	std::string chunk_data;
+
+	while (std::getline(ss, chunk_size))
+	{
+		chunk_size.erase(std::remove(chunk_size.begin(), chunk_size.end(), '\r'), chunk_size.end());
+		if (chunk_size.empty())
+			continue;
+		std::stringstream chunk_stream(chunk_size);
+		chunk_stream >> std::hex >> chunk;
+		if (chunk.empty())
+		{
+			Log::log(Log::ERROR, "Invalid chunk");
+			_serverCode = 400;
+			return;
+		}
+		chunk_data += chunk;
+	}
 }
 
 void Request::findConfigLocation() 

@@ -41,6 +41,7 @@ class Request
         int parseRequestHeaders(std::string const &headers);
 		void parseBody();
         void parseMultipartFormData(std::string& body, const std::string& boundary);
+        void parseChunkedBody();
 
 		void findConfigServer();
 		void findConfigLocation();
