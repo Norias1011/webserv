@@ -326,25 +326,45 @@ void Request::findConfigServer() //should we check here the range of usable port
 void Request::parseChunkedBody()
 {
 	std::istringstream ss(_body);
-	std::string chunk_size;
+	std::string chunk_size_str;
 	std::string chunk;
-	std::string chunk_data;
+	std::string full_chunk;
 
-	while (std::getline(ss, chunk_size))
+	while (std::getline(ss, chunk_size_str))
 	{
-		chunk_size.erase(std::remove(chunk_size.begin(), chunk_size.end(), '\r'), chunk_size.end());
-		if (chunk_size.empty())
+		chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
+		if (chunk_size_str.empty())
 			continue;
-		std::stringstream chunk_stream(chunk_size);
-		chunk_stream >> std::hex >> chunk;
-		if (chunk.empty())
-		{
-			Log::log(Log::ERROR, "Invalid chunk");
-			_serverCode = 400;
-			return;
-		}
-		chunk_data += chunk;
+		
+		std::stringstream chunk_stream(chunk_size_str);
+		size_t chunk_size;
+		chunk_stream >> std::hex >> chunk_size;
+        if (chunk_size == 0)
+        {
+			// Read the trailing \r\n after the last chunk
+            std::string trailing;
+            std::getline(ss, trailing);
+            break;
+        }
+		chunk.resize(chunk_size);
+        ss.read(&chunk[0], chunk_size);
+
+        // Check if the read was successful
+        if (ss.gcount() != static_cast<std::streamsize>(chunk_size))
+        {
+            Log::log(Log::ERROR, "Incomplete chunk received");
+            _serverCode = 400;
+            return;
+        }
+
+        // Append the chunk data to the body
+        full_chunk += chunk;
+
+        // Read the trailing \r\n after the chunk data
+        std::string trailing;
+        std::getline(ss, trailing);
 	}
+	_body = full_chunk;
 }
 
 void Request::findConfigLocation() 

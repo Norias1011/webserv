@@ -156,7 +156,6 @@ void Client::sendResponse(int fd)
     {
 		Log::log(Log::ERROR, "Error: Unable to send response");
 		Log::logVar(Log::DEBUG, "sendResponse is :",sendResponse);
-        std::cerr << "Error: Unable to send response" << std::endl; // throw une erreur ici
         throw std::runtime_error("Error: Unable to send response");
     }
     else
