@@ -48,12 +48,13 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	Log::log(Log::DEBUG, "Entering the handle request part");
+	Log::log(Log::DEBUG, "Entering the Client:handleRequest part");
 	std::string request;
 	std::string body;
 	bool headers_received = false;
 	unsigned long len = 0;
 
+	Log::logVar(Log::DEBUG,"Request status is {}", this->_requestStatus);
 	if (this->_requestStatus == true)
 		return;
 	Log::logVar(Log::DEBUG,"Handling request from client fd {}.", this->_fd);
@@ -62,24 +63,33 @@ void Client::handleRequest(int fd)
 		char buffer[CLIENT_BUFFER + 1];
 		bzero(buffer, CLIENT_BUFFER + 1);
 		int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
-
-		if (bytes <= 0) 
+		Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
+		
+		if (bytes < 0) 
 		{
 			throw DecoExc();
 		}
+		
 		request.append(buffer,bytes);
-
+		Log::logVar(Log::ERROR, "request received:", request);
+		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 		if (!headers_received)
 		{
+			Log::log(Log::ERROR, "Entering the !headers_received part");
 			size_t pos = request.find("\r\n\r\n");
 			if (pos != std::string::npos)
 			{
+				Log::log(Log::ERROR, "We find the end of the headers!");
 				headers_received = true;
 				std::string headers = request.substr(0,pos);
 				Log::log(Log::DEBUG,"Beginning parsing of the Headers.");
 				if (this->_request->parseRequestHeaders(headers) == -1)
+				{
 					Log::log(Log::ERROR,"Error in the parsing of the Headers.");
-				Log::log(Log::DEBUG,"Headers are OK.");
+					this->_request->setServerCode(400);
+				}
+				else
+					Log::log(Log::DEBUG,"Headers are OK.");
 
 				//Content-Length
 				std::string content_length = this->_request->getHeaders("Content-Length");
@@ -102,14 +112,12 @@ void Client::handleRequest(int fd)
 					Log::log(Log::ERROR, "Content-Length contains non-digit characters");
 			}
 		}
+		
 		//once the heders are received, we can find the configuration
 		Log::logVar(Log::ERROR, "Len is: {}", len);
-		if (headers_received)
-		{
-			Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
-			Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
-			this->_request->findConfigServer();
-		}
+		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
+		Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
+		this->_request->findConfigServer();
 		// Body
 		if (headers_received && len > 0)
 		{
@@ -127,8 +135,17 @@ void Client::handleRequest(int fd)
 		else if (len == 0)
 			break;
 	}
-	Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready");
-	this->_requestStatus = true;
+	if (!headers_received)
+	{
+		Log::log(Log::ERROR,"Invalid Request, missing headers.");
+		this->_request->setServerCode(400);
+		this->_requestStatus = true;
+	}
+	else
+	{
+		Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready");
+		this->_requestStatus = true;
+	}
 	changeEpoll(fd);
 }
 
@@ -166,10 +183,10 @@ void Client::sendResponse(int fd)
     {
 		std::cout << "[DEBUG] - Response is done ... request and response are reseting.. " << std::endl;
        	if (this->getRequestStatus() != true)
-            throw DecoExc();	
+            throw DecoExc();
+		delete this->_response;	
         delete this->_request;
 		this->_request = new Request(this);
-        delete this->_response;
         this->_response = new Response(this);
 		this->setRequestStatus(false);
         epoll_event ev;

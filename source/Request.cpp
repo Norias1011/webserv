@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isCGI(false),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isCGI(false), _lastRequestTime(0)
 {
 }
 
@@ -43,6 +43,7 @@ Request &Request::operator=(Request const &src)
 		this->_serverCode = src._serverCode;
 		this->_headers = src._headers;
 		this->_body = src._body;
+		this->_isCGI = src._isCGI;
 		this->_rawHeaders = src._rawHeaders;
 	}
 	return *this;
@@ -77,6 +78,7 @@ int Request::parseRequestHeaders(std::string const &raw_headers)
 		return -1;
 	}
 	_path = objects[1];
+	_path.find("/cgi-bin/") != std::string::npos ? _isCGI = true : _isCGI = false;
 	if (!isHttpVersionValid(objects[2]))
 	{
 		Log::log(Log::ERROR, "Invalid http version");
@@ -227,18 +229,30 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 			mkdir("docs/uploads/", 0777);
 			std::ofstream file(file_path.c_str(), std::ios::binary);
 			if (!file)
+			{
 				Log::logVar(Log::ERROR, " Failed to open file: {}", file_path);
+				_serverCode = 500;
+			}
 			else 
 			{
                 file.write(content.data(), content.size());
-                if (!file) 
+                if (!file)
+				{
 					Log::logVar(Log::ERROR, " Failed to write to file: {}", file_path);
-				else 
+					_serverCode = 500;
+				}
+				else
+				{
 					Log::logVar(Log::INFO, " File uploaded: {}", file_path);
+					_serverCode = 200; // cest 201 je crois mais ca bug a cause de la reponse a voir
+				}
             }
         } 
-		else 
+		else
+		{
             Log::log(Log::DEBUG, "there is no file to upload");
+			_serverCode = 400;
+		}
     }
 }
 
@@ -280,7 +294,6 @@ void Request::findConfigServer() //should we check here the range of usable port
 		_serverCode = 400;
 		return;
 	}
-	
     const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
   	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
     {
@@ -302,23 +315,31 @@ void Request::findConfigServer() //should we check here the range of usable port
             Log::logVar(Log::DEBUG, "Server Name de la config : {}", server_name_config);
 			Log::logVar(Log::DEBUG, "Server Port de la config : {}", server_port_config);
 			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
-			if (server_name_config == server_name && server_port_config == server_port)
+			if (server_name_config == server_name && server_port_config == server_port && !server_name.empty() && !server_name_config.empty())
             {
 				Log::log(Log::INFO, "Config server done \u2713");
                 _configServer = &(*it2);
 				_configServer->print();
 				this->findConfigLocation();
+				if (_isCGI == true)
+				{
+					Log::log(Log::INFO, "CGI is true"); // to parse CGI REquest
+					return;
+				}
                 return;
             }
-			else if(!server_name.empty())
+			else	
 			{
 				Log::log(Log::INFO, "Config server done with default server \u2713");
-				_configServer = &(it2[0]); // a checker si ca passe ca
+				_configServer = &(it2[0]); // to check  if it works
 				_configServer->print();
 				this->findConfigLocation();
+				if (_isCGI == true)
+				{
+					Log::log(Log::INFO, "CGI is true"); // to parse CGI REquest
+					return;
+				}
 			}
-			else
-				Log::log(Log::ERROR, "Config server not possible");
         }
     }
 }
@@ -341,7 +362,6 @@ void Request::parseChunkedBody()
 		chunk_stream >> std::hex >> chunk_size;
         if (chunk_size == 0)
         {
-			// Read the trailing \r\n after the last chunk
             std::string trailing;
             std::getline(ss, trailing);
             break;
@@ -349,7 +369,6 @@ void Request::parseChunkedBody()
 		chunk.resize(chunk_size);
         ss.read(&chunk[0], chunk_size);
 
-        // Check if the read was successful
         if (ss.gcount() != static_cast<std::streamsize>(chunk_size))
         {
             Log::log(Log::ERROR, "Incomplete chunk received");
@@ -357,10 +376,8 @@ void Request::parseChunkedBody()
             return;
         }
 
-        // Append the chunk data to the body
         full_chunk += chunk;
 
-        // Read the trailing \r\n after the chunk data
         std::string trailing;
         std::getline(ss, trailing);
 	}
@@ -388,7 +405,6 @@ void Request::findConfigLocation()
 			_configDone = true;
 			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done \u2713");
-			_serverCode = 200;
 			//_configLocation->print(); //DEBUG
 			return;
 		}

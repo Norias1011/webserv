@@ -34,6 +34,7 @@ class Request
         time_t getLastRequestTime() const { return _lastRequestTime; };
         int getServerCode() const { return _serverCode; };
 		bool getConfigDone() const {return _configDone; };
+        bool getChunked() const {return _isChunked; };
 
         void timeoutChecker();
 		std::string getHeaders(const std::string& headername);
@@ -49,6 +50,7 @@ class Request
         std::string isMethod(std::string const &method);
 
         void setServerCode(int code) { _serverCode = code; };
+        void setChunked(bool value) { _isChunked = value; };
 
 		void printHeaders() const;
 		void printPostHeaders() const;
@@ -74,6 +76,8 @@ class Request
         bool _init;
         bool _working;
         bool _configDone;
+        bool _isCGI;
+        bool _isChunked;
         time_t _lastRequestTime;
 };
 

@@ -42,7 +42,7 @@ Response &Response::operator=(Response const &src)
 int Response::giveAnswer()
 {
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
-    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode is :" << _request->getServerCode()<< std::endl;
+    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode is : " << _request->getServerCode()<< std::endl;
     if (!_response.empty())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
@@ -97,7 +97,7 @@ int Response::giveAnswer()
 
 bool Response::checkRewrite()
 {
-	if (this->_request->getConfigDone())
+	//if (this->_request->getConfigDone() == false)
 		
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
