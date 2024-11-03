@@ -118,6 +118,7 @@ void Client::handleRequest(int fd)
 		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 		Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
 		this->_request->findConfigServer();
+		this->_request->setRequest(request);
 		// Body
 		if (headers_received && len > 0)
 		{
@@ -127,23 +128,26 @@ void Client::handleRequest(int fd)
 			this->_request->setBody(body);
 			if (body.size() >= len)
 			{
-				this->_request->setRequest(request);
 				this->_request->parseBody();
 				break;
 			}
 		}
-		else if (len == 0)
+		else if (headers_received && len == 0)
+		{	
+			if (_request->getMethod() == "DELETE")
+				_request->handleDelete();
 			break;
+		}
 	}
 	if (!headers_received)
 	{
-		Log::log(Log::ERROR,"Invalid Request, missing headers.");
+		Log::log(Log::ERROR,"Invalid Request, missing headers - Error 404.");
 		this->_request->setServerCode(400);
 		this->_requestStatus = true;
 	}
 	else
 	{
-		Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready");
+		Log::log(Log::DEBUG,"Request headers, configuration server and body are ready");
 		this->_requestStatus = true;
 	}
 	changeEpoll(fd);

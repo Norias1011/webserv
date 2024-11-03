@@ -125,11 +125,46 @@ void Request::parseBody()
 			parseMultipartFormData(_body, boundary);
 		}
 		if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
-		{
 			parseChunkedBody();
-		}
 	}
-	//printPostHeaders();
+}
+
+void Request::handleDelete()
+{
+
+	std::string file_path  = "";
+
+	if (_path.find("file=") != std::string::npos)
+	{
+		size_t pos = _path.find("file=") + 5;
+		file_path = _path.substr(pos);
+	}
+	else
+	{
+		Log::log(Log::ERROR, "Invalid path");
+		_serverCode = 400;
+		return;
+	}
+
+	Log::logVar(Log::DEBUG, "uploadedFilename: {}", _uploadedFilename);
+    if (access(file_path.c_str(), F_OK) != -1)
+    {
+        if (remove(file_path.c_str()) == 0)
+        {
+            Log::logVar(Log::INFO, "File deleted: {}", file_path);
+            _serverCode = 200; 
+        }
+        else
+        {
+            Log::logVar(Log::ERROR, "Failed to delete file: {}", file_path);
+            _serverCode = 500; 
+        }
+    }
+    else
+    {
+        Log::logVar(Log::ERROR, "File not found: {}", file_path);
+        _serverCode = 404;
+    }
 }
 
 bool Request::isHttpVersionValid(std::string const &version)
@@ -243,7 +278,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 				}
 				else
 				{
-					Log::logVar(Log::INFO, " File uploaded: {}", file_path);
+					Log::logVar(Log::INFO, " File uploaded on: {}", file_path);
 					_serverCode = 200; // cest 201 je crois mais ca bug a cause de la reponse a voir
 				}
             }

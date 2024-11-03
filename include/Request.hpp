@@ -35,6 +35,7 @@ class Request
         int getServerCode() const { return _serverCode; };
 		bool getConfigDone() const {return _configDone; };
         bool getChunked() const {return _isChunked; };
+        void handleDelete();
 
         void timeoutChecker();
 		std::string getHeaders(const std::string& headername);
@@ -72,6 +73,7 @@ class Request
         std::map<std::string, std::string> _postHeaders;
         std::map<std::string, std::map<std::string, std::string> > _fileHeaders;
 		std::string _body;
+        std::string _uploadedFilename;
         int _serverCode;
         bool _init;
         bool _working;
