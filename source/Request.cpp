@@ -354,7 +354,7 @@ void Request::findConfigServer() //should we check here the range of usable port
 			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
 			if (server_name_config == server_name && server_port_config == server_port && !server_name.empty() && !server_name_config.empty())
             {
-				Log::log(Log::INFO, "Config server done witth the match server \u2713");
+				Log::log(Log::INFO, "Config server done with the match server \u2713");
                 _configServer = &(*it2);
 				_configServer->print();
 				this->findConfigLocation();
@@ -441,11 +441,11 @@ void Request::findConfigLocation()
 			this->_configLocation = &(*it);
 			_configDone = true;
 			_serverCode = 200;
-			Log::log(Log::INFO, "Config location done \u2713");
+			Log::log(Log::INFO, "Config location done with a match \u2713");
 			//_configLocation->print(); //DEBUG
 			return;
 		}
-		Log::log(Log::ERROR, "No location found");
-		_serverCode = 404;
+		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
+		this->_configLocation = &(it[0]);
 	}
 }

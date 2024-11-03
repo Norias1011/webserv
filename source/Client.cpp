@@ -64,6 +64,7 @@ void Client::handleRequest(int fd)
 		bzero(buffer, CLIENT_BUFFER + 1);
 		int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
 		Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
+		Log::logVar(Log::DEBUG,"buffer received {}.", buffer);
 		
 		if (bytes < 0) 
 		{
