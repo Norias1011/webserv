@@ -87,7 +87,8 @@ void Client::handleRequest(int fd)
 				if (this->_request->parseRequestHeaders(headers) == -1)
 				{
 					Log::log(Log::ERROR,"Error in the parsing of the Headers.");
-					this->_request->setServerCode(400);
+					this->_request->findConfigServer();
+					return;
 				}
 				else
 					Log::log(Log::DEBUG,"Headers are OK.");
