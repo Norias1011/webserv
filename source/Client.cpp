@@ -67,7 +67,7 @@ void Client::handleRequest(int fd)
 		
 		if (bytes <= 0)
 		{
-			this->_request->setServerCode(400);
+			this->_request->setServerCode(405);
 			throw DecoExc();
 		}
 		
@@ -78,7 +78,7 @@ void Client::handleRequest(int fd)
 		{
 			Log::log(Log::ERROR, "No, so Entering the !headers_received part");
 			size_t pos = request.find("\r\n\r\n");
-			if (pos != std::string::npos)
+			if (pos != std::string::npos || request.find("chunked") != std::string::npos)
 			{
 				Log::log(Log::ERROR, "We find the end of the headers !");
 				headers_received = true;
@@ -115,13 +115,15 @@ void Client::handleRequest(int fd)
 		}
 		
 		//once the heders are received, we can find the configuration
-		Log::logVar(Log::ERROR, "Len is: {}", len);
+		//and if the headers are not fully received also to get the Error pages.
+		Log::logVar(Log::ERROR, "Len of the body is: {}", len);
 		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 		Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
 		this->_request->findConfigServer();
 		this->_request->setRequest(request);
 		// Body
-		if (headers_received && len > 0)
+
+		if ((headers_received && len > 0) || this->_request->getHeaders("Transfer-Encoding:") == "chunked")
 		{
 			Log::log(Log::DEBUG,"End of configuration of the request , now parsing the body for POST method..");
 			size_t body_p = request.find("\r\n\r\n") + 4;
@@ -139,10 +141,12 @@ void Client::handleRequest(int fd)
 				_request->handleDelete();
 			break;
 		}
+		else if (!headers_received && this->_request->getHeaders("Transfer-Encoding:") != "chunked")
+			break;
 	}
 	if (!headers_received)
 	{
-		Log::log(Log::ERROR,"Invalid Request, missing headers - Error 404.");
+		Log::log(Log::ERROR,"Invalid Request, missing headers - Error 400.");
 		this->_request->setServerCode(400);
 		this->_requestStatus = true;
 	}

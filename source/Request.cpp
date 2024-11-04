@@ -129,7 +129,15 @@ void Request::parseBody()
 			return;
 		}
 		else if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
-			parseChunkedBody();
+		{
+			while (true)
+			{
+				size_t old_size = _body.size();
+				parseChunkedBody();
+				if (_body.size() == old_size)
+                    break;
+			}
+		}
 	}
 }
 
@@ -373,6 +381,10 @@ void Request::findConfigServer() //should we check here the range of usable port
 
 void Request::parseChunkedBody()
 {
+	Log::log(Log::DEBUG, "Entering parsing chunk Body");
+	if (_body.empty())
+		_body = "";
+
 	std::istringstream ss(_body);
 	std::string chunk_size_str;
 	std::string chunk;
@@ -395,14 +407,6 @@ void Request::parseChunkedBody()
         }
 		chunk.resize(chunk_size);
         ss.read(&chunk[0], chunk_size);
-
-        if (ss.gcount() != static_cast<std::streamsize>(chunk_size))
-        {
-            Log::log(Log::ERROR, "Incomplete chunk received");
-            _serverCode = 400;
-            return;
-        }
-
         full_chunk += chunk;
 
         std::string trailing;

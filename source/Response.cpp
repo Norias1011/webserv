@@ -53,6 +53,7 @@ int Response::giveAnswer()
         std::cout << "server code : " << _request->getServerCode() << std::endl;
         std::cout << "[DEBUG] - Response::giveAnswer - server code is not 200" << std::endl;
         _response = _errorPage.getConfigErrorPage(_request->getConfigServer()->getErrorPages(), _request->getServerCode());
+		_done = true;
         return 0;
     }
     if (checkRewrite())
