@@ -65,21 +65,19 @@ void Client::handleRequest(int fd)
 		int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
 		Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
 		
-		if (bytes < 0) 
-		{
-			throw DecoExc();
-		}
+		if (bytes <= 0) 
+			this->_request->setServerCode(400);
 		
 		request.append(buffer,bytes);
-		Log::logVar(Log::ERROR, "request received:", request);
-		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
+		Log::logVar(Log::INFO, "request received:", request);
+		Log::logVar(Log::ERROR, "every the headers are received ? {}", headers_received);
 		if (!headers_received)
 		{
-			Log::log(Log::ERROR, "Entering the !headers_received part");
+			Log::log(Log::ERROR, "No, so Entering the !headers_received part");
 			size_t pos = request.find("\r\n\r\n");
 			if (pos != std::string::npos)
 			{
-				Log::log(Log::ERROR, "We find the end of the headers!");
+				Log::log(Log::ERROR, "We find the end of the headers !");
 				headers_received = true;
 				std::string headers = request.substr(0,pos);
 				Log::log(Log::DEBUG,"Beginning parsing of the Headers.");
@@ -118,6 +116,7 @@ void Client::handleRequest(int fd)
 		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 		Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
 		this->_request->findConfigServer();
+		this->_request->setRequest(request);
 		// Body
 		if (headers_received && len > 0)
 		{
@@ -127,23 +126,26 @@ void Client::handleRequest(int fd)
 			this->_request->setBody(body);
 			if (body.size() >= len)
 			{
-				this->_request->setRequest(request);
 				this->_request->parseBody();
 				break;
 			}
 		}
-		else if (len == 0)
+		else if (headers_received && len == 0)
+		{	
+			if (_request->getMethod() == "DELETE")
+				_request->handleDelete();
 			break;
+		}
 	}
 	if (!headers_received)
 	{
-		Log::log(Log::ERROR,"Invalid Request, missing headers.");
+		Log::log(Log::ERROR,"Invalid Request, missing headers - Error 404.");
 		this->_request->setServerCode(400);
 		this->_requestStatus = true;
 	}
 	else
 	{
-		Log::log(Log::DEBUG,"Request headers, configuration server and boy are ready");
+		Log::log(Log::DEBUG,"Request headers, configuration server and body are ready");
 		this->_requestStatus = true;
 	}
 	changeEpoll(fd);

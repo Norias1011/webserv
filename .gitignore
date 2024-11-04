@@ -1,5 +1,7 @@
 # Ignore Visual Studio Code configuration files
 .vscode/
+tester/
+webserv_tester/
 
 # Ignore object files
 *.o
