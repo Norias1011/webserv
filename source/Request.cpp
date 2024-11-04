@@ -117,14 +117,18 @@ void Request::parseBody()
 	{
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
+			Log::logVar(Log::INFO,"Entering multipart/form-data - le body {}", _body );
 			std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
 			boundary.erase(0,boundary.find_first_not_of("\t\n\r",1));
 			boundary.erase(boundary.find_last_not_of(" \t\n\r") + 1);
-			Log::logVar(Log::INFO,"Le boundary {}", boundary );
-			Log::logVar(Log::INFO,"Le body {}", _body );
 			parseMultipartFormData(_body, boundary);
 		}
-		if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
+		else if (_headers["Content-Type"].find("text/plain") != std::string::npos) 
+		{
+			Log::logVar(Log::INFO,"Entering text/plain- le body {}", _body );
+			return;
+		}
+		else if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
 			parseChunkedBody();
 	}
 }

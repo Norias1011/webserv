@@ -65,8 +65,11 @@ void Client::handleRequest(int fd)
 		int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
 		Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
 		
-		if (bytes <= 0) 
+		if (bytes <= 0)
+		{
 			this->_request->setServerCode(400);
+			throw DecoExc();
+		}
 		
 		request.append(buffer,bytes);
 		Log::logVar(Log::INFO, "request received:", request);

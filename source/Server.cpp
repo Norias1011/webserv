@@ -77,6 +77,7 @@ void Server::createSocket()
 			bzero(&(addr.sin_zero),8);
 			_sockets[new_socket] = addr;
 			Log::logVar(Log::DEBUG, "sucess creating the socket for the port number:{}", _new_server[i].getPort());
+			Log::logVar(Log::DEBUG, "sucess creating the socket for the server name:{}", _new_server[i].getServerNames());
 			this->addSocket(_epollFd, new_socket, EPOLLIN);
 		}
 	}
