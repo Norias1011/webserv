@@ -64,23 +64,20 @@ void Client::handleRequest(int fd)
 		bzero(buffer, CLIENT_BUFFER + 1);
 		int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
 		Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
-		Log::logVar(Log::DEBUG,"buffer received {}.", buffer);
 		
-		if (bytes < 0) 
-		{
-			throw DecoExc();
-		}
+		if (bytes <= 0) 
+			this->_request->setServerCode(400);
 		
 		request.append(buffer,bytes);
-		Log::logVar(Log::ERROR, "request received:", request);
-		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
+		Log::logVar(Log::INFO, "request received:", request);
+		Log::logVar(Log::ERROR, "every the headers are received ? {}", headers_received);
 		if (!headers_received)
 		{
-			Log::log(Log::ERROR, "Entering the !headers_received part");
+			Log::log(Log::ERROR, "No, so Entering the !headers_received part");
 			size_t pos = request.find("\r\n\r\n");
 			if (pos != std::string::npos)
 			{
-				Log::log(Log::ERROR, "We find the end of the headers!");
+				Log::log(Log::ERROR, "We find the end of the headers !");
 				headers_received = true;
 				std::string headers = request.substr(0,pos);
 				Log::log(Log::DEBUG,"Beginning parsing of the Headers.");
