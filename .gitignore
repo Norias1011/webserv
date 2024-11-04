@@ -5,4 +5,4 @@
 *.o
 
 # Ignore executable files
-*.exe
+webserv
