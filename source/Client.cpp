@@ -75,6 +75,7 @@ void Client::handleRequest(int fd)
 		return;
 	}
 	this->_request->parseRequest(raw_request);
+	this->_requestStatus = true;
 	changeEpoll(fd);
 }
 
