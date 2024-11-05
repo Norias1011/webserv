@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isCGI(false),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isChunked(false),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isCGI(false), _lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isChunked(false),_lastRequestTime(0)
 {
 }
 
@@ -43,75 +43,211 @@ Request &Request::operator=(Request const &src)
 		this->_serverCode = src._serverCode;
 		this->_headers = src._headers;
 		this->_body = src._body;
-		this->_isCGI = src._isCGI;
-		this->_rawHeaders = src._rawHeaders;
+		this->_isChunked = src._isChunked;
+		this->_isFirstLineParsed = src._isFirstLineParsed;
+		this->_isHeadersParsed =src._isHeadersParsed;
+		this->_isHttpParsed = src._isHttpParsed;
+		this->_isMethodParsed = src._isMethodParsed;
+		this->_isPathParsed = src._isPathParsed;
 	}
 	return *this;
 }
 
-int Request::parseRequestHeaders(std::string const &raw_headers)
+void Request::parseRequest(const std::string &raw_request)
 {
-	_rawHeaders = raw_headers;
-	std::string extracted = raw_headers.substr(0,raw_headers.find("\n"));
-	this->_lastRequestTime = time(0) + 10;
-	if (extracted.empty())
-		return -1;
-	extracted.erase(std::remove(extracted.begin(), extracted.end(), '\r'), extracted.end());
-	std::stringstream ss(extracted);
-	std::string object;
-	std::vector<std::string> objects;
-	while (std::getline(ss, object, ' '))
+	this->_request += raw_request;
+
+	Log::logVar(Log::DEBUG, "Parsing request {}", this->_request);
+	this->parseFirstLine();
+	if (this->getFirstLineParsed() == true)
+		this->parseRequestHeaders();
+	else
+		Log::log(Log::DEBUG, "The First line is not properly parsed");
+	if (this->getHeadersParsed() == true)
 	{
-		objects.push_back(object);
+		Log::log(Log::DEBUG, "The Headers are parsed");
+		//this->_request->parseBody();
 	}
-	if (objects.size() != 3)
+	else
+		Log::log(Log::DEBUG, "headers are not properly parsed");
+}
+
+void Request::parseFirstLine(void)
+{
+	if (this->_isFirstLineParsed == true)
+		return;
+	// METHOD PARSING AND CHECK
+	int i = 0;
+	int size = _request.size();
+	bool flag = 0;
+	while (i < size)
 	{
-		Log::log(Log::ERROR, "Invalid request");
+		if (this->_request[i] == ' ')
+		{
+			flag = 1;
+			break;
+		}
+		if (!std::isalpha(this->_request[i]))
+			_serverCode = 400;
+		this->_method += this->_request[i];
+		i++;
+	}
+	_request.erase(0,flag? i + 1 : i);
+	if (flag)
+	{
+		if (_method.empty())
+		{
+			_serverCode = 400;
+			return;
+		}
+		if (isMethod(_method) == "WRONG METHOD")
+		{
+			_serverCode = 405;
+			return;
+		}
+		Log::logVar(Log::DEBUG,"method is:", _method);
+		_isMethodParsed = true;
+	}
+	// PATH PARSING AND CHECK
+	i = 0;
+	size = this->_request.size();
+	flag = false;
+	while (i < size)
+	{
+		if (this->_path.empty() && (this->_request[i] == ' ' || this->_request[i] == '\t'))
+		{
+			i++;
+			continue;
+		}
+		if (this->_request[i] == ' ')
+		{
+			flag = true;
+			break;
+		}
+		if (!std::isprint(this->_request[i]))
+		{
+			_serverCode = 400;
+			return;
+		}
+		this->_path += this->_request[i];
+		i++;
+	}
+	_request.erase(0,flag ? i + 1 : i);
+	if (flag)
+	{
+		if (this->_path.empty())
+		{
+			_serverCode = 400;
+			return;
+		}
+		//if (this->checkFile(_path))
+		Log::logVar(Log::DEBUG,"path is:", _path);
+		_isPathParsed = true;
+	}
+	// HTTP PARSING AND CHECK
+	i = 0;
+	size = this->_request.size();
+	flag = false;
+	while (i < size)
+	{
+		if (this->_httpVersion.empty() && (this->_request[i] == ' ' || this->_request[i] == '\t'))
+		{
+			i++;
+			continue;
+		}
+		if (this->_request[i] != 'H' && this->_request[i] != 'T' && this->_request[i] != 'P' && this->_request[i] != '/' && this->_request[i] != '.' && !std::isdigit(this->_request[i]))
+		{
+			flag = true;
+			break;
+		}
+		this->_httpVersion += this->_request[i];
+		i++;
+	}
+	_request.erase(0,flag ? i + 1 : i);
+	if (flag)
+	{
+		if (this->_httpVersion.empty())
+		{
+			_serverCode = 400;
+			return;
+		}
+		if (!isHttpVersionValid(_httpVersion))
+		{
+			_serverCode = 505;
+			return;
+		}
+		Log::logVar(Log::DEBUG,"http version is:", _httpVersion);
+		_isHttpParsed = true;
+	}
+	if (_isHttpParsed == true && _isMethodParsed == true && _isPathParsed == true)
+	{
+		this->_request.erase(0, this->_request.find_first_not_of(" \t"));
+		if (_request.empty())
+			return;
+		if (this->_request[0] == '\n')
+		{
+			this->_request.erase(0, 1);
+			_isFirstLineParsed = true;
+			return;
+		}
+		if (this->_request[0] == '\r')
+		{
+			if (this->_request.size() < 2)
+				return ;
+			if (this->_request[1] == '\n')
+			{
+				this->_request.erase(0, 2);
+				_isFirstLineParsed = true;
+				return ;
+			}
+			_serverCode = 400;
+			return;
+		}
 		_serverCode = 400;
-		return -1;
+		return;
 	}
-	_method = isMethod(objects[0]);
-	if (_method == "WRONG METHOD")
+}
+
+void Request::parseRequestHeaders()
+{
+	if (this->_isHeadersParsed == true)
 	{
-		Log::log(Log::ERROR, "Invalid method");
-		_serverCode = 405;
-		return -1;
+		Log::log(Log::DEBUG,"Headers are already parsed");
+		return;
 	}
-	_path = objects[1];
-	_path.find("/cgi-bin/") != std::string::npos ? _isCGI = true : _isCGI = false;
-	if (!isHttpVersionValid(objects[2]))
+	size_t start = 0;
+	size_t end = _request.find("\r\n\r\n", start);
+	if (end == std::string::npos)
 	{
-		Log::log(Log::ERROR, "Invalid http version");
-		_serverCode = 505;
-		return -1;
+		Log::log(Log::DEBUG,"End of the headers not found");
+		_serverCode = 400;
+		return;
 	}
-	_httpVersion = objects[2];
-	Log::logVar(Log::DEBUG, "method is:", _method);
-	Log::logVar(Log::DEBUG, "path is :", _path);
-	Log::logVar(Log::DEBUG, "version is :", _httpVersion);
-	Log::logVar(Log::DEBUG, "server code is :", _serverCode);
-	size_t start = _rawHeaders.find("\r\n") + 2; 
-	size_t end = _rawHeaders.find("\r\n\r\n", start);
-	std::string all_headers = _rawHeaders.substr(start, end - start);
+	std::string all_headers = _request.substr(start, end - start);
 	std::stringstream headers_stream(all_headers);
 	std::string header;
 	while(std::getline(headers_stream, header, '\n'))
 	{
-		size_t pos = header.find(": ");
+		size_t pos = header.find(":");
 		if (pos == std::string::npos)
 		{
 			Log::log(Log::ERROR, "Invalid header");
-			return -1;
+			_serverCode = 400;
+			return;
 		}
 		std::string key = header.substr(0, pos);
 		std::string value = header.substr(pos + 1);
 		_headers[key] = value;
-		 std::cout << "[DEBUG] Parsed header: " << key << " = " << value << std::endl;
+		std::cout << "[DEBUG] Parsed header: " << key << " = " << value << std::endl;
 	}
-	return (0);
+	this->_request.erase(0 ,end + 4);
+	_isHeadersParsed = true;
+	Log::log(Log::DEBUG, "We found the end of the headers we can config");
+	if (this->findConfigServer() == -1)
+		return;
 }
 
-void Request::parseBody()
+/*void Request::parseBody()
 {
 	if (_method == "POST")
 	{
@@ -139,7 +275,7 @@ void Request::parseBody()
 			}
 		}
 	}
-}
+}*/
 
 void Request::handleDelete()
 {
@@ -313,72 +449,6 @@ void Request::printPostHeaders() const
 	}
 }
 
-void Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
-{
-	if(_configDone == true)
-	{
-		Log::log(Log::DEBUG, "Config server/locations already found");
-        return;
-	}
-	std::string host = getHeaders("Host");
-	/*if (host.empty())
-	{
-		Log::log(Log::ERROR, "Host is empty");
-		_serverCode = 400;
-		return;
-	}/*/
-    const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
-  	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
-    {
-        const std::vector<ConfigServer> &servers = it->second;
-        for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
-        {
-			Log::logVar(Log::DEBUG, "_configServerd default: {}", _configServer);
-			std::string host = getHeaders("Host");
-         	std::string server_name = host.substr(0, host.find(":"));
-            std::string port_str = host.substr(host.find(":") + 1);
-			server_name.erase(std::remove_if(server_name.begin(), server_name.end(), ::isspace), server_name.end());
-			port_str.erase(std::remove_if(port_str.begin(), port_str.end(), ::isspace), port_str.end());
-			unsigned int server_port = 0;
-			std::stringstream ss(port_str);
-			ss >> server_port;
-
-			Log::logVar(Log::DEBUG, "Server Name de la requete: {}", server_name);
-			Log::logVar(Log::DEBUG, "Server Port la requete: {}", server_port);
-			unsigned int server_port_config = it2->getPort();
-			std::string server_name_config = it2->getServerNames();
-            Log::logVar(Log::DEBUG, "Server Name de la config : {}", server_name_config);
-			Log::logVar(Log::DEBUG, "Server Port de la config : {}", server_port_config);
-			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
-			if (server_name_config == server_name && server_port_config == server_port && !server_name.empty() && !server_name_config.empty())
-            {
-				Log::log(Log::INFO, "Config server done with the match server \u2713");
-                _configServer = &(*it2);
-				_configServer->print();
-				this->findConfigLocation();
-				if (_isCGI == true)
-				{
-					Log::log(Log::INFO, "CGI is true"); // to parse CGI REquest
-					return;
-				}
-                return;
-            }
-			else	
-			{
-				Log::log(Log::INFO, "Config server done with default server \u2713");
-				_configServer = &(it2[0]); // to check  if it works
-				_configServer->print();
-				this->findConfigLocation();
-				if (_isCGI == true)
-				{
-					Log::log(Log::INFO, "CGI is true"); // to parse CGI REquest
-					return;
-				}
-			}
-        }
-    }
-}
-
 void Request::parseChunkedBody()
 {
 	Log::log(Log::DEBUG, "Entering parsing chunk Body");
@@ -414,14 +484,71 @@ void Request::parseChunkedBody()
 	}
 	_body = full_chunk;
 }
+int Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
+{
+	if(_configDone == true)
+	{
+		Log::log(Log::DEBUG, "Config server/locations already found");
+        return -1;
+	}
+	std::string host = getHeaders("Host");
+	if (host.empty())
+	{
+		Log::log(Log::ERROR, "Host is empty");
+		_serverCode = 400;
+		return -1;
+	}
+    const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
+  	for (std::map<std::string, std::vector<ConfigServer> >::const_iterator it = serverConfigs.begin(); it != serverConfigs.end(); ++it)
+    {
+        const std::vector<ConfigServer> &servers = it->second;
+        for (std::vector<ConfigServer>::const_iterator it2 = servers.begin(); it2 != servers.end(); ++it2)
+        {
+			Log::logVar(Log::DEBUG, "_configServer default: {}", _configServer);
+			std::string host = getHeaders("Host");
+         	std::string server_name = host.substr(0, host.find(":"));
+            std::string port_str = host.substr(host.find(":") + 1);
+			server_name.erase(std::remove_if(server_name.begin(), server_name.end(), ::isspace), server_name.end());
+			port_str.erase(std::remove_if(port_str.begin(), port_str.end(), ::isspace), port_str.end());
+			unsigned int server_port = 0;
+			std::stringstream ss(port_str);
+			ss >> server_port;
 
-void Request::findConfigLocation() 
+			Log::logVar(Log::DEBUG, "Server Name de la requete: {}", server_name);
+			Log::logVar(Log::DEBUG, "Server Port la requete: {}", server_port);
+			unsigned int server_port_config = it2->getPort();
+			std::string server_name_config = it2->getServerNames();
+            Log::logVar(Log::DEBUG, "Server Name de la config : {}", server_name_config);
+			Log::logVar(Log::DEBUG, "Server Port de la config : {}", server_port_config);
+			server_name_config.erase(std::remove_if(server_name_config.begin(), server_name_config.end(), ::isspace), server_name_config.end());
+			if (server_name_config == server_name && server_port_config == server_port && !server_name.empty() && !server_name_config.empty())
+            {
+				Log::log(Log::INFO, "Config server done with the match server \u2713");
+                _configServer = &(*it2);
+				_configServer->print();
+				this->findConfigLocation();
+                return (0);
+            }
+			else	
+			{
+				Log::log(Log::INFO, "Config server done with default server \u2713");
+				_configServer = &(it2[0]); // to check  if it works
+				_configServer->print();
+				this->findConfigLocation();
+				return (0);
+			}
+        }
+    }
+	return (0);
+}
+
+int Request::findConfigLocation() 
 {
 	if (_configServer == NULL)
 	{
     	Log::log(Log::ERROR, "_configServer is NULL	");
 		_serverCode = 500;
-    	return;
+    	return -1;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
 	const std::vector<ConfigLocation>& locations = this->_configServer->getLocations();
@@ -437,9 +564,10 @@ void Request::findConfigLocation()
 			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done with a match \u2713");
 			//_configLocation->print(); //DEBUG
-			return;
+			return (0);
 		}
 		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
 		this->_configLocation = &(it[0]);
 	}
+	return (0);
 }

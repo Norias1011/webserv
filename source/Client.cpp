@@ -48,13 +48,45 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
+	char buffer[CLIENT_BUFFER + 1];
+	bzero(buffer, CLIENT_BUFFER + 1);
+	int bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
+	Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
+
+	if (bytes > 0)
+	{
+		buffer[bytes] = '\0';
+	}
+	else if (bytes < 0)
+		throw std::runtime_error("Error recv function");
+	else if (bytes == 0)
+		throw DecoExc();
+	
+	if (this->_requestStatus == true)
+	{
+		Log::log(Log::DEBUG,"Request already handled");
+		return;
+	}
+	std::string raw_request(buffer,bytes);
+	
+	if (raw_request.empty())
+	{
+		Log::log(Log::ERROR,"the raw request is empty");
+		return;
+	}
+	this->_request->parseRequest(raw_request);
+	changeEpoll(fd);
+}
+
+/*void Client::handleRequest(int fd)
+{
 	Log::log(Log::DEBUG, "Entering the Client:handleRequest part");
 	std::string request;
 	std::string body;
+	
 	bool headers_received = false;
 	unsigned long len = 0;
 
-	Log::logVar(Log::DEBUG,"Request status is {}", this->_requestStatus);
 	if (this->_requestStatus == true)
 		return;
 	Log::logVar(Log::DEBUG,"Handling request from client fd {}.", this->_fd);
@@ -72,11 +104,9 @@ void Client::handleRequest(int fd)
 		}
 		
 		request.append(buffer,bytes);
-		Log::logVar(Log::INFO, "request received:", request);
-		Log::logVar(Log::ERROR, "every the headers are received ? {}", headers_received);
 		if (!headers_received)
 		{
-			Log::log(Log::ERROR, "No, so Entering the !headers_received part");
+			Log::log(Log::ERROR, "Entering the !headers_received part");
 			size_t pos = request.find("\r\n\r\n");
 			if (pos != std::string::npos || request.find("chunked") != std::string::npos)
 			{
@@ -114,7 +144,7 @@ void Client::handleRequest(int fd)
 					Log::log(Log::ERROR, "Content-Length contains non-digit characters");
 			}
 		}
-		
+	
 		//once the heders are received, we can find the configuration
 		//and if the headers are not fully received also to get the Error pages.
 		Log::logVar(Log::ERROR, "Len of the body is: {}", len);
@@ -145,6 +175,7 @@ void Client::handleRequest(int fd)
 		else if (!headers_received && this->_request->getHeaders("Transfer-Encoding:") != "chunked")
 			break;
 	}
+	Log::logVar(Log::INFO, "full request received:", request);
 	if (!headers_received)
 	{
 		Log::log(Log::ERROR,"Invalid Request, missing headers - Error 400.");
@@ -157,7 +188,7 @@ void Client::handleRequest(int fd)
 		this->_requestStatus = true;
 	}
 	changeEpoll(fd);
-}
+}*/
 
 void Client::changeEpoll(int fd)
 {

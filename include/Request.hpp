@@ -33,31 +33,38 @@ class Request
         const ConfigLocation* getConfigLocation() const { return _configLocation; };
         time_t getLastRequestTime() const { return _lastRequestTime; };
         int getServerCode() const { return _serverCode; };
-		bool getConfigDone() const {return _configDone; };
-        bool getChunked() const {return _isChunked; };
-        void handleDelete();
 
+		bool getConfigDone() const {return _configDone; };
+		bool getFirstLineParsed() const {return _isFirstLineParsed; };
+        bool getChunked() const {return _isChunked; };
+		bool getMethodParsed() const {return _isMethodParsed;};
+		bool getPathParsed() const {return _isPathParsed;};
+		bool getHeadersParsed() const {return _isHeadersParsed;};
+		bool getHttpParsed() const {return _isHttpParsed;};
+        
+		void handleDelete();
         void timeoutChecker();
 		std::string getHeaders(const std::string& headername);
 
-        int parseRequestHeaders(std::string const &headers);
+		void parseRequest(const std::string &raw_request);
+		void parseFirstLine();
+        void parseRequestHeaders();
 		void parseBody();
         void parseMultipartFormData(std::string& body, const std::string& boundary);
         void parseChunkedBody();
 
-		void findConfigServer();
-		void findConfigLocation();
+		int findConfigServer();
+		int findConfigLocation();
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
 
         void setServerCode(int code) { _serverCode = code; };
         void setChunked(bool value) { _isChunked = value; };
-
-		void printHeaders() const;
-		void printPostHeaders() const;
-
 		void setRequest(const std::string& request) {_request = request;}
 		void setBody(const std::string& body) {_body = body;}
+		
+		void printHeaders() const;
+		void printPostHeaders() const;
     
     private:
 
@@ -65,7 +72,6 @@ class Request
         const ConfigServer* _configServer;
         const ConfigLocation* _configLocation; // TODO checker la location avec le path
 		std::string _request;
-		std::string _rawHeaders;
 		std::string _path;
         std::string _method;
         std::string _httpVersion;
@@ -78,7 +84,12 @@ class Request
         bool _init;
         bool _working;
         bool _configDone;
-        bool _isCGI;
+		bool _isMethodParsed;
+		bool _isHttpParsed;
+		bool _isPathParsed;
+		bool _isFirstLineParsed;
+		bool _isHeadersParsed;
+		bool _isCGI;
         bool _isChunked;
         time_t _lastRequestTime;
 };
