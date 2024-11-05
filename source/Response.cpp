@@ -61,7 +61,13 @@ int Response::giveAnswer()
         _done = true;
         return 0;
     }
-
+    if (_request->getCgiStatus() == true)
+    {
+        Log::log(Log::INFO, "CGI is true");
+        // handlecgi() with the execution etc..
+        _done = true;
+        return 0;
+    }
     if (_request->getMethod() == "GET")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - GET method" << std::endl;

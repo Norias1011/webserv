@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isCGI(false),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false), _isCGI(false),_lastRequestTime(0), _infoCgi(this)
 {
 }
 
-Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isCGI(false), _lastRequestTime(0)
+Request::Request(Client* client): _client(client), _configServer(NULL), _configLocation(NULL), _request(""),_path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isCGI(false), _lastRequestTime(0), _infoCgi(this)
 {
 }
 
@@ -448,4 +448,83 @@ void Request::findConfigLocation()
 		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
 		this->_configLocation = &(it[0]);
 	}
+}
+
+int Request::findCGI()
+{
+	if (this->_configLocation == NULL)
+		return -1;
+	std::vector<std::string> fullPathLocation = findFullPathLocation();
+	for (size_t i = 0; i < fullPathLocation.size(); i++)
+	{
+		for (std::map<std::string, std::string>::const_iterator it = this->_configLocation->getCgi().begin(); it != this->_configLocation->getCgi().end(); it++)
+		{
+			if (checkExtension(fullPathLocation[i]) == it->first)
+			{
+				if (checkfile(fullPathLocation[i]))
+				{
+					_infoCgi._statusCgi = true;
+					_infoCgi._path = fullPathLocation[i];
+					_infoCgi._cgiPath = it->second;
+					return 0;
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+std::vector<std::string> Request::findFullPathLocation()
+{
+    bool isAlias = false;
+    std::vector<std::string> FullPaths;
+    std::string pathRequest = this->_path;
+    std::string root = this->_configLocation->getRoot();
+    std::string alias = this->_configLocation->getAlias();
+    std::vector<std::string> allIndex = this->_configLocation->getIndex();
+
+    if (this->_configLocation == NULL)
+        return std::vector<std::string>();
+    if (root.empty())
+        root = this->_configServer->getRoot();
+    if (!alias.empty())
+    {
+        isAlias = true;
+        root = alias;
+    }
+    if (pathRequest[pathRequest.size() - 1] != '/')
+    {
+        if (isAlias)
+            pathRequest = pathRequest.substr(this->_configLocation->getPath().size());
+        FullPaths.push_back(root + pathRequest);
+    }
+    for (size_t i = 0; i < allIndex.size(); i++)
+    {
+        std::string index = allIndex[i];
+        std::string tmpPath = pathRequest;
+        if (pathRequest == "/")
+            pathRequest = root + "/" + index;
+        else if (isAlias)
+            pathRequest = root + "/" + index;
+        else
+            pathRequest = root + pathRequest + "/" + index;
+        std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
+        FullPaths.push_back(pathRequest);
+        pathRequest = tmpPath;
+    }
+    return FullPaths;
+}
+
+std::string Request::checkExtension(std::string const &path)
+{
+	size_t pos = path.find_last_of(".");
+	if (pos == std::string::npos)
+		return "";
+	return path.substr(pos + 1);
+}
+
+bool Request::checkfile(std::string const &path)
+{
+	struct stat buf;
+	return (stat(path.c_str(), &buf) == 0 && S_ISREG(buf.st_mode));
 }

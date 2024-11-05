@@ -2,6 +2,7 @@
 #define REQUEST_HPP
 
 #include "Client.hpp"
+#include "InfoCgi.hpp"
 #include <map>
 #include <string>
 #include <algorithm> // remove
@@ -13,6 +14,7 @@ class Client;
 
 class Request
 {
+    friend class InfoCgi;
     public:
 		Request();
         Request(Client *client);
@@ -35,6 +37,7 @@ class Request
         int getServerCode() const { return _serverCode; };
 		bool getConfigDone() const {return _configDone; };
         bool getChunked() const {return _isChunked; };
+        bool getCgiStatus() const {return _infoCgi._statusCgi; };
         void handleDelete();
 
         void timeoutChecker();
@@ -49,6 +52,10 @@ class Request
 		void findConfigLocation();
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+        int findCGI();
+        std::vector<std::string> findFullPathLocation();
+        std::string checkExtension(std::string const &path);
+        bool checkfile(std::string const &path);
 
         void setServerCode(int code) { _serverCode = code; };
         void setChunked(bool value) { _isChunked = value; };
@@ -80,6 +87,7 @@ class Request
         bool _configDone;
         bool _isCGI;
         bool _isChunked;
+        InfoCgi _infoCgi;
         time_t _lastRequestTime;
 };
 

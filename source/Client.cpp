@@ -116,6 +116,10 @@ void Client::handleRequest(int fd)
 		Log::logVar(Log::ERROR, "headers_received is ok ? {}", headers_received);
 		Log::log(Log::DEBUG,"Getting server configuration to handle the request...");
 		this->_request->findConfigServer();
+		if (this->_request->findCGI() == 0)
+			Log::log(Log::DEBUG,"CGI is found in the request");
+		else
+			Log::log(Log::DEBUG,"CGI is not found in the request");
 		this->_request->setRequest(request);
 		// Body
 		if (headers_received && len > 0)
