@@ -27,6 +27,7 @@ class Request
         std::string getHttpVersion() const;
         std::string getPath() const;
         std::map<std::string, std::string> getHeaders() const;
+        std::string getHeaders(const std::string& headername);
         std::string getBody() const;
         Client* getClient() const { return _client; };
         const ConfigServer* getConfigServer() const { return _configServer; };
@@ -42,17 +43,17 @@ class Request
 		bool getHeadersParsed() const {return _isHeadersParsed;};
 		bool getHttpParsed() const {return _isHttpParsed;};
         
-		void handleDelete();
         void timeoutChecker();
-		std::string getHeaders(const std::string& headername);
 
 		void parseRequest(const std::string &raw_request);
 		void parseFirstLine();
         void parseRequestHeaders();
 		void parseBody();
-        void parseMultipartFormData(std::string& body, const std::string& boundary);
+        void parseMultipartFormData(const std::string& boundary);
         void parseChunkedBody();
 
+        int checkConfig();
+        int checkPath();
 		int findConfigServer();
 		int findConfigLocation();
 		bool isHttpVersionValid(std::string const &version);
@@ -63,9 +64,6 @@ class Request
 		void setRequest(const std::string& request) {_request = request;}
 		void setBody(const std::string& body) {_body = body;}
 		
-		void printHeaders() const;
-		void printPostHeaders() const;
-    
     private:
 
         Client* _client;
@@ -89,9 +87,14 @@ class Request
 		bool _isPathParsed;
 		bool _isFirstLineParsed;
 		bool _isHeadersParsed;
+        bool _isBodyParsed;
 		bool _isCGI;
         bool _isChunked;
+        unsigned long long _contentLength;
         time_t _lastRequestTime;
 };
+
+bool fileExists(const std::string& path);
+bool isDirectory(const std::string& path);
 
 #endif //REQUEST_HPP

@@ -134,7 +134,20 @@ bool Response::checkRewrite()
 
 void Response::manageDeleteRequest()
 {
-    
+    std::string path = this->_request->getConfigLocation() ? this->_request->getConfigLocation()->getRoot() + this->_request->getPath() : this->_request->getConfigServer()->getRoot() +this->_request->getPath() ;
+    Log::logVar(Log::DEBUG, "entering DELETE method with path:", path);
+    if (!fileExists(path))
+    {
+        std::cerr << "Error: File not found" << std::endl;
+        _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
+        return ;
+    }
+    if (isDirectory(path))
+    {
+        std::cerr << "Error: Unable to delete directory" << std::endl;
+        _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
+        return ;
+    }
     std::string body = "{\n";
     body += "\"method\": \"DELETE\",\n";
     body += "\"path\": \"" + _request->getPath() + "\",\n";

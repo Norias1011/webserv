@@ -2,12 +2,28 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isChunked(false),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isChunked(false),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
+	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
+    if (!serverConfigs.empty())
+    {
+        const std::vector<ConfigServer>& defaultServers = serverConfigs.begin()->second;
+        if (!defaultServers.empty())
+        {
+            _configServer = &defaultServers[0];
+            Log::log(Log::INFO, "Default config server set at Request in constructor\u2713");
+        }
+    }
+	else
+	{
+		Log::log(Log::ERROR, "No server config found");
+		_serverCode = 500;
+		this->_client->setRequestStatus(true);
+	}
 }
 
 Request::~Request()
@@ -49,12 +65,23 @@ Request &Request::operator=(Request const &src)
 		this->_isHttpParsed = src._isHttpParsed;
 		this->_isMethodParsed = src._isMethodParsed;
 		this->_isPathParsed = src._isPathParsed;
+		this->_contentLength = src._contentLength;
 	}
 	return *this;
 }
 
 void Request::parseRequest(const std::string &raw_request)
 {
+	if (this->_client->getRequestStatus() == true)
+	{
+		Log::log(Log::DEBUG,"Request already handled");
+		return;
+	}
+	if (raw_request.empty())
+	{
+		Log::log(Log::ERROR,"Empty request");
+		return;
+	}
 	this->_request += raw_request;
 
 	Log::logVar(Log::DEBUG, "Parsing request {}", this->_request);
@@ -65,11 +92,18 @@ void Request::parseRequest(const std::string &raw_request)
 		Log::log(Log::DEBUG, "The First line is not properly parsed");
 	if (this->getHeadersParsed() == true)
 	{
-		Log::log(Log::DEBUG, "The Headers are parsed");
-		//this->_request->parseBody();
+		Log::log(Log::DEBUG, "The Headers are parsed we can now parse the body");
+		this->parseBody();
 	}
 	else
 		Log::log(Log::DEBUG, "headers are not properly parsed");
+	if (_isBodyParsed == true)
+	{
+		Log::log(Log::DEBUG, "The body is parsed");
+		this->_client->setRequestStatus(true);
+	}
+	else
+		Log::log(Log::DEBUG, "The body is not properly parsed");
 }
 
 void Request::parseFirstLine(void)
@@ -88,7 +122,11 @@ void Request::parseFirstLine(void)
 			break;
 		}
 		if (!std::isalpha(this->_request[i]))
+		{
 			_serverCode = 400;
+			Log::log(Log::ERROR,"Wrong Method");
+			this->_client->setRequestStatus(true);
+		}
 		this->_method += this->_request[i];
 		i++;
 	}
@@ -98,11 +136,15 @@ void Request::parseFirstLine(void)
 		if (_method.empty())
 		{
 			_serverCode = 400;
+			Log::log(Log::ERROR,"Method empty");
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		if (isMethod(_method) == "WRONG METHOD")
 		{
 			_serverCode = 405;
+			Log::log(Log::ERROR,"Wrong Method");
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		Log::logVar(Log::DEBUG,"method is:", _method);
@@ -127,6 +169,8 @@ void Request::parseFirstLine(void)
 		if (!std::isprint(this->_request[i]))
 		{
 			_serverCode = 400;
+			Log::log(Log::ERROR,"Wrong path");
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		this->_path += this->_request[i];
@@ -138,9 +182,12 @@ void Request::parseFirstLine(void)
 		if (this->_path.empty())
 		{
 			_serverCode = 400;
+			Log::log(Log::ERROR,"Empty path");
+			this->_client->setRequestStatus(true);
 			return;
 		}
-		//if (this->checkFile(_path))
+		//if (this->checkUri(_path) = 1) // pour checker si ? avec les query dans l'URL
+		//	return;
 		Log::logVar(Log::DEBUG,"path is:", _path);
 		_isPathParsed = true;
 	}
@@ -169,11 +216,15 @@ void Request::parseFirstLine(void)
 		if (this->_httpVersion.empty())
 		{
 			_serverCode = 400;
+			Log::log(Log::ERROR,"Empty http version");
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		if (!isHttpVersionValid(_httpVersion))
 		{
 			_serverCode = 505;
+			Log::log(Log::ERROR,"Invalid HttpVersion");
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		Log::logVar(Log::DEBUG,"http version is:", _httpVersion);
@@ -221,6 +272,7 @@ void Request::parseRequestHeaders()
 	{
 		Log::log(Log::DEBUG,"End of the headers not found");
 		_serverCode = 400;
+		this->_client->setRequestStatus(true);
 		return;
 	}
 	std::string all_headers = _request.substr(start, end - start);
@@ -233,73 +285,79 @@ void Request::parseRequestHeaders()
 		{
 			Log::log(Log::ERROR, "Invalid header");
 			_serverCode = 400;
+			this->_client->setRequestStatus(true);
 			return;
 		}
 		std::string key = header.substr(0, pos);
 		std::string value = header.substr(pos + 1);
 		_headers[key] = value;
-		std::cout << "[DEBUG] Parsed header: " << key << " = " << value << std::endl;
 	}
 	this->_request.erase(0 ,end + 4);
 	_isHeadersParsed = true;
 	Log::log(Log::DEBUG, "We found the end of the headers we can config");
-	if (this->findConfigServer() == -1)
+	if (this->checkConfig() == -1)
 		return;
 }
 
-/*void Request::parseBody()
+int Request::checkConfig()
 {
-	if (_method == "POST")
+	Log::log(Log::DEBUG, "Entering checkConfig");
+	if (this->findConfigServer() == -1)
+		return -1;
+	if (this->getHeaders("Transfer-Encoding").find("chunked")) // to check other TransferEncoding?
+	{
+		_isChunked = true;
+		Log::log(Log::DEBUG, "Chunked body");
+	}
+	if (this->getHeaders("Content-Length") != "")
+	{
+		std::istringstream ss(this->getHeaders("Content-Length"));
+		ss >> this->_contentLength;
+		Log::logVar(Log::DEBUG, "content length :  {}", this->_contentLength);
+	}
+	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
+	{
+		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
+		_serverCode = 413;
+		return (-1)
+	}*/
+	if (this->_client->getRequestStatus() == true)
+		return -1;
+	return 0;
+
+}
+
+void Request::parseBody()
+{
+	if (_isChunked == true)
+	{
+		parseChunkedBody();
+	}
+	if (_method == "POST") //et pas CGI
 	{
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
-			Log::logVar(Log::INFO,"Entering multipart/form-data - le body {}", _body );
 			std::string boundary = "--" + _headers["Content-Type"].substr(_headers["Content-Type"].find("boundary=") + 9);
 			boundary.erase(0,boundary.find_first_not_of("\t\n\r",1));
 			boundary.erase(boundary.find_last_not_of(" \t\n\r") + 1);
-			parseMultipartFormData(_body, boundary);
+			parseMultipartFormData(boundary);
 		}
 		else if (_headers["Content-Type"].find("text/plain") != std::string::npos) 
 		{
-			Log::logVar(Log::INFO,"Entering text/plain- le body {}", _body );
+			Log::logVar(Log::INFO,"Entering text/plain- le body {}", _request );
 			return;
 		}
-		else if (_headers["Transfer-encoding"].find("chunked") != std::string::npos)
-		{
-			while (true)
-			{
-				size_t old_size = _body.size();
-				parseChunkedBody();
-				if (_body.size() == old_size)
-                    break;
-			}
-		}
 	}
-}*/
-
-void Request::handleDelete()
-{
-	std::string path = this->_configLocation ? this->_configLocation->getRoot() + this->getPath() : this->_configServer->getRoot() + this->getPath();
-
-    if (access(path.c_str(), F_OK) != -1)
-    {
-        if (remove(path.c_str()) == 0)
-        {
-            Log::logVar(Log::INFO, "File deleted: {}", path);
-            _serverCode = 200; 
-        }
-        else
-        {
-            Log::logVar(Log::ERROR, "Failed to delete file: {}", path);
-            _serverCode = 500; 
-        }
-    }
-    else
-    {
-        Log::logVar(Log::ERROR, "File not found: {}", path);
-        _serverCode = 404;
-    }
+	Log::logVar(Log::DEBUG, "request?: {}", this->_request);
+	Log::logVar(Log::DEBUG, "Body is size: {}", this->_request.size());
+	Log::logVar(Log::DEBUG, "content length: {}", this->_contentLength);
+	if (this->_request.size() == this->_contentLength)
+	{
+		_isBodyParsed = true;
+		return;
+	}
 }
+
 
 bool Request::isHttpVersionValid(std::string const &version)
 {
@@ -330,17 +388,17 @@ std::string Request::isMethod(std::string const &method)
 	return "WRONG METHOD";
 }
 
-void Request::parseMultipartFormData(std::string& body, const std::string& boundary) 
+void Request::parseMultipartFormData(const std::string& boundary) 
 {
     size_t pos = 0;
 	Log::log(Log::DEBUG," Entering into the parsing of the body for multipartform data ");
 	Log::logVar(Log::INFO," boundary: {} ", boundary);
-	Log::logVar(Log::INFO," body: {} ", body);
-	Log::logVar(Log::INFO," pos: {} ", body.find(boundary));
-    while ((pos = body.find(boundary)) != std::string::npos) 
+	Log::logVar(Log::INFO," body: {} ", _request);
+	Log::logVar(Log::INFO," pos: {} ", _request.find(boundary));
+    while ((pos = _request.find(boundary)) != std::string::npos) 
 	{
-        std::string part = body.substr(0, pos);
-        body.erase(0, pos + boundary.length());
+        std::string part = _request.substr(0, pos);
+        _request.erase(0, pos + boundary.length());
         if (part.empty() || part == "\r\n") continue;
 
         size_t header_end = part.find("\r\n\r\n");
@@ -390,17 +448,14 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		Log::logVar(Log::DEBUG, "filename is : {}", filename);
         if (!filename.empty()) 
 		{
-			//location path // pas de location a gerer
-			//std::string file_path = this->_configLocation->getUploadPath() + "/ "+ filename ;
-			//Log::logVar(Log::DEBUG, "upload path is : {}", this->_configLocation->getUploadPath()); 
-			//mkdir(this->_configLocation->getUploadPath(), 0777);
 			std::string file_path = "docs/uploads/" + filename;
 			mkdir("docs/uploads/", 0777);
 			std::ofstream file(file_path.c_str(), std::ios::binary);
 			if (!file)
 			{
 				Log::logVar(Log::ERROR, " Failed to open file: {}", file_path);
-				_serverCode = 500;
+				this->_client->setRequestStatus(true);
+				_serverCode = 403;
 			}
 			else 
 			{
@@ -408,11 +463,13 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
                 if (!file)
 				{
 					Log::logVar(Log::ERROR, " Failed to write to file: {}", file_path);
-					_serverCode = 500;
+					this->_client->setRequestStatus(true);
+					_serverCode = 403;
 				}
 				else
 				{
 					Log::logVar(Log::INFO, " File uploaded on: {}", file_path);
+					this->_client->setRequestStatus(true);
 					_serverCode = 200; // cest 201 je crois mais ca bug a cause de la reponse a voir
 				}
             }
@@ -420,6 +477,7 @@ void Request::parseMultipartFormData(std::string& body, const std::string& bound
 		else
 		{
             Log::log(Log::DEBUG, "there is no file to upload");
+			this->_client->setRequestStatus(true);
 			_serverCode = 400;
 		}
     }
@@ -433,35 +491,16 @@ std::string Request::getHeaders(const std::string& headername)
 	return "";
 }
 
-void Request::printHeaders() const
-{
-	for (std::map<std::string, std::string >::const_iterator it = _headers.begin(); it != _headers.end(); it++)
-	{
-        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
-	}
-}
-
-void Request::printPostHeaders() const
-{
-	for (std::map<std::string, std::string >::const_iterator it = _postHeaders.begin(); it != _postHeaders.end(); it++)
-	{
-        std::cout << "[DEBUG]" << it->first << ": " << it->second << std::endl;
-	}
-}
-
 void Request::parseChunkedBody()
 {
-	Log::log(Log::DEBUG, "Entering parsing chunk Body");
-	if (_body.empty())
-		_body = "";
-
-	std::istringstream ss(_body);
-	std::string chunk_size_str;
-	std::string chunk;
-	std::string full_chunk;
-
-	while (std::getline(ss, chunk_size_str))
+	while (!this->_request.empty())
 	{
+		Log::log(Log::DEBUG, "Entering parsing chunk Body");
+		std::istringstream ss(_request);
+		std::string chunk_size_str;
+		std::string chunk;
+		std::string full_chunk;
+
 		chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
 		if (chunk_size_str.empty())
 			continue;
@@ -469,33 +508,35 @@ void Request::parseChunkedBody()
 		std::stringstream chunk_stream(chunk_size_str);
 		size_t chunk_size;
 		chunk_stream >> std::hex >> chunk_size;
-        if (chunk_size == 0)
-        {
-            std::string trailing;
-            std::getline(ss, trailing);
-            break;
-        }
+		if (chunk_size == 0)
+		{
+			std::string trailing;
+			std::getline(ss, trailing);
+			break;
+		}
 		chunk.resize(chunk_size);
-        ss.read(&chunk[0], chunk_size);
-        full_chunk += chunk;
+		ss.read(&chunk[0], chunk_size);
+		full_chunk += chunk;
 
-        std::string trailing;
-        std::getline(ss, trailing);
+		std::string trailing;
+		std::getline(ss, trailing);
+		_body = full_chunk;
 	}
-	_body = full_chunk;
 }
+
 int Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
-	if(_configDone == true)
+	/*if(_configDone == true)
 	{
 		Log::log(Log::DEBUG, "Config server/locations already found");
         return -1;
-	}
+	}*/
 	std::string host = getHeaders("Host");
 	if (host.empty())
 	{
 		Log::log(Log::ERROR, "Host is empty");
 		_serverCode = 400;
+		this->_client->setRequestStatus(true);
 		return -1;
 	}
     const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = this->_client->getServer()->getConfig().getConfigServer();
@@ -563,11 +604,24 @@ int Request::findConfigLocation()
 			_configDone = true;
 			_serverCode = 200;
 			Log::log(Log::INFO, "Config location done with a match \u2713");
-			//_configLocation->print(); //DEBUG
 			return (0);
 		}
 		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
 		this->_configLocation = &(it[0]);
 	}
 	return (0);
+}
+
+bool fileExists(const std::string& path) 
+{
+	struct stat buffer;
+	return (stat(path.c_str(), &buffer) == 0);
+}
+
+bool isDirectory(const std::string& path) 
+{
+	struct stat buffer;
+	if (stat(path.c_str(), &buffer) == 0)
+		return S_ISDIR(buffer.st_mode);
+	return false;
 }

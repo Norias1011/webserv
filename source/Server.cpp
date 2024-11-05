@@ -3,7 +3,7 @@
 
 //#define IP 1270001  //  to link to parsing
 //#define PORT 8001 // to link to parsing
-#define MAX_CO 10
+#define MAX_CO 10000
 #define BUFFER 1024
 
 Server::Server() : _config(), _done(false), _working(false), _break(false), _epollFd(-1)
@@ -160,6 +160,7 @@ void Server::handleEvent(epoll_event *event)
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
+			Log::log(Log::DEBUG, "EPOLLIN event detected");
 			if (this->_clients.find(event->data.fd) == this->_clients.end())
 			{
 				Log::log(Log::DEBUG, "Entering the connection part");
@@ -173,12 +174,12 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
+			//Log::log(Log::DEBUG, "EPOLLOUT event detected");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
 			}
 		}
-		//Log::logVar(Log::DEBUG, "Event Handled with fd: {}", event->data.fd);
 	catch (Client::DecoExc &e)
 	{
 		this->handleDc(event->data.fd);

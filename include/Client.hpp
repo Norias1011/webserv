@@ -8,7 +8,7 @@
 #include "Log.hpp"
 #include <bits/basic_string.h>
 
-#define CLIENT_BUFFER 1024
+#define CLIENT_BUFFER 50000
 
 class Request;
 class Response;
