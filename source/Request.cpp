@@ -453,7 +453,10 @@ void Request::findConfigLocation()
 int Request::findCGI()
 {
 	if (this->_configLocation == NULL)
+	{
+		Log::log(Log::ERROR, "No location found for CGI");
 		return -1;
+	}
 	std::vector<std::string> fullPathLocation = findFullPathLocation();
 	for (size_t i = 0; i < fullPathLocation.size(); i++)
 	{
@@ -508,7 +511,7 @@ std::vector<std::string> Request::findFullPathLocation()
             pathRequest = root + "/" + index;
         else
             pathRequest = root + pathRequest + "/" + index;
-        std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
+        std::cout << "[DEBUG] - Request::findFullPathLocation - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
     }
@@ -518,9 +521,10 @@ std::vector<std::string> Request::findFullPathLocation()
 std::string Request::checkExtension(std::string const &path)
 {
 	size_t pos = path.find_last_of(".");
+	std::cout << "[DEBUG] - Request::checkExtension - path: " << path.substr(pos + 1) << std::endl;
 	if (pos == std::string::npos)
 		return "";
-	return path.substr(pos + 1);
+	return ( "." + path.substr(pos + 1));
 }
 
 bool Request::checkfile(std::string const &path)

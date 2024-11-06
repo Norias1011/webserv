@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:18:36 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/06 17:13:33 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/06 17:18:59 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,9 +116,9 @@ std::string CgiRun::executeCgi()
         ret = 1;
         while (ret > 0)
         {
-            ret = read(pipefd[0], buffer, 1024);
+            memset(buffer, 0, 1024);
+            ret = read(pipefd[0], buffer, 1024 - 1);
             response += buffer;
-            bzero(buffer, 1024);
         }
     }
 

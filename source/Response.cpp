@@ -549,22 +549,6 @@ std::vector<std::string> Response::getFullPaths()
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
     }
-    /*if (pathRequest[pathRequest.size() - 1] == '/')
-    {
-        for (std::vector<std::string>::iterator it = allIndex.begin(); it != allIndex.end(); it++)
-        {
-            std::string index = *it;
-            std::string tmpPath = pathRequest;
-            if (pathRequest == "/")
-                pathRequest = root + "/" + index;
-            else
-                pathRequest = root + pathRequest + index;
-            FullPaths.push_back(pathRequest);
-            pathRequest = tmpPath;
-        }
-    }
-    else
-        FullPaths.push_back(root + pathRequest);*/
     return FullPaths;
 }
 
