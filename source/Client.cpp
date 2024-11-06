@@ -80,7 +80,7 @@ void Client::handleRequest(int fd)
 void Client::changeEpoll(int epollfd)
 {
 	epoll_event ev;
-	ev.events = (EPOLLIN | EPOLLRDHUP | EPOLLERR | EPOLLOUT); // Reponse est prete a etre envoyé / Request finished
+	ev.events = EPOLLOUT; // Reponse est prete a etre envoyé / Request finished
 	ev.data.fd = this->_fd;
 	epoll_ctl(epollfd, EPOLL_CTL_MOD, this->_fd, &ev);
 }
@@ -95,6 +95,7 @@ void Client::sendResponse(int fd)
     }
     int sendResponse = -1;
 	Log::logVar(Log::DEBUG, "sendResponse fd is :",_fd);
+	Log::logVar(Log::DEBUG, "sendResponse response is :",_response->getResponse());
     if (_fd != -1)
         sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
     if (sendResponse < 0)
@@ -115,10 +116,8 @@ void Client::sendResponse(int fd)
 		delete this->_response;	
         this->_response = new Response(this);
 		this->setRequestStatus(false);
-		Log::logVar(Log::DEBUG, "request should be nil {}", this->getRequestStatus());
-		Log::logVar(Log::DEBUG, "Respons send should be nil {} :", this->_response->_done);
         epoll_event ev;
-        ev.events = (EPOLLIN | EPOLLRDHUP | EPOLLERR); // Quand le client envoie une nouvelle requete
+        ev.events = EPOLLIN; // Quand le client envoie une nouvelle requete
         ev.data.fd = this->_fd;
         epoll_ctl(fd, EPOLL_CTL_MOD, this->_fd, &ev);
     }

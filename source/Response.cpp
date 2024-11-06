@@ -50,10 +50,9 @@ int Response::giveAnswer()
     }
     if (_request->getServerCode() != 200)
     {
-        std::cout << "server code : " << _request->getServerCode() << std::endl;
         std::cout << "[DEBUG] - Response::giveAnswer - server code is not 200" << std::endl;
-        this->_request->setServerCode(_request->getServerCode());
         _response = _errorPage.getConfigErrorPage(_request->getConfigServer()->getErrorPages(), _request->getServerCode());
+        Log::logVar(Log::DEBUG, "Response::giveAnswer - _response : ", _response);
         _done = true;
         return 0;
     }
@@ -534,6 +533,7 @@ std::vector<std::string> Response::getFullPaths()
         isAlias = true;
         root = alias;
     }
+    
     if (pathRequest[pathRequest.size() - 1] != '/')
     {
         if (isAlias)
