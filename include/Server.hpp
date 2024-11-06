@@ -33,8 +33,7 @@ class Server
 
 		Server &operator=(Server const &src);
 
-		long getSocketFd() const;
-		long getEpollFd() const;
+		long getEpollFD() const {return _epollFd;};
 		const Config &getConfig() const { return _config; };
 
 		void createSocket();

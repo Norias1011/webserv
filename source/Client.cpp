@@ -73,15 +73,16 @@ void Client::handleRequest(int fd)
 
 	request.append(buffer,bytes);
 	this->_request->parseRequest(request);
-	changeEpoll(fd);
+	if (this->getRequestStatus() == true)
+		changeEpoll(fd);
 }
 
-void Client::changeEpoll(int fd)
+void Client::changeEpoll(int epollfd)
 {
 	epoll_event ev;
-	ev.events = EPOLLOUT;
-	ev.data.fd = _fd;
-	epoll_ctl(fd, EPOLL_CTL_MOD, _fd, &ev);
+	ev.events = (EPOLLIN | EPOLLRDHUP | EPOLLERR | EPOLLOUT); // Reponse est prete a etre envoyé / Request finished
+	ev.data.fd = this->_fd;
+	epoll_ctl(epollfd, EPOLL_CTL_MOD, this->_fd, &ev);
 }
 
 void Client::sendResponse(int fd)
@@ -98,8 +99,6 @@ void Client::sendResponse(int fd)
         sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
     if (sendResponse < 0)
     {
-		Log::log(Log::ERROR, "Error: Unable to send response");
-		Log::logVar(Log::DEBUG, "sendResponse is :",sendResponse);
         throw std::runtime_error("Error: Unable to send response");
     }
     else
@@ -111,15 +110,17 @@ void Client::sendResponse(int fd)
 		std::cout << "[DEBUG] - Response is done ... request and response are reseting.. " << std::endl;
        	if (this->getRequestStatus() != true)
             throw DecoExc();
-		delete this->_response;	
         delete this->_request;
 		this->_request = new Request(this);
+		delete this->_response;	
         this->_response = new Response(this);
 		this->setRequestStatus(false);
+		Log::logVar(Log::DEBUG, "request should be nil {}", this->getRequestStatus());
+		Log::logVar(Log::DEBUG, "Respons send should be nil {} :", this->_response->_done);
         epoll_event ev;
-        ev.events = EPOLLIN;
-        ev.data.fd = _fd;
-        epoll_ctl(fd, EPOLL_CTL_MOD, _fd, &ev);
+        ev.events = (EPOLLIN | EPOLLRDHUP | EPOLLERR); // Quand le client envoie une nouvelle requete
+        ev.data.fd = this->_fd;
+        epoll_ctl(fd, EPOLL_CTL_MOD, this->_fd, &ev);
     }
 }
 

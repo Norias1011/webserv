@@ -272,7 +272,7 @@ bool ConfigLocation::checkLocationLine(std::vector<std::string>& locationLine, s
     return false;
 }
 
-void ConfigLocation::print()
+void ConfigLocation::print() const
 {
     Log::log(Log::DEBUG, "Config Location is as follows:");
     std::cout << "Path: " << this->_path << std::endl;
@@ -282,15 +282,15 @@ void ConfigLocation::print()
     std::cout << "Autoindex: " << this->_autoindex << std::endl;
     std::cout << "Rewrite: " << this->_rewrite.first << " " << this->_rewrite.second << std::endl;
     std::cout << "Index: ";
-    for (std::vector<std::string>::iterator it = this->_index.begin(); it != this->_index.end(); it++)
+    for (std::vector<std::string>::const_iterator it = this->_index.begin(); it != this->_index.end(); ++it)
         std::cout << *it << " ";
     std::cout << std::endl;
     std::cout << "Methods: ";
-    for (std::vector<std::string>::iterator it = this->_methods.begin(); it != this->_methods.end(); it++)
+    for (std::vector<std::string>::const_iterator it = this->_methods.begin(); it != this->_methods.end(); ++it)
         std::cout << *it << " ";
     std::cout << std::endl;
     std::cout << "CGI: ";
-    for (std::map<std::string, std::string>::iterator it = this->_cgi.begin(); it != this->_cgi.end(); it++)
-        std::cout << it->first << " " << it->second << " ";
+    for (std::map<std::string, std::string>::const_iterator it = this->_cgi.begin(); it != this->_cgi.end(); ++it)
+        std::cout << it->first << " => " << it->second << " ";
     std::cout << std::endl;
 }

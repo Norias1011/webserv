@@ -31,7 +31,7 @@ class ConfigLocation
         bool is_empty(std::ifstream& pFile);
         const std::string &getPath() const { return _path; };
         void setPath(const std::string &path) { _path = path; };
-        void print();
+        void print() const ;
 
         const std::string &getRoot() const { return this->_root; };
         const std::string &getUploadPath() const { return this->_uploadPath; };
@@ -42,6 +42,7 @@ class ConfigLocation
         const std::map<std::string, std::string> &getCgi() const { return this->_cgi; };
         const std::pair<int, std::string> &getRewrite() const { return this->_rewrite; };
         const std::vector<std::string> &getMethods() const { return this->_methods; };
+        const std::vector<std::string> &getAllowedMethods() const { return this->_allowedMethods; };
     protected:
 
     private:

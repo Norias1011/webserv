@@ -36,7 +36,7 @@ class Client
 		void handleRequest(int fd);
 		void sendResponse(int fd);
 
-		void changeEpoll(int fd);
+		void changeEpoll(int epollfd);
 
 		void setRequestStatus(bool status) { _requestStatus = status; };
 

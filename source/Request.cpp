@@ -104,6 +104,7 @@ void Request::parseRequest(const std::string &raw_request)
 	}
 	else
 		Log::log(Log::DEBUG, "The body is not properly parsed");
+	Log::logVar(Log::DEBUG, "Request is parsed ?: {}", this->_client->getRequestStatus());
 }
 
 void Request::parseFirstLine(void)
@@ -293,10 +294,13 @@ void Request::parseRequestHeaders()
 		_headers[key] = value;
 	}
 	this->_request.erase(0 ,end + 4);
-	_isHeadersParsed = true;
-	Log::log(Log::DEBUG, "We found the end of the headers we can config");
 	if (this->checkConfig() == -1)
 		return;
+	else
+	{
+		Log::log(Log::DEBUG, "We found the end of the headers we can config");
+		_isHeadersParsed = true;
+	}
 }
 
 int Request::checkConfig()
@@ -304,17 +308,15 @@ int Request::checkConfig()
 	Log::log(Log::DEBUG, "Entering checkConfig");
 	if (this->findConfigServer() == -1)
 		return -1;
-	if (this->getHeaders("Transfer-Encoding").find("chunked")) // to check other TransferEncoding?
+	if (this->isMethodAllowed() == -1)
+		return -1;
+	if (this->getHeaders("Transfer-Encoding").find("chunked")!= std::string::npos) // to check other TransferEncoding?
 	{
 		_isChunked = true;
 		Log::log(Log::DEBUG, "Chunked body");
 	}
-	if (this->getHeaders("Content-Length") != "")
-	{
-		std::istringstream ss(this->getHeaders("Content-Length"));
-		ss >> this->_contentLength;
-		Log::logVar(Log::DEBUG, "content length :  {}", this->_contentLength);
-	}
+	if (this->checkSize() == -1)
+		return -1;
 	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
 	{
 		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
@@ -495,32 +497,60 @@ void Request::parseChunkedBody()
 {
 	while (!this->_request.empty())
 	{
-		Log::log(Log::DEBUG, "Entering parsing chunk Body");
-		std::istringstream ss(_request);
-		std::string chunk_size_str;
-		std::string chunk;
-		std::string full_chunk;
+        std::istringstream ss_request(_request);
+        std::string chunk_size_str;
+        std::string buffer;
 
-		chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
-		if (chunk_size_str.empty())
-			continue;
-		
-		std::stringstream chunk_stream(chunk_size_str);
-		size_t chunk_size;
-		chunk_stream >> std::hex >> chunk_size;
-		if (chunk_size == 0)
+        // Read the chunk size line
+        std::getline(ss_request, chunk_size_str);
+        chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
+        if (chunk_size_str.empty())
+            continue;
+
+        // Parse the chunk size
+        std::stringstream chunk_stream(chunk_size_str);
+        size_t chunk_size;
+        chunk_stream >> std::hex >> chunk_size;
+        if (chunk_stream.fail())
+        {
+            Log::log(Log::ERROR, "Failed to parse chunk size");
+			_serverCode = 400;
+			this->_client->setRequestStatus(true);
+            break;
+        }
+		Log::logVar(Log::DEBUG, "Chunk size: {}", chunk_size);
+
+        // If chunk size is 0, this is the last chunk
+        if (chunk_size == 0)
+        {
+            std::string trailing;
+            std::getline(ss_request, trailing);
+			Log::logVar(Log::DEBUG, "End of chunked body with trailing : ", trailing);
+			_isBodyParsed = true;
+            break;
+        }
+
+        // Read the chunk data
+        buffer.resize(chunk_size);
+        if (!ss_request.read(&buffer[0], chunk_size))
 		{
-			std::string trailing;
-			std::getline(ss, trailing);
-			break;
-		}
-		chunk.resize(chunk_size);
-		ss.read(&chunk[0], chunk_size);
-		full_chunk += chunk;
+            Log::log(Log::ERROR, "Chunk size does not match the size of the chunk data");
+			_serverCode = 400;
+			this->_client->setRequestStatus(true);
+            break;
+        }
 
-		std::string trailing;
-		std::getline(ss, trailing);
-		_body = full_chunk;
+        // Read the trailing CRLF
+        std::string trailing;
+        std::getline(ss_request, trailing);
+
+        // Store the chunk data
+        _body += buffer;
+		Log::logVar(Log::DEBUG,"Chunked body size: {}", _body.size());
+
+        // Erase the processed chunk from the request buffer
+        size_t processed_size = chunk_size_str.size() + 2 + chunk_size + 2; // chunk size + CRLF + chunk data + CRLF
+        _request.erase(0, processed_size);
 	}
 }
 
@@ -603,6 +633,7 @@ int Request::findConfigLocation()
 			this->_configLocation = &(*it);
 			_configDone = true;
 			_serverCode = 200;
+			this->_configLocation->print();
 			Log::log(Log::INFO, "Config location done with a match \u2713");
 			return (0);
 		}
@@ -610,6 +641,60 @@ int Request::findConfigLocation()
 		this->_configLocation = &(it[0]);
 	}
 	return (0);
+}
+
+int Request::isMethodAllowed()
+{
+	const std::vector<std::string>& allowedMethods = this->getConfigLocation()->getMethods();
+
+    if (allowedMethods.empty())
+    {
+        Log::log(Log::INFO, "No methods defined in the location block, allowing all methods");
+        return 0;
+    }
+
+    for (std::vector<std::string>::const_iterator it = allowedMethods.begin(); it != allowedMethods.end(); ++it)
+    {
+		Log::logVar(Log::DEBUG, "Method allowed: {}", *it);
+        if (*it == _method)
+        {
+            Log::logVar(Log::INFO, "Method {} is allowed", _method);
+            return 0;
+        }
+    }
+    Log::logVar(Log::ERROR, "Method {} is not allowed", _method);
+    _serverCode = 405;
+	this->_client->setRequestStatus(true);
+    return -1;
+
+}
+
+int Request::checkSize()
+{
+	std::string content_length_str = this->getHeaders("Content-Length");
+	if (!content_length_str.empty())
+	{
+		std::istringstream ss(content_length_str);
+		size_t content_length;
+		ss >> content_length;
+
+		if (!ss.fail() && ss.eof() && content_length > 0)
+		{
+			Log::logVar(Log::DEBUG, "Content-Length: {}", content_length);
+			return 0;
+		}
+		else
+		{
+			Log::log(Log::ERROR, "Invalid Content-Length value");
+			_serverCode = 400; // Bad Request
+			this->_client->setRequestStatus(true);
+			return -1;
+		}
+	}
+	else
+		Log::log(Log::DEBUG, "Content-Length header is missing");
+	return 0;
+	
 }
 
 bool fileExists(const std::string& path) 
@@ -625,3 +710,4 @@ bool isDirectory(const std::string& path)
 		return S_ISDIR(buffer.st_mode);
 	return false;
 }
+

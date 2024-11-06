@@ -58,6 +58,8 @@ class Request
 		int findConfigLocation();
 		bool isHttpVersionValid(std::string const &version);
         std::string isMethod(std::string const &method);
+        int isMethodAllowed();
+        int checkSize();
 
         void setServerCode(int code) { _serverCode = code; };
         void setChunked(bool value) { _isChunked = value; };
