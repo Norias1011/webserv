@@ -550,7 +550,8 @@ std::vector<std::string> Response::getFullPaths()
         else if (isAlias)
             pathRequest = root + "/" + index;
         else
-            pathRequest = root + pathRequest + "/" + index;
+            pathRequest = root + /*pathRequest + */ "/" + index; // test 4 passed with the commented thing
+        Log::logVar(Log::DEBUG, "Response::getFullPaths - root: ", root); 
         std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;

@@ -60,6 +60,7 @@ class Request
         std::string isMethod(std::string const &method);
         int isMethodAllowed();
         int checkSize();
+        int checkUri();
 
         void setServerCode(int code) { _serverCode = code; };
         void setChunked(bool value) { _isChunked = value; };
@@ -73,6 +74,8 @@ class Request
         const ConfigLocation* _configLocation; // TODO checker la location avec le path
 		std::string _request;
 		std::string _path;
+        std::string _uri;
+        std::string _query;
         std::string _method;
         std::string _httpVersion;
 		std::map<std::string, std::string> _headers;

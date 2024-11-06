@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -52,6 +52,7 @@ Request &Request::operator=(Request const &src)
 		this->_request = src._request;
 		this->_method = src._method;
 		this->_path = src._path;
+		this->_uri = src._uri;
         this->_httpVersion = src._httpVersion;
 		this->_init = src._init;
 		this->_working = src._working;
@@ -157,7 +158,7 @@ void Request::parseFirstLine(void)
 	flag = false;
 	while (i < size)
 	{
-		if (this->_path.empty() && (this->_request[i] == ' ' || this->_request[i] == '\t'))
+		if (this->_uri.empty() && (this->_request[i] == ' ' || this->_request[i] == '\t'))
 		{
 			i++;
 			continue;
@@ -170,26 +171,26 @@ void Request::parseFirstLine(void)
 		if (!std::isprint(this->_request[i]))
 		{
 			_serverCode = 400;
-			Log::log(Log::ERROR,"Wrong path");
+			Log::log(Log::ERROR,"Wrong URI");
 			this->_client->setRequestStatus(true);
 			return;
 		}
-		this->_path += this->_request[i];
+		this->_uri += this->_request[i];
 		i++;
 	}
 	_request.erase(0,flag ? i + 1 : i);
 	if (flag)
 	{
-		if (this->_path.empty())
+		if (this->_uri.empty())
 		{
 			_serverCode = 400;
-			Log::log(Log::ERROR,"Empty path");
+			Log::log(Log::ERROR,"Empty URI");
 			this->_client->setRequestStatus(true);
 			return;
 		}
-		//if (this->checkUri(_path) = 1) // pour checker si ? avec les query dans l'URL
-		//	return;
-		Log::logVar(Log::DEBUG,"path is:", _path);
+		if (this->checkUri() == -1)
+			return;
+		Log::logVar(Log::DEBUG,"uri is:", _uri );
 		_isPathParsed = true;
 	}
 	// HTTP PARSING AND CHECK
@@ -628,7 +629,7 @@ int Request::findConfigLocation()
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
-		if (it->getPath() == _path)
+		if (_path.find(it->getPath()) != std::string::npos)
 		{
 			this->_configLocation = &(*it);
 			_configDone = true;
@@ -694,7 +695,19 @@ int Request::checkSize()
 	else
 		Log::log(Log::DEBUG, "Content-Length header is missing");
 	return 0;
-	
+}
+
+int Request::checkUri()
+{
+	size_t pos = this->_uri.find("?");
+	if (pos != std::string::npos)
+	{
+		_path = this->_uri.substr(0, pos);
+		_query = this->_uri.substr(pos + 1);
+	}
+	else
+		_path = this->_uri;
+	return (0);
 }
 
 bool fileExists(const std::string& path) 
