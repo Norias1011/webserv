@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Serveur HTTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .url-input, .data-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test des Méthodes HTTP</h1>
+        <input type="text" id="url" class="url-input" placeholder="Entrez l'URL du serveur" />
+
+        <textarea id="data" class="data-input" placeholder="Entrez les données pour PUT/POST (JSON)"></textarea>
+
+        <div class="buttons">
+            <button onclick="sendRequest('GET')">GET</button>
+            <button onclick="sendRequest('POST')">POST</button>
+            <button onclick="sendRequest('PUT')">PUT</button>
+            <button onclick="sendRequest('DELETE')">DELETE</button>
+        </div>
+
+        <h3>Réponse du serveur :</h3>
+        <pre id="response"></pre>
+    </div>
+
+    <script>
+        function sendRequest(method) {
+            const url = document.getElementById('url').value;
+            const data = document.getElementById('data').value;
+            const responseElement = document.getElementById('response');
+
+            // Initialisation de la requête
+            let options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            // Ajouter le body pour les méthodes POST et PUT
+            if (method === 'POST' || method === 'PUT') {
+                try {
+                    options.body = JSON.stringify(JSON.parse(data)); // Validation du JSON
+                } catch (e) {
+                    responseElement.textContent = "Erreur: Données JSON invalides";
+                    return;
+                }
+            }
+
+            // Envoyer la requête
+            fetch(url, options)
+                .then(response => response.json().then(json => ({status: response.status, body: json})))
+                .then(result => {
+                    responseElement.textContent = `Status: ${result.status}\n${JSON.stringify(result.body, null, 2)}`;
+                })
+                .catch(error => {
+                    responseElement.textContent = `Erreur: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>

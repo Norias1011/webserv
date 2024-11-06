@@ -157,7 +157,7 @@ void ConfigLocation::defaultValue()
     if (this->_uploadPath.empty())
         this->_uploadPath = "";
     if (this->_index.size() == 0)
-        this->_index.push_back("index2.html");
+        this->_index.push_back("index.html");
     if (this->_alias.empty())
         this->_alias = "";
     if (this->_rewrite.second.empty())

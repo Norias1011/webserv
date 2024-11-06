@@ -253,6 +253,7 @@ void Response::handleLocation()
         std::cout << "[DEBUG] - Response::handleLocation - FullPath: " << FullPath[i] << std::endl;
         if (checkFileExist(FullPath[i]))
         {
+            std::cout << "[DEBUG] - Response::handleLocation - File exist : " << FullPath[i] <<  std::endl;
             path = FullPath[i];
             break;
         }

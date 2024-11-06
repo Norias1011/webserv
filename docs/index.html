@@ -1,120 +1,58 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Serveur HTTP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .url-input, .data-input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .buttons {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        #response {
-            margin-top: 20px;
-            white-space: pre-wrap;
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webserv 42 - Test Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    form { margin: 20px 0; }
+    label { display: block; margin: 10px 0 5px; }
+    button { margin: 10px 0; }
+	.file-list { margin-top: 20px; }
+    .file-item { display: flex; justify-content: space-between; align-items: center; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Test des Méthodes HTTP</h1>
-        <input type="text" id="url" class="url-input" placeholder="Entrez l'URL du serveur" />
 
-        <textarea id="data" class="data-input" placeholder="Entrez les données pour PUT/POST (JSON)"></textarea>
+  <h1>Webserv 42 - Antho & Elo</h1>
 
-        <div class="buttons">
-            <button onclick="sendRequest('GET')">GET</button>
-            <button onclick="sendRequest('POST')">POST</button>
-            <button onclick="sendRequest('PUT')">PUT</button>
-            <button onclick="sendRequest('DELETE')">DELETE</button>
-        </div>
+  <h2>Test GET Method</h2>
 
-        <h3>Réponse du serveur :</h3>
-        <pre id="response"></pre>
-    </div>
+  <!-- Link to test GET method -->
+  <a href="http://localhost:8002/presentation">Click here to send GET request</a><br>
+  <a href="http://localhost:8002/new">Test 1</a><br>
+  
+  <!-- POST Method -->
+  <h2>Test POST Method</h2>
 
-    <script>
-        function sendRequest(method) {
-            const url = document.getElementById('url').value;
-            const data = document.getElementById('data').value;
-            const responseElement = document.getElementById('response');
+	  <h1>Test Multipart Form Data</h1>
+	  <form id="upload-form" action="/" method="POST" enctype="multipart/form-data">
+		  
+		<label for="file">Upload File:</label>
+		<input type="file" id="file" name="file"><br><br>
+		<button type="submit">Upload</button>
+		<br>
+	
+    <h2>Delete Uploaded File</h2>
+  <button id="delete-button">Delete Uploaded File</button>
 
-            // Initialisation de la requête
-            let options = {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            // Ajouter le body pour les méthodes POST et PUT
-            if (method === 'POST' || method === 'PUT') {
-                try {
-                    options.body = JSON.stringify(JSON.parse(data)); // Validation du JSON
-                } catch (e) {
-                    responseElement.textContent = "Erreur: Données JSON invalides";
-                    return;
-                }
-            }
-
-            // Envoyer la requête
-            fetch(url, options)
-                .then(response => response.json().then(json => ({status: response.status, body: json})))
-                .then(result => {
-                    responseElement.textContent = `Status: ${result.status}\n${JSON.stringify(result.body, null, 2)}`;
-                })
-                .catch(error => {
-                    responseElement.textContent = `Erreur: ${error.message}`;
-                });
-        }
-    </script>
-</body>
-</html>
+  <script>
+  document.getElementById("delete-button").addEventListener("click", function() {
+    var file = this.dataset.file;
+    if (!file) {
+      console.log("No file to delete");
+      return;
+    }
+  
+    fetch("http://localhost:8002/docs/uploads/" + file, {
+      method: "DELETE"
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("File deleted:", data);
+      // Disable the delete button
+      document.getElementById("delete-button").disabled = true;
+    });
+  });
+  </script>

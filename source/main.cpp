@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         {
             std::string config_file;
             Config config;
-            config_file = (argc == 2) ? argv[1] : "configs/default.conf";
+            config_file = (argc == 2) ? argv[1] : "configs/linux.conf";
             signal(SIGINT, signalHandler);
             config.parseConfig(config_file);
             config.printAll();

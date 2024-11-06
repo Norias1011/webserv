@@ -159,7 +159,7 @@ void ConfigServer::defaultValues()
     if (this->_root.empty())
         this->_root = ".";
     if (this->_index.empty())
-        this->_index.push_back("index2.html");
+        this->_index.push_back("index.html");
     if (this->_listens.empty())
     {
         ConfigListen listen("0.0.0.0:80");
