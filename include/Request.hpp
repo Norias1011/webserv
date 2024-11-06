@@ -38,6 +38,7 @@ class Request
 		bool getConfigDone() const {return _configDone; };
         bool getChunked() const {return _isChunked; };
         bool getCgiStatus() const {return _infoCgi._statusCgi; };
+        InfoCgi getInfoCgi() const {return _infoCgi; };
         void handleDelete();
 
         void timeoutChecker();

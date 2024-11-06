@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/05 16:45:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/05 17:04:07 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/06 14:37:58 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ class Request;
 class InfoCgi
 {
     friend class Request;
+    friend class CgiRun;
     public:
         InfoCgi();
         InfoCgi(Request* request);

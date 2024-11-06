@@ -65,6 +65,9 @@ int Response::giveAnswer()
     {
         Log::log(Log::INFO, "CGI is true");
         // handlecgi() with the execution etc..
+        InfoCgi infoCgi = _request->getInfoCgi();
+        CgiRun newCgi(&infoCgi);
+        _response= newCgi.executeCgi();
         _done = true;
         return 0;
     }
@@ -431,12 +434,13 @@ std::string Response::responsePage(std::vector<std::string> listFiles, std::stri
     }
     answer += "</ul>";
     answer += "</body></html>";
-    std::ostringstream answerSize;
-    answerSize << answer.size();
-    std::string answerSizeStr = answerSize.str();
+    int size = answer.size();
+    //std::ostringstream answerSize;
+    //answerSize << answer.size();
+    //std::string answerSizeStr = answerSize.();
     std::string header = "HTTP/1.1 200 OK\r\n";
     header += "Content-Type: text/html\r\n";
-    header += "Content-Length: " + answerSizeStr + "\r\n";
+    header += "Content-Length: " + numberToString(size) + "\r\n";
     header += "\r\n";
     answer = header + answer;
     return answer;
