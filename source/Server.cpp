@@ -174,7 +174,7 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			Log::log(Log::DEBUG, "EPOLLOUT event detected");
+			//Log::log(Log::DEBUG, "EPOLLOUT event detected");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);

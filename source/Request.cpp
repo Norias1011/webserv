@@ -6,7 +6,7 @@ Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method("
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _infoCgi(this), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -317,6 +317,8 @@ int Request::checkConfig()
 		Log::log(Log::DEBUG, "Chunked body");
 	}
 	if (this->checkSize() == -1)
+		return -1;
+	if (this->findCGI() == -1)
 		return -1;
 	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
 	{
