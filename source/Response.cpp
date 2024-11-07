@@ -120,7 +120,7 @@ bool Response::checkRewrite()
     std::string tmpPath = _request->getPath();
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
         return false;
-    if (!checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
+    if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
     {
         std::string tmpHeader = _request->getHeaders()["Host"];
         _response = "HTTP/1.1 301 Moved Permanently\r\n";
