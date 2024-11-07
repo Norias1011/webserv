@@ -318,8 +318,11 @@ int Request::checkConfig()
 	}
 	if (this->checkSize() == -1)
 		return -1;
+	Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
 	if (this->findCGI() == -1)
 		return -1;
+	std::cout << "is CGI found ? " << this->findCGI() << std::endl;
+	Log::logVar(Log::DEBUG, "is CGI found ? ", this->findCGI());
 	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
 	{
 		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
@@ -726,10 +729,9 @@ bool isDirectory(const std::string& path)
 	return false;
 }
 
-
-
 int Request::findCGI()
 {
+	Log::log(Log::DEBUG, "Entering findCGI");
 	if (this->_configLocation == NULL)
 	{
 		Log::log(Log::ERROR, "No location found for CGI");
@@ -738,8 +740,10 @@ int Request::findCGI()
 	std::vector<std::string> fullPathLocation = findFullPathLocation();
 	for (size_t i = 0; i < fullPathLocation.size(); i++)
 	{
+		Log::logVar(Log::DEBUG, "Full path location: {}", fullPathLocation[i]);
 		for (std::map<std::string, std::string>::const_iterator it = this->_configLocation->getCgi().begin(); it != this->_configLocation->getCgi().end(); it++)
 		{
+			Log::logVar(Log::DEBUG, "CGI path: {}", it->first);
 			if (checkExtension(fullPathLocation[i]) == it->first)
 			{
 				if (checkfile(fullPathLocation[i]))

@@ -160,7 +160,6 @@ void Server::handleEvent(epoll_event *event)
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
-			Log::log(Log::DEBUG, "EPOLLIN event detected");
 			if (this->_clients.find(event->data.fd) == this->_clients.end())
 			{
 				Log::log(Log::DEBUG, "Entering the connection part");
