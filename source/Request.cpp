@@ -319,8 +319,10 @@ int Request::checkConfig()
 	if (this->checkSize() == -1)
 		return -1;
 	Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
-	if (this->findCGI() == -1)
-		return -1;
+	if (this->findCGI() == 0)
+		Log::log(Log::DEBUG, "CGI is found in the request");
+	else
+		Log::log(Log::DEBUG, "CGI is not found in the request");
 	std::cout << "is CGI found ? " << this->findCGI() << std::endl;
 	Log::logVar(Log::DEBUG, "is CGI found ? ", this->findCGI());
 	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
@@ -634,7 +636,7 @@ int Request::findConfigLocation()
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
-		if (_path.find(it->getPath()) != std::string::npos)
+		if (_path.compare(0, it->getPath().length(), it->getPath()) == 0 && (_path.length() == it->getPath().length() || _path[it->getPath().length()] == '/'))
 		{
 			this->_configLocation = &(*it);
 			_configDone = true;
@@ -756,6 +758,7 @@ int Request::findCGI()
 			}
 		}
 	}
+	Log::log(Log::DEBUG, "No CGI found");
 	return -1;
 }
 
