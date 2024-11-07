@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _query(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""), _query(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -53,6 +53,7 @@ Request &Request::operator=(Request const &src)
 		this->_method = src._method;
 		this->_path = src._path;
 		this->_uri = src._uri;
+		this->_query = src._query;
         this->_httpVersion = src._httpVersion;
 		this->_init = src._init;
 		this->_working = src._working;
@@ -629,7 +630,7 @@ int Request::findConfigLocation()
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
-		if (_path.find(it->getPath()) != std::string::npos)
+		if (_path.compare(0, it->getPath().length(), it->getPath()) == 0 && (_path.length() == it->getPath().length() || _path[it->getPath().length()] == '/'))
 		{
 			this->_configLocation = &(*it);
 			_configDone = true;

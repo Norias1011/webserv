@@ -160,7 +160,6 @@ void Server::handleEvent(epoll_event *event)
 			throw Client::DecoExc();
 		if (event->events & EPOLLIN)
 		{
-			Log::log(Log::DEBUG, "EPOLLIN event detected");
 			if (this->_clients.find(event->data.fd) == this->_clients.end())
 			{
 				Log::log(Log::DEBUG, "Entering the connection part");
@@ -174,7 +173,6 @@ void Server::handleEvent(epoll_event *event)
 		}
 		if (event->events & EPOLLOUT) // check the CGI here
 		{
-			Log::log(Log::DEBUG, "EPOLLOUT event detected");
 			this->_clients[event->data.fd]->setLastRequestTime(time(0));
 			if (this->_clients[event->data.fd]->getRequest() && this->_clients[event->data.fd]->getRequestStatus() == true)
 				this->_clients[event->data.fd]->sendResponse(_epollFd);
