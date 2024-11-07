@@ -310,7 +310,7 @@ void Response::normalResponse(std::string &path)
         _response = "HTTP/1.1 200 OK\r\n";
         _response += "Content-Type: text/html\r\n";
         _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
-        _response += "\r\n";
+        _response += "\r\n\r\n";
         _response += buffer.str();
         file.close();
     }

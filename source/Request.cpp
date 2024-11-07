@@ -785,6 +785,7 @@ std::vector<std::string> Request::findFullPathLocation()
         if (isAlias)
             pathRequest = pathRequest.substr(this->_configLocation->getPath().size());
         FullPaths.push_back(root + pathRequest);
+		Log::logVar(Log::DEBUG, "Request::findFullPathLocation - root + pathRequest: {}", root + pathRequest);
     }
     for (size_t i = 0; i < allIndex.size(); i++)
     {
