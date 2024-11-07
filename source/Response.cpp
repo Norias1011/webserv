@@ -120,7 +120,7 @@ bool Response::checkRewrite()
     std::string tmpPath = _request->getPath();
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
         return false;
-    if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
+    if (!checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
     {
         std::string tmpHeader = _request->getHeaders()["Host"];
         _response = "HTTP/1.1 301 Moved Permanently\r\n";
@@ -135,7 +135,7 @@ bool Response::checkRewrite()
 void Response::manageDeleteRequest()
 {
     std::string path = this->_request->getConfigLocation() ? this->_request->getConfigLocation()->getRoot() + this->_request->getPath() : this->_request->getConfigServer()->getRoot() +this->_request->getPath() ;
-    Log::logVar(Log::DEBUG, "entering DELETE method with path:", path);
+	Log::logVar(Log::DEBUG, "entering DELETE method with path:", path);
     if (!fileExists(path))
     {
         std::cerr << "Error: File not found" << std::endl;
@@ -146,8 +146,9 @@ void Response::manageDeleteRequest()
     {
         std::cerr << "Error: Unable to delete directory" << std::endl;
         _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
-        return ;
+        return ; 
     }
+	remove(path.c_str());
     std::string body = "{\n";
     body += "\"method\": \"DELETE\",\n";
     body += "\"path\": \"" + _request->getPath() + "\",\n";
@@ -159,7 +160,6 @@ void Response::manageDeleteRequest()
     _response += "\r\n";
     _response += body;
 }
-
 
 void Response::managePutRequest()
 {
@@ -550,7 +550,7 @@ std::vector<std::string> Response::getFullPaths()
         else if (isAlias)
             pathRequest = root + "/" + index;
         else
-            pathRequest = root + /*pathRequest + */ "/" + index; // test 4 passed with the commented thing
+            pathRequest = root + pathRequest +  "/" + index; // test 4 passed with the commented thing
         Log::logVar(Log::DEBUG, "Response::getFullPaths - root: ", root); 
         std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);

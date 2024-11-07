@@ -65,10 +65,7 @@ void Client::handleRequest(int fd)
 	else if (bytes == 0)
 	{
 		if (request.empty())
-		{
-			Log::log(Log::ERROR, "Error: Empty request");
 			throw DecoExc();
-		}
 	}
 
 	request.append(buffer,bytes);
