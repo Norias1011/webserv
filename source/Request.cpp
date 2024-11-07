@@ -319,12 +319,6 @@ int Request::checkConfig()
 	}
 	if (this->checkSize() == -1)
 		return -1;
-	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
-	{
-		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
-		_serverCode = 413;
-		return (-1)
-	}*/
 	if (this->_client->getRequestStatus() == true)
 		return -1;
 	return 0;
@@ -483,6 +477,7 @@ void Request::parseMultipartFormData(const std::string& boundary)
             Log::log(Log::DEBUG, "there is no file to upload");
 			this->_client->setRequestStatus(true);
 			_serverCode = 400;
+			return;
 		}
     }
 }
@@ -677,18 +672,13 @@ int Request::checkSize()
 	if (!content_length_str.empty())
 	{
 		std::istringstream ss(content_length_str);
-		size_t content_length;
-		ss >> content_length;
+		ss >> _contentLength;
+		Log::logVar(Log::DEBUG, "Content-Length: {}", _contentLength);
 
-		if (!ss.fail() && ss.eof() && content_length > 0)
+		if (_contentLength > this->getConfigServer()->getMaxBodySize())
 		{
-			Log::logVar(Log::DEBUG, "Content-Length: {}", content_length);
-			return 0;
-		}
-		else
-		{
-			Log::log(Log::ERROR, "Invalid Content-Length value");
-			_serverCode = 400; // Bad Request
+			Log::logVar(Log::ERROR, "Content-Length is too big: {}", _contentLength);
+			_serverCode = 413;
 			this->_client->setRequestStatus(true);
 			return -1;
 		}

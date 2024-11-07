@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ehamm <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 15:46:53 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/07 12:19:02 by ehamm            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         {
             std::string config_file;
             Config config;
-            config_file = (argc == 2) ? argv[1] : "configs/linux.conf";
+            config_file = (argc == 2) ? argv[1] : "configs/default.conf";
             signal(SIGINT, signalHandler);
             config.parseConfig(config_file);
             config.printAll();
