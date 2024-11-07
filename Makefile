@@ -14,7 +14,9 @@ SRCS = 	$(SRC_DIR)/main.cpp \
 		$(SRC_DIR)/ConfigServer.cpp \
 		$(SRC_DIR)/ConfigListen.cpp \
 		$(SRC_DIR)/ErrorPage.cpp \
-		$(SRC_DIR)/Response.cpp 
+		$(SRC_DIR)/Response.cpp \
+		$(SRC_DIR)/CgiRun.cpp \
+		$(SRC_DIR)/InfoCgi.cpp
 
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 

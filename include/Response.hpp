@@ -4,6 +4,8 @@
 #include "Request.hpp"
 #include "Client.hpp"
 #include "ErrorPage.hpp"
+#include "InfoCgi.hpp"
+#include "CgiRun.hpp"
 #include <iostream>
 #include <map>
 #include <string>

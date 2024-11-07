@@ -133,3 +133,9 @@ std::ostream& operator<<(std::ostream& os, const Client &client)
     os << "Client fd: " << client.getFd();
     return os;
 }
+
+
+/*if (this->_request->findCGI() == 0)
+			Log::log(Log::DEBUG,"CGI is found in the request");
+		else
+			Log::log(Log::DEBUG,"CGI is not found in the request");*/

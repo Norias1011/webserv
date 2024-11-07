@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webserv 42 - Test Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    form { margin: 20px 0; }
+    label { display: block; margin: 10px 0 5px; }
+    button { margin: 10px 0; }
+	.file-list { margin-top: 20px; }
+    .file-item { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+
+  <h1>Webserv 42 - Antho & Elo</h1>
+
+  <h2>Test GET Method</h2>
+
+  <!-- Link to test GET method -->
+  <a href="/presentation">Click here to send GET request</a><br>
+  <a href="/new">Test 1</a><br>
+  <a href="/cgi-bin">Test date Python</a><br>
+  
+  <!-- POST Method -->
+  <h2>Test POST Method</h2>
+
+	  <h1>Test Multipart Form Data</h1>
+	  <form id="upload-form" action="/" method="POST" enctype="multipart/form-data">
+		  
+		<label for="file">Upload File:</label>
+		<input type="file" id="file" name="file"><br><br>
+		<button type="submit">Upload</button>
+		<br>
+	
+    <h2>Delete Uploaded File</h2>
+  <button id="delete-button">Delete Uploaded File</button>
+
+  <script>
+  document.getElementById("delete-button").addEventListener("click", function() {
+    var file = this.dataset.file;
+    if (!file) {
+      console.log("No file to delete");
+      return;
+    }
+  
+    fetch("/docs/uploads/" + file, {
+      method: "DELETE"
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("File deleted:", data);
+      // Disable the delete button
+      document.getElementById("delete-button").disabled = true;
+    });
+  });
+  </script>

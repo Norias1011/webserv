@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _infoCgi(this), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -724,3 +724,87 @@ bool isDirectory(const std::string& path)
 	return false;
 }
 
+
+
+int Request::findCGI()
+{
+	if (this->_configLocation == NULL)
+	{
+		Log::log(Log::ERROR, "No location found for CGI");
+		return -1;
+	}
+	std::vector<std::string> fullPathLocation = findFullPathLocation();
+	for (size_t i = 0; i < fullPathLocation.size(); i++)
+	{
+		for (std::map<std::string, std::string>::const_iterator it = this->_configLocation->getCgi().begin(); it != this->_configLocation->getCgi().end(); it++)
+		{
+			if (checkExtension(fullPathLocation[i]) == it->first)
+			{
+				if (checkfile(fullPathLocation[i]))
+				{
+					_infoCgi._statusCgi = true;
+					_infoCgi._path = fullPathLocation[i];
+					_infoCgi._cgiPath = it->second;
+					return 0;
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+std::vector<std::string> Request::findFullPathLocation()
+{
+    bool isAlias = false;
+    std::vector<std::string> FullPaths;
+    std::string pathRequest = this->_path;
+    std::string root = this->_configLocation->getRoot();
+    std::string alias = this->_configLocation->getAlias();
+    std::vector<std::string> allIndex = this->_configLocation->getIndex();
+
+    if (this->_configLocation == NULL)
+        return std::vector<std::string>();
+    if (root.empty())
+        root = this->_configServer->getRoot();
+    if (!alias.empty())
+    {
+        isAlias = true;
+        root = alias;
+    }
+    if (pathRequest[pathRequest.size() - 1] != '/')
+    {
+        if (isAlias)
+            pathRequest = pathRequest.substr(this->_configLocation->getPath().size());
+        FullPaths.push_back(root + pathRequest);
+    }
+    for (size_t i = 0; i < allIndex.size(); i++)
+    {
+        std::string index = allIndex[i];
+        std::string tmpPath = pathRequest;
+        if (pathRequest == "/")
+            pathRequest = root + "/" + index;
+        else if (isAlias)
+            pathRequest = root + "/" + index;
+        else
+            pathRequest = root + pathRequest + "/" + index;
+        std::cout << "[DEBUG] - Request::findFullPathLocation - pathRequest: " << pathRequest << std::endl;
+        FullPaths.push_back(pathRequest);
+        pathRequest = tmpPath;
+    }
+    return FullPaths;
+}
+
+std::string Request::checkExtension(std::string const &path)
+{
+	size_t pos = path.find_last_of(".");
+	std::cout << "[DEBUG] - Request::checkExtension - path: " << path.substr(pos + 1) << std::endl;
+	if (pos == std::string::npos)
+		return "";
+	return ( "." + path.substr(pos + 1));
+}
+
+bool Request::checkfile(std::string const &path)
+{
+	struct stat buf;
+	return (stat(path.c_str(), &buf) == 0 && S_ISREG(buf.st_mode));
+}
