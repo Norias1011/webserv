@@ -115,9 +115,7 @@ void Server::runServer()
 	time_t before_loop_time = time(0);
 	while (this->_working)
 	{
-		Log::log(Log::INFO, "Looping for events incoming -(epoll wait)");
 		int num_fds = epoll_wait(_epollFd, events, MAX_CO, -1);
-		Log::logVar(Log::INFO, "Looping for events incoming -(epoll wait) with number fd number:{}", num_fds);
 		if (num_fds < 0)
 			throw Server::ErrorException("epoll_wait fail");
 		for (int i = 0; i < num_fds; i++)
