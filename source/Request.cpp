@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _query(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""), _query(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -319,7 +319,7 @@ int Request::checkConfig()
 	}
 	if (this->checkSize() == -1)
 		return -1;
-	Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
+			Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
 	if (this->findCGI() == 0)
 		Log::log(Log::DEBUG, "CGI is found in the request");
 	else
@@ -638,18 +638,23 @@ int Request::findConfigLocation()
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
-		if (_path.compare(0, it->getPath().length(), it->getPath()) == 0 && (_path.length() == it->getPath().length() || _path[it->getPath().length()] == '/'))
+
+		// Normalize paths
+		std::string configPath = normalizePath(it->getPath());
+		std::string requestPath = _path;
+
+		if (requestPath.compare(0, configPath.length(), configPath) == 0 && (requestPath.length() == configPath.length() || requestPath[configPath.length()] == '/'))
 		{
 			this->_configLocation = &(*it);
 			_configDone = true;
 			_serverCode = 200;
 			this->_configLocation->print();
 			Log::log(Log::INFO, "Config location done with a match \u2713");
-			return (0);
+			return 0;
 		}
-		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
-		this->_configLocation = &(it[0]);
 	}
+	Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
+	this->_configLocation = &(locations[0]);
 	return (0);
 }
 
@@ -814,4 +819,11 @@ bool Request::checkfile(std::string const &path)
 {
 	struct stat buf;
 	return (stat(path.c_str(), &buf) == 0 && S_ISREG(buf.st_mode));
+}
+
+std::string normalizePath(const std::string& path)
+{
+    if (path.size() > 1 && path[path.size() - 1] == '/')
+        return path.substr(0, path.size() - 1);
+    return path;
 }

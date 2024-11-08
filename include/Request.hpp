@@ -112,5 +112,6 @@ class Request
 
 bool fileExists(const std::string& path);
 bool isDirectory(const std::string& path);
+std::string normalizePath(const std::string& path);
 
 #endif //REQUEST_HPP
