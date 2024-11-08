@@ -60,7 +60,6 @@ ErrorPage::ErrorPage()
     _errorMessages[226] = "IM Used";
     _errorMessages[207] = "Multi-Status";
     _errorMessages[208] = "Already Reported";
-    _errorMessages[226] = "IM Used";
 }
 
 ErrorPage::~ErrorPage()
@@ -83,7 +82,10 @@ ErrorPage &ErrorPage::operator=(ErrorPage const &src)
 
 std::string ErrorPage::getErrorPage(int code)
 {
+    std::cout << "getErrorPage - Error code: " << code << std::endl;
     std::string messageError = getErrorMessages(code);
+    if (messageError == "Error code not found")
+        return messageError = "Unknown error";
     std::string errorPage = "<!DOCTYPE html> <html><head><title>" + messageError + "</title></head><body>";
     errorPage += "<h1>" + messageError + "</h1>";
     errorPage += "</body></html>";
@@ -99,7 +101,8 @@ std::string ErrorPage::getConfigErrorPage(std::map<int, std::string> configError
 {
     std::map<int, std::string>::const_iterator it = configErrorPage.find(code);
     if (it == configErrorPage.end())
-        return "Error code not found";
+        return getErrorPage(code);
+    //    return "Error code not found";
     std::string messageError = it->second;
     std::string errorPage;
     std::ifstream file(messageError.c_str());
@@ -115,8 +118,10 @@ std::string ErrorPage::getConfigErrorPage(std::map<int, std::string> configError
     else
     {
         std::cout << "Error: Unable to open file in Error Page" << std::endl;
-        return "";
+        return getErrorPage(code);
+        //return "";
     }
+    std::cout << "getConfigErrorPage - Error code: " << code << std::endl;
     std::string header = "HTTP/1.1 " + numberToString(code) + " " + getErrorMessages(code) + "\r\n";
     header += "Content-Type: text/html\r\n"; // change with the type of file
     header += "Content-Length: " + numberToString(errorPage.size()) + "\r\n";

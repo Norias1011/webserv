@@ -52,7 +52,6 @@ int Response::giveAnswer()
     {
         std::cout << "[DEBUG] - Response::giveAnswer - server code is not 200" << std::endl;
         _response = _errorPage.getConfigErrorPage(_request->getConfigServer()->getErrorPages(), _request->getServerCode());
-        Log::logVar(Log::DEBUG, "Response::giveAnswer - _response : ", _response);
         _done = true;
         return 0;
     }
@@ -310,7 +309,7 @@ void Response::normalResponse(std::string &path)
         _response = "HTTP/1.1 200 OK\r\n";
         _response += "Content-Type: text/html\r\n";
         _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
-        _response += "\r\n\r\n";
+        _response += "\r\n";
         _response += buffer.str();
         file.close();
     }

@@ -47,7 +47,7 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	//sleep(1);
+	sleep(1);
 	std::string request;
 	char buffer[CLIENT_BUFFER + 1];
 	int bytes = 0;
