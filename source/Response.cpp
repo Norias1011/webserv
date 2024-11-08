@@ -107,7 +107,7 @@ int Response::giveAnswer()
 bool Response::checkRewrite()
 {
 	//if (this->_request->getConfigDone() == false)
-		
+	std::string tmpPath;
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();
@@ -125,7 +125,11 @@ bool Response::checkRewrite()
         root = this->_request->getConfigLocation()->getRoot();
     else
         root = this->_request->getConfigServer()->getRoot(); // check ici car ça segfault si on se connecte a distance
-    std::string tmpPath = _request->getPath();
+    if (_request->getConfigLocation() && _request->getConfigLocation()->getAlias().size() > 0)
+        tmpPath = _request->getConfigLocation()->getAlias() + _request->getPath().substr(_request->getConfigLocation()->getPath().size());
+    else
+        tmpPath = _request->getPath();
+    Log::logVar(Log::DEBUG,"tmpPath :",tmpPath);
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
         return false;
     if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
@@ -265,9 +269,15 @@ void Response::handleLocation()
             path = FullPath[i];
             break;
         }
+        else
+        {
+            Log::logVar(Log::DEBUG, "File does not exist: ", FullPath[i]);
+            break;
+        }
     }
     if (path.empty())
     {
+        Log::log(Log::DEBUG, "Path is empty");
         if (this->_request->getConfigLocation()->getAutoindex() == true)
         {
             std::string newAlias = this->_request->getConfigLocation()->getAlias();
@@ -282,6 +292,7 @@ void Response::handleLocation()
             return ;
         }
         std::string notFound = root + _request->getPath();
+        Log::logVar(Log::DEBUG, "notFound :", notFound);
         struct stat buffer;
         if (stat(notFound.c_str(), &buffer) == 0)
             _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
@@ -533,6 +544,8 @@ std::vector<std::string> Response::getFullPaths()
     std::string root = this->_request->getConfigLocation()->getRoot();
     std::string alias = this->_request->getConfigLocation()->getAlias();
     std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
+    std::string secondDirectory = "";
+    Log::logVar(Log::DEBUG, "Response::getFullPaths - pathRequest: ", pathRequest);
 
     if (this->_request->getConfigLocation() == NULL)
         return std::vector<std::string>();
@@ -544,11 +557,22 @@ std::vector<std::string> Response::getFullPaths()
         root = alias;
     }
     
-    if (pathRequest[pathRequest.size() - 1] != '/')
+    if (isFileUri(pathRequest))
     {
         if (isAlias)
             pathRequest = pathRequest.substr(_request->getConfigLocation()->getPath().size());
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after isFileUri - root + pathRequest: ", root + pathRequest);
         FullPaths.push_back(root + pathRequest);
+        return FullPaths;
+    }
+    if (hasMoreThanOneSlash(pathRequest))
+    {
+        if (isAlias)
+            secondDirectory = pathRequest.substr(_request->getConfigLocation()->getPath().size());
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after hasMoreThanOneSlash - secondDirectory: ", secondDirectory);
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after hasMoreThanOneSlash - root + pathRequest: ", root + pathRequest);
+        /*FullPaths.push_back(root + pathRequest);
+        return FullPaths;*/
     }
     for (size_t i = 0; i < allIndex.size(); i++)
     {
@@ -556,10 +580,14 @@ std::vector<std::string> Response::getFullPaths()
         std::string tmpPath = pathRequest;
         if (pathRequest == "/")
             pathRequest = root + "/" + index;
+        else if (isAlias && !secondDirectory.empty())
+            pathRequest = root + secondDirectory + "/" + index;
         else if (isAlias)
             pathRequest = root + "/" + index;
         else
+        {
             pathRequest = root + pathRequest +  "/" + index; // test 4 passed with the commented thing
+        }
         Log::logVar(Log::DEBUG, "Response::getFullPaths - root: ", root); 
         std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
@@ -587,4 +615,33 @@ std::string Response::numberToString(int number)
     convert << number;
     result = convert.str();
     return result;
+}
+
+bool Response::isFileUri(const std::string& uri) {
+    // Find the last dot and the last slash in the URI
+    std::string::size_type dotPos = uri.find_last_of('.');
+    std::string::size_type slashPos = uri.find_last_of('/');
+
+    // Check if the dot comes after the last slash, indicating a file extension
+    if (dotPos != std::string::npos && (slashPos == std::string::npos || dotPos > slashPos)) {
+        return true; // URI likely points to a file
+    }
+    return false; // URI likely points to a directory
+}
+
+bool Response::hasMoreThanOneSlash(const std::string& str) {
+    int slashCount = 0;
+
+    // Parcours de la chaîne pour compter les '/'
+    for (std::string::size_type i = 0; i < str.length(); ++i) {
+        if (str[i] == '/') {
+            ++slashCount;
+        }
+
+        // Si on trouve plus d'un '/', on peut arrêter la boucle
+        if (slashCount > 1) {
+            return true;
+        }
+    }
+    return false;
 }
