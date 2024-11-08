@@ -58,6 +58,9 @@ class Response
 
         std::string numberToString(int number);
 
+        bool isFileUri(const std::string& uri);
+        bool hasMoreThanOneSlash(const std::string& str);
+
     private:
 
         Request* _request;
