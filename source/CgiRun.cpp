@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:18:36 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/06 17:18:59 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/08 17:32:09 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ CgiRun &CgiRun::operator=(CgiRun const &src)
 
 CgiRun::~CgiRun()
 {
+    if (!_env.empty())
+        _env.clear();
 }
 
 void CgiRun::_setEnv()
@@ -130,6 +132,7 @@ std::string CgiRun::executeCgi()
     delete[] env;
     for (size_t i = 0; argv[i]; i++)
         delete[] argv[i];
+    delete[] argv;
     Log::log(Log::DEBUG, "CGI executed successfully");
     return ("HTTP/1.1 200 OK\r\n" + checkContentLength(response));
 }
@@ -153,7 +156,7 @@ std::string CgiRun::checkContentLength(const std::string &response)
     size_t pos = response.find("\r\n\r\n");
     std::string header = response.substr(0, pos);
     std::string body = response.substr(pos + 4);
-    std::string contentLength = "Content-Length: " + numberToString(body.size()) + "\r\n";
+    std::string contentLength = "\nContent-Length: " + numberToString(body.size()) + "\r\n";
     return header + contentLength + "\r\n" + body;
 }
 

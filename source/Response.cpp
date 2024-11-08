@@ -318,7 +318,7 @@ void Response::normalResponse(std::string &path)
         std::stringstream buffer;
         buffer << file.rdbuf();
         _response = "HTTP/1.1 200 OK\r\n";
-        _response += "Content-Type: text/html\r\n";
+        _response += "Content-Type: " + checkMime(path)  + "\r\n";
         _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
         _response += "\r\n";
         _response += buffer.str();
@@ -375,7 +375,7 @@ void Response::chunkedHeader(std::string &path)
     if (stat(path.c_str(), &buffer) == 0)
     {
         std::string header = "HTTP/1.1 200 OK\r\n";
-        header += "Content-Type: text/html\r\n";
+        header += "Content-Type: " + checkMime(path) + "\r\n";
         header += "Transfer-Encoding: chunked\r\n";
         header += "\r\n";
         _response = header;
@@ -644,4 +644,38 @@ bool Response::hasMoreThanOneSlash(const std::string& str) {
         }
     }
     return false;
+}
+
+std::string Response::checkMime(const std::string &path)
+{
+    std::map<std::string, std::string> allMimeTypes;
+    allMimeTypes[".html"] = "text/html";
+    allMimeTypes[".css"] = "text/css";
+    allMimeTypes[".js"] = "application/javascript";
+    allMimeTypes[".jpg"] = "image/jpeg";
+    allMimeTypes[".jpeg"] = "image/jpeg";
+    allMimeTypes[".png"] = "image/png";
+    allMimeTypes[".gif"] = "image/gif";
+    allMimeTypes[".htm"] = "text/html";
+    allMimeTypes[".txt"] = "text/plain";
+    allMimeTypes[".pdf"] = "application/pdf";
+    allMimeTypes[".zip"] = "application/zip";
+    allMimeTypes[".tar"] = "application/x-tar";
+    allMimeTypes[".tar.gz"] = "application/x-gzip";
+    allMimeTypes[".gz"] = "application/x-gzip";
+    allMimeTypes[".mp3"] = "audio/mpeg";
+    allMimeTypes[".mp4"] = "video/mp4";
+    allMimeTypes[".avi"] = "video/x-msvideo";
+    allMimeTypes[".mpeg"] = "video/mpeg";
+    allMimeTypes[".webm"] = "video/webm";
+    allMimeTypes[".json"] = "application/json";
+    allMimeTypes[".xml"] = "application/xml";
+    allMimeTypes[".cgi"] = "application/x-httpd-cgi";
+    allMimeTypes[".sh"] = "application/x-sh";
+    allMimeTypes[".py"] = "application/x-python";
+
+    std::string extension = path.substr(path.find_last_of('.'));
+    if (allMimeTypes.find(extension) != allMimeTypes.end())
+        return allMimeTypes[extension];
+    return "application/octet-stream";
 }

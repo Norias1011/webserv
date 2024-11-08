@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/31 14:26:22 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/08 17:25:00 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,10 @@ Config::Config() : _filename("")
 
 Config::~Config()
 {
+    if (!_servers.empty())
+        _servers.clear();
+    if (!_serverConfigs.empty())
+        _serverConfigs.clear();
 }
 
 Config::Config(Config const &src)

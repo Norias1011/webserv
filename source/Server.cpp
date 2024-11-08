@@ -31,6 +31,11 @@ Server::~Server()
 		close(it->first);
 	}
 	this->_sockets.clear();
+	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = this->_serv_list.begin(); it != this->_serv_list.end(); it++)
+	{
+		this->_serv_list.erase(it);
+	}
+	this->_serv_list.clear();
 	if (_epollFd != -1)
 		close(_epollFd);
 }
@@ -43,7 +48,6 @@ Server &Server::operator=(Server const &rhs)
 		_serv_list = rhs._serv_list;
 		_sockets = rhs._sockets;
 		_clients = rhs._clients;
-		_serv_list = rhs._serv_list;
 		_new_server = rhs._new_server;
 		_done = rhs._done;
 		_working = rhs._working;
