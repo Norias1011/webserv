@@ -47,7 +47,7 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	sleep(1);
+	//sleep(1);
 	std::string request;
 	char buffer[CLIENT_BUFFER + 1];
 	int bytes = 0;
@@ -91,8 +91,8 @@ void Client::sendResponse(int fd)
         return ;
     }
     int sendResponse = -1;
-	Log::logVar(Log::DEBUG, "sendResponse fd is :",_fd);
-	Log::logVar(Log::DEBUG, "sendResponse response is :",_response->getResponse());
+	Log::logVar(Log::DEBUG, "sendResponse fd is :", _fd);
+	Log::logVar(Log::DEBUG, "sendResponse response is :", _response->getResponse());
     if (_fd != -1)
         sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
     if (sendResponse < 0)
@@ -101,7 +101,8 @@ void Client::sendResponse(int fd)
     }
     else
 	{
-        std::cout << "Response sent" << std::endl;
+        Log::logVar(Log::DEBUG, "Response sent to client with fd {}", _fd);
+		Log::logVar(Log::DEBUG, "Response sent to client with sendResponse {}", sendResponse);
 	}
     if (this->getResponse()->_done == true)
     {
@@ -130,3 +131,9 @@ std::ostream& operator<<(std::ostream& os, const Client &client)
     os << "Client fd: " << client.getFd();
     return os;
 }
+
+
+/*if (this->_request->findCGI() == 0)
+			Log::log(Log::DEBUG,"CGI is found in the request");
+		else
+			Log::log(Log::DEBUG,"CGI is not found in the request");*/

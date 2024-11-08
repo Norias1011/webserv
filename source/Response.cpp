@@ -62,7 +62,16 @@ int Response::giveAnswer()
         _done = true;
         return 0;
     }
-
+    if (_request->getCgiStatus() == true)
+    {
+        Log::log(Log::INFO, "CGI is true");
+        // handlecgi() with the execution etc..
+        InfoCgi infoCgi = _request->getInfoCgi();
+        CgiRun newCgi(&infoCgi);
+        _response= newCgi.executeCgi();
+        _done = true;
+        return 0;
+    }
     if (_request->getMethod() == "GET")
     {
         std::cout << "[DEBUG] - Response::giveAnswer - GET method" << std::endl;
@@ -301,7 +310,7 @@ void Response::normalResponse(std::string &path)
         _response = "HTTP/1.1 200 OK\r\n";
         _response += "Content-Type: text/html\r\n";
         _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
-        _response += "\r\n";
+        _response += "\r\n\r\n";
         _response += buffer.str();
         file.close();
     }
@@ -440,12 +449,13 @@ std::string Response::responsePage(std::vector<std::string> listFiles, std::stri
     }
     answer += "</ul>";
     answer += "</body></html>";
-    std::ostringstream answerSize;
-    answerSize << answer.size();
-    std::string answerSizeStr = answerSize.str();
+    int size = answer.size();
+    //std::ostringstream answerSize;
+    //answerSize << answer.size();
+    //std::string answerSizeStr = answerSize.();
     std::string header = "HTTP/1.1 200 OK\r\n";
     header += "Content-Type: text/html\r\n";
-    header += "Content-Length: " + answerSizeStr + "\r\n";
+    header += "Content-Length: " + numberToString(size) + "\r\n";
     header += "\r\n";
     answer = header + answer;
     return answer;
@@ -556,22 +566,6 @@ std::vector<std::string> Response::getFullPaths()
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
     }
-    /*if (pathRequest[pathRequest.size() - 1] == '/')
-    {
-        for (std::vector<std::string>::iterator it = allIndex.begin(); it != allIndex.end(); it++)
-        {
-            std::string index = *it;
-            std::string tmpPath = pathRequest;
-            if (pathRequest == "/")
-                pathRequest = root + "/" + index;
-            else
-                pathRequest = root + pathRequest + index;
-            FullPaths.push_back(pathRequest);
-            pathRequest = tmpPath;
-        }
-    }
-    else
-        FullPaths.push_back(root + pathRequest);*/
     return FullPaths;
 }
 
