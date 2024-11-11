@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/06 14:18:36 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/08 17:32:09 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:25:38 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,7 @@ CgiRun::CgiRun(InfoCgi *infoCgi) : _infoCgi(infoCgi)
 
 CgiRun::CgiRun(CgiRun const &src)
 {
-    if (this != &src)
-    {
-        *this = src;
-    }
+    *this = src;
 }
 
 CgiRun &CgiRun::operator=(CgiRun const &src)

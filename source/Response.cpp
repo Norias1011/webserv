@@ -19,10 +19,7 @@ Response::~Response()
 
 Response::Response(Response const &copy)
 {
-    if (this != &copy)
-    {
-        *this = copy;
-    }
+    *this = copy;
 }
 
 Response &Response::operator=(Response const &src)
@@ -31,6 +28,7 @@ Response &Response::operator=(Response const &src)
     {
         this->_done = src._done;
         this->_working = src._working;
+        this->_break = src._break;
         this->_request = src._request;
         this->_newFd = src._newFd;
         this->_errorPage = src._errorPage;

@@ -21,21 +21,22 @@ Server::Server(Server const &copy)
 
 Server::~Server()
 {
-	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
+		close(it->first);
 		delete it->second;
 	}
 	this->_clients.clear();
-	for (std::map<int, struct sockaddr_in>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
+	for (std::map<int, struct sockaddr_in>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
 	{
 		close(it->first);
 	}
 	this->_sockets.clear();
-	for (std::map<std::string, std::vector<ConfigServer> >::iterator it = this->_serv_list.begin(); it != this->_serv_list.end(); it++)
+	/*for (std::map<std::string, std::vector<ConfigServer> >::iterator it = this->_serv_list.begin(); it != this->_serv_list.end(); it++)
 	{
 		this->_serv_list.erase(it);
 	}
-	this->_serv_list.clear();
+	this->_serv_list.clear();*/
 	if (_epollFd != -1)
 		close(_epollFd);
 }
@@ -87,6 +88,7 @@ void Server::createSocket()
 	}
 	BindandListen();
 	_done = true;
+
 }
 //AREVOIR LE REINTERPRET cast
 void Server::BindandListen()
@@ -243,4 +245,5 @@ void Server::closeServer()
 {
 	_working = false;
 	_break = true;
+
 }

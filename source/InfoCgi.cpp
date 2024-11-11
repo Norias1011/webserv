@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/05 16:47:15 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/08 17:29:43 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:26:05 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,10 +22,7 @@ InfoCgi::InfoCgi() : _request(NULL), _statusCgi(false), _path(""), _cgiPath("")
 
 InfoCgi::InfoCgi(InfoCgi const &src)
 {
-    if (this != &src)
-    {
-        *this = src;
-    }
+    *this = src;
 }
 
 InfoCgi &InfoCgi::operator=(InfoCgi const &src)

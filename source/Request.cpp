@@ -57,9 +57,13 @@ Request &Request::operator=(Request const &src)
         this->_httpVersion = src._httpVersion;
 		this->_init = src._init;
 		this->_working = src._working;
+		this->_configDone = src._configDone;
 		this->_lastRequestTime = src._lastRequestTime;
 		this->_serverCode = src._serverCode;
 		this->_headers = src._headers;
+		this->_postHeaders = src._postHeaders;
+		this->_fileHeaders = src._fileHeaders;
+		this->_uploadedFilename = src._uploadedFilename;
 		this->_body = src._body;
 		this->_isChunked = src._isChunked;
 		this->_isFirstLineParsed = src._isFirstLineParsed;
@@ -67,7 +71,9 @@ Request &Request::operator=(Request const &src)
 		this->_isHttpParsed = src._isHttpParsed;
 		this->_isMethodParsed = src._isMethodParsed;
 		this->_isPathParsed = src._isPathParsed;
+		this->_isBodyParsed = src._isBodyParsed;
 		this->_contentLength = src._contentLength;
+		this->_infoCgi = src._infoCgi;
 	}
 	return *this;
 }
