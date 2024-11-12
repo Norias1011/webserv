@@ -29,7 +29,7 @@ Client::~Client()
         close(_fd);
 }
 
-Client &Client::operator=(Client const &src)
+/*Client &Client::operator=(Client const &src)
 {
     if (this != &src)
     {
@@ -41,7 +41,7 @@ Client &Client::operator=(Client const &src)
 		this->_requestStatus = src._requestStatus;
     }
     return *this;
-}
+}*/
 
 int Client::getFd() const
 {
