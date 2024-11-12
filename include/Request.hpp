@@ -105,6 +105,8 @@ class Request
         bool _isBodyParsed;
 		bool _isCGI;
         bool _isChunked;
+		int _chunkSize;
+		int _bodySize;
         unsigned long long _contentLength;
         InfoCgi _infoCgi;
         time_t _lastRequestTime;

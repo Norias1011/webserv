@@ -29,7 +29,7 @@ Client::~Client()
         close(_fd);
 }
 
-/*Client &Client::operator=(Client const &src)
+Client &Client::operator=(Client const &src)
 {
     if (this != &src)
     {
@@ -41,7 +41,7 @@ Client::~Client()
 		this->_requestStatus = src._requestStatus;
     }
     return *this;
-}*/
+}
 
 int Client::getFd() const
 {
@@ -50,7 +50,7 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	sleep(1);
+	//sleep(1);
 	std::string request;
 	char buffer[CLIENT_BUFFER + 1];
 	int bytes = 0;
