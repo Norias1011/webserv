@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 12:00:02 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/31 14:26:22 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:49:59 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,12 @@ Config::~Config()
 {
 }
 
-Config::Config(Config const &src)
+/*Config::Config(Config const &src)
 {
-    _filename = src._filename;
-    _servers = src._servers;
-    _serverConfigs = src._serverConfigs;
-}
+    *this = src;
+}*/
 
-Config &Config::operator=(Config const &src)
+/*Config &Config::operator=(Config const &src)
 {
     if (this != &src)
     {
@@ -36,7 +34,7 @@ Config &Config::operator=(Config const &src)
         this->_serverConfigs = src._serverConfigs;
     }
     return *this;
-}
+}*/
 
 void Config::parseConfig(const std::string &filename)
 {

@@ -22,6 +22,9 @@ Client::~Client()
 	    delete _request;
     if (_response != NULL)
 	   	delete _response;
+	_server = NULL;
+	/*if (_server != NULL)
+		delete _server;*/
     if (_fd != -1)
         close(_fd);
 }
@@ -47,7 +50,7 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	sleep(1);
+	//sleep(1);
 	std::string request;
 	char buffer[CLIENT_BUFFER + 1];
 	int bytes = 0;

@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:32 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/31 14:05:54 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:25:53 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,10 +40,7 @@ ConfigLocation::~ConfigLocation()
 
 ConfigLocation::ConfigLocation(ConfigLocation const &src)
 {
-    if (this != &src)
-    {
-        *this = src;
-    }
+    *this = src;
 }
 
 ConfigLocation &ConfigLocation::operator=(ConfigLocation const &src)

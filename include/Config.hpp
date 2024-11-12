@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:34:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/30 10:58:25 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:50:04 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ class Config
     public:
         Config();
         ~Config();
-        Config(Config const &src);
-        Config &operator=(Config const &src);
+        //Config(Config const &src);
+        //Config &operator=(Config const &src);
         void parseConfig(const std::string &filename);
         std::vector<std::string> split(std::string& s, const std::string& delimiter);
         void checkDoubleServerName();
@@ -42,7 +42,7 @@ class Config
         void printAll();
         std::string numberToString(int number);
 
-    	const std::map<std::string, std::vector<ConfigServer> >& getConfigServer() const { return _serverConfigs; }
+    	const std::map<std::string, std::vector<ConfigServer> >& getConfigServer() const { return _serverConfigs; } // const const 
 
         class ErrorException : public std::exception
 		{
