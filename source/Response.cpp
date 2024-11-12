@@ -19,10 +19,7 @@ Response::~Response()
 
 Response::Response(Response const &copy)
 {
-    if (this != &copy)
-    {
-        *this = copy;
-    }
+    *this = copy;
 }
 
 Response &Response::operator=(Response const &src)
@@ -31,6 +28,7 @@ Response &Response::operator=(Response const &src)
     {
         this->_done = src._done;
         this->_working = src._working;
+        this->_break = src._break;
         this->_request = src._request;
         this->_newFd = src._newFd;
         this->_errorPage = src._errorPage;
@@ -107,7 +105,7 @@ int Response::giveAnswer()
 bool Response::checkRewrite()
 {
 	//if (this->_request->getConfigDone() == false)
-		
+	std::string tmpPath;
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
         std::pair<int, std::string> rewrite = this->_request->getConfigLocation()->getRewrite();
@@ -125,7 +123,11 @@ bool Response::checkRewrite()
         root = this->_request->getConfigLocation()->getRoot();
     else
         root = this->_request->getConfigServer()->getRoot(); // check ici car ça segfault si on se connecte a distance
-    std::string tmpPath = _request->getPath();
+    if (_request->getConfigLocation() && _request->getConfigLocation()->getAlias().size() > 0)
+        tmpPath = _request->getConfigLocation()->getAlias() + _request->getPath().substr(_request->getConfigLocation()->getPath().size());
+    else
+        tmpPath = _request->getPath();
+    Log::logVar(Log::DEBUG,"tmpPath :",tmpPath);
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
         return false;
     if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
@@ -265,9 +267,15 @@ void Response::handleLocation()
             path = FullPath[i];
             break;
         }
+        else
+        {
+            Log::logVar(Log::DEBUG, "File does not exist: ", FullPath[i]);
+            break;
+        }
     }
     if (path.empty())
     {
+        Log::log(Log::DEBUG, "Path is empty");
         if (this->_request->getConfigLocation()->getAutoindex() == true)
         {
             std::string newAlias = this->_request->getConfigLocation()->getAlias();
@@ -282,6 +290,7 @@ void Response::handleLocation()
             return ;
         }
         std::string notFound = root + _request->getPath();
+        Log::logVar(Log::DEBUG, "notFound :", notFound);
         struct stat buffer;
         if (stat(notFound.c_str(), &buffer) == 0)
             _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
@@ -307,7 +316,7 @@ void Response::normalResponse(std::string &path)
         std::stringstream buffer;
         buffer << file.rdbuf();
         _response = "HTTP/1.1 200 OK\r\n";
-        _response += "Content-Type: text/html\r\n";
+        _response += "Content-Type: " + checkMime(path)  + "\r\n";
         _response += "Content-Length: " + numberToString(buffer.str().size()) + "\r\n";
         _response += "\r\n";
         _response += buffer.str();
@@ -364,7 +373,7 @@ void Response::chunkedHeader(std::string &path)
     if (stat(path.c_str(), &buffer) == 0)
     {
         std::string header = "HTTP/1.1 200 OK\r\n";
-        header += "Content-Type: text/html\r\n";
+        header += "Content-Type: " + checkMime(path) + "\r\n";
         header += "Transfer-Encoding: chunked\r\n";
         header += "\r\n";
         _response = header;
@@ -533,6 +542,8 @@ std::vector<std::string> Response::getFullPaths()
     std::string root = this->_request->getConfigLocation()->getRoot();
     std::string alias = this->_request->getConfigLocation()->getAlias();
     std::vector<std::string> allIndex = this->_request->getConfigLocation()->getIndex();
+    std::string secondDirectory = "";
+    Log::logVar(Log::DEBUG, "Response::getFullPaths - pathRequest: ", pathRequest);
 
     if (this->_request->getConfigLocation() == NULL)
         return std::vector<std::string>();
@@ -544,11 +555,22 @@ std::vector<std::string> Response::getFullPaths()
         root = alias;
     }
     
-    if (pathRequest[pathRequest.size() - 1] != '/')
+    if (isFileUri(pathRequest))
     {
         if (isAlias)
             pathRequest = pathRequest.substr(_request->getConfigLocation()->getPath().size());
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after isFileUri - root + pathRequest: ", root + pathRequest);
         FullPaths.push_back(root + pathRequest);
+        return FullPaths;
+    }
+    if (hasMoreThanOneSlash(pathRequest))
+    {
+        if (isAlias)
+            secondDirectory = pathRequest.substr(_request->getConfigLocation()->getPath().size());
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after hasMoreThanOneSlash - secondDirectory: ", secondDirectory);
+        Log::logVar(Log::DEBUG, "Response::getFullPaths after hasMoreThanOneSlash - root + pathRequest: ", root + pathRequest);
+        /*FullPaths.push_back(root + pathRequest);
+        return FullPaths;*/
     }
     for (size_t i = 0; i < allIndex.size(); i++)
     {
@@ -556,10 +578,14 @@ std::vector<std::string> Response::getFullPaths()
         std::string tmpPath = pathRequest;
         if (pathRequest == "/")
             pathRequest = root + "/" + index;
+        else if (isAlias && !secondDirectory.empty())
+            pathRequest = root + secondDirectory + "/" + index;
         else if (isAlias)
             pathRequest = root + "/" + index;
         else
+        {
             pathRequest = root + pathRequest +  "/" + index; // test 4 passed with the commented thing
+        }
         Log::logVar(Log::DEBUG, "Response::getFullPaths - root: ", root); 
         std::cout << "[DEBUG] - Response::getFullPaths - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
@@ -587,4 +613,67 @@ std::string Response::numberToString(int number)
     convert << number;
     result = convert.str();
     return result;
+}
+
+bool Response::isFileUri(const std::string& uri) {
+    // Find the last dot and the last slash in the URI
+    std::string::size_type dotPos = uri.find_last_of('.');
+    std::string::size_type slashPos = uri.find_last_of('/');
+
+    // Check if the dot comes after the last slash, indicating a file extension
+    if (dotPos != std::string::npos && (slashPos == std::string::npos || dotPos > slashPos)) {
+        return true; // URI likely points to a file
+    }
+    return false; // URI likely points to a directory
+}
+
+bool Response::hasMoreThanOneSlash(const std::string& str) {
+    int slashCount = 0;
+
+    // Parcours de la chaîne pour compter les '/'
+    for (std::string::size_type i = 0; i < str.length(); ++i) {
+        if (str[i] == '/') {
+            ++slashCount;
+        }
+
+        // Si on trouve plus d'un '/', on peut arrêter la boucle
+        if (slashCount > 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string Response::checkMime(const std::string &path)
+{
+    std::map<std::string, std::string> allMimeTypes;
+    allMimeTypes[".html"] = "text/html";
+    allMimeTypes[".css"] = "text/css";
+    allMimeTypes[".js"] = "application/javascript";
+    allMimeTypes[".jpg"] = "image/jpeg";
+    allMimeTypes[".jpeg"] = "image/jpeg";
+    allMimeTypes[".png"] = "image/png";
+    allMimeTypes[".gif"] = "image/gif";
+    allMimeTypes[".htm"] = "text/html";
+    allMimeTypes[".txt"] = "text/plain";
+    allMimeTypes[".pdf"] = "application/pdf";
+    allMimeTypes[".zip"] = "application/zip";
+    allMimeTypes[".tar"] = "application/x-tar";
+    allMimeTypes[".tar.gz"] = "application/x-gzip";
+    allMimeTypes[".gz"] = "application/x-gzip";
+    allMimeTypes[".mp3"] = "audio/mpeg";
+    allMimeTypes[".mp4"] = "video/mp4";
+    allMimeTypes[".avi"] = "video/x-msvideo";
+    allMimeTypes[".mpeg"] = "video/mpeg";
+    allMimeTypes[".webm"] = "video/webm";
+    allMimeTypes[".json"] = "application/json";
+    allMimeTypes[".xml"] = "application/xml";
+    allMimeTypes[".cgi"] = "application/x-httpd-cgi";
+    allMimeTypes[".sh"] = "application/x-sh";
+    allMimeTypes[".py"] = "application/x-python";
+
+    std::string extension = path.substr(path.find_last_of('.'));
+    if (allMimeTypes.find(extension) != allMimeTypes.end())
+        return allMimeTypes[extension];
+    return "application/octet-stream";
 }

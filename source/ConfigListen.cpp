@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 13:57:40 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/23 15:46:49 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:36:18 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ ConfigListen::ConfigListen() : _ip(""), _port(0), _IpAndPort("")
 
 ConfigListen::~ConfigListen()
 {
+    
 }
 
 ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(ipLine)

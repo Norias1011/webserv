@@ -22,6 +22,9 @@ Client::~Client()
 	    delete _request;
     if (_response != NULL)
 	   	delete _response;
+	_server = NULL;
+	/*if (_server != NULL)
+		delete _server;*/
     if (_fd != -1)
         close(_fd);
 }

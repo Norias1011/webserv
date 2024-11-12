@@ -57,6 +57,10 @@ class Response
         void chunkedHeader(std::string &path);
 
         std::string numberToString(int number);
+        std::string checkMime(const std::string &path);
+
+        bool isFileUri(const std::string& uri);
+        bool hasMoreThanOneSlash(const std::string& str);
 
     private:
 
