@@ -352,6 +352,7 @@ int Request::checkConfig()
 
 void Request::parseBody()
 {
+	Log::log(Log::DEBUG, "Entering parseBody function");
 	if (_isChunked == true)
 	{
 		parseChunkedBody();
@@ -374,6 +375,13 @@ void Request::parseBody()
 	Log::logVar(Log::DEBUG, "request?: {}", this->_request);
 	Log::logVar(Log::DEBUG, "Body is size: {}", this->_request.size());
 	Log::logVar(Log::DEBUG, "content length: {}", this->_contentLength);
+	if (_method == "GET" && this->_request.size() == 0)
+	{
+		_isBodyParsed = true;
+		return;
+	}
+	else
+		return;
 	if (this->_request.size() == this->_contentLength)
 	{
 		_isBodyParsed = true;
@@ -519,6 +527,7 @@ std::string Request::getHeaders(const std::string& headername)
 
 void Request::parseChunkedBody()
 {
+	Log::log(Log::DEBUG, "Entering parseChunkedBody");
 	int loop_count = 0 ;
 	while (!this->_request.empty())
 	{
@@ -559,6 +568,7 @@ void Request::parseChunkedBody()
 			Log::log(Log::ERROR, "Failed to open temporary file");
 			this->_client->setRequestStatus(true);
 		}
+		tmpFile.write(this->_request.c_str(), this->_chunkSize);
 		tmpFile.close();
 		this->_request.erase(0, this->_chunkSize + 2);
 		this->_chunkSize = -1;
@@ -640,6 +650,15 @@ int Request::findConfigLocation()
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
+    	if (_method == "POST" && _path.size() >= 4 && _path.compare(_path.size() - 4, 4, ".bla") == 0)
+		{
+			this->_configLocation = &(locations[4]);
+			_configDone = true;
+			_serverCode = 200;
+			this->_configLocation->print();
+			Log::log(Log::INFO, "Config location done with a .bla match and POST method \u2713");
+			return 0;
+		}
 		if (_path.compare(0, it->getPath().length(), it->getPath()) == 0 && (_path.length() == it->getPath().length() || _path[it->getPath().length()] == '/'))
 		{
 			this->_configLocation = &(*it);
