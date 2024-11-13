@@ -41,6 +41,7 @@ $(NAME): $(OBJS)
 
 clean:
 	$(RM) $(OBJ_DIR)
+	@if [ -f tmp_file ]; then $(RM) tmp_file; fi
 	@echo "$(YELLOW)$(OBJS) object file removed$(END)"
 
 fclean: clean

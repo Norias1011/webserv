@@ -105,7 +105,7 @@ void Request::parseRequest(const std::string &raw_request)
 	}
 	else
 		Log::log(Log::DEBUG, "headers are not properly parsed");
-	if (_isBodyParsed == true)
+	if (_isBodyParsed == true || _method =="DELETE")
 	{
 		Log::log(Log::DEBUG, "The body is parsed");
 		this->_client->setRequestStatus(true);

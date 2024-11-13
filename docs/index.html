@@ -5,37 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Webserv 42 - Test Page</title>
   <style>
+    h2 {
+            text-align: center;
+            color: green;
+        }
     body { font-family: Arial, sans-serif; }
-    form { margin: 20px 0; }
+    form { margin: 20px 0; text-align: center; }
     label { display: block; margin: 10px 0 5px; }
     button { margin: 10px 0; }
-	.file-list { margin-top: 20px; }
+	  .file-list { margin-top: 20px; }
     .file-item { display: flex; justify-content: space-between; align-items: center; }
+    .button-link, .button{
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            background-color: rgb(27, 94, 79);
+            border-radius: 5px;
+        }
+        .button-container {
+            text-align: center;
+      }
   </style>
 </head>
 <body>
 
-  <h1>Webserv 42 - Antho & Elo</h1>
+  <h1 style="text-align: center; color: rgb(46, 71, 17);">Webserv 42 - Antho & Elo</h1>
 
   <h2>Test GET Method</h2>
 
   <!-- Link to test GET method -->
-  <a href="/presentation">Click here to send GET request</a><br>
-  <a href="/new">Test 1</a><br>
-  <a href="/cgi-bin">Test date Python CGI</a><br>
-  <a href="/test-sh">Test Shell CGI</a><br>
-  <a href="/youtube">Test Youtube</a><br>
-  
+  <div class="button-container">
+    <a href="/presentation" class="button-link">Click here to send GET request - Presentation of the Project</a><br>
+    <a href="/new" class="button-link">Test 2 - GET</a><br>
+  </div>
+
+  <h2>Test CGI</h2>
+  <div class="button-container">
+    <a href="/cgi-bin" class="button-link">Test date Python CGI</a><br>
+    <a href="/test-sh" class="button-link">Test Shell CGI</a><br>
+  </div>
+
+  <h2>Test Redirection</h2>
+  <div class="button-container">
+    <a href="/youtube" class="button-link">Test redirection Youtube</a><br>
+  </div>
+
   <!-- POST Method -->
   <h2>Test POST Method</h2>
 
-	  <h1>Test Multipart Form Data</h1>
 	  <form id="upload-form" action="/" method="POST" enctype="multipart/form-data">
 		  
 		<label for="file">Upload File:</label>
 		<input type="file" id="file" name="file"><br><br>
-		<button type="submit">Upload</button>
+		<button type="submit" class="button">Upload</button>
 		<br>
 	
-    <h2>Delete Uploaded File</h2>
+    <h2>Test DELETE Method</h2>
 	<a>To delete put in the terminal curl -X DELETE http://localhost:8002/uploads/image.jpeg</a>
