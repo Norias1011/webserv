@@ -129,7 +129,13 @@ bool Response::checkRewrite()
         tmpPath = _request->getPath();
     Log::logVar(Log::DEBUG,"tmpPath :",tmpPath);
     if (tmpPath[tmpPath.size() - 1] == '/' || tmpPath == "/")
+	{
         return false;
+	}
+	if (_request->getMethod() == "DELETE")
+	{
+		return false;
+	}
     if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
     {
         std::string tmpHeader = _request->getHeaders()["Host"];
@@ -158,7 +164,11 @@ void Response::manageDeleteRequest()
         _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 403);
         return ; 
     }
-	remove(path.c_str());
+	if (remove(path.c_str()) == 0) {
+    Log::logVar(Log::DEBUG, "File deleted: ", path);
+	} else {
+		Log::logVar(Log::ERROR, "Error deleting file: ", path);
+	}
     std::string body = "{\n";
     body += "\"method\": \"DELETE\",\n";
     body += "\"path\": \"" + _request->getPath() + "\",\n";

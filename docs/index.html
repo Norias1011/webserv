@@ -38,24 +38,4 @@
 		<br>
 	
     <h2>Delete Uploaded File</h2>
-  <button id="delete-button">Delete Uploaded File</button>
-
-  <script>
-  document.getElementById("delete-button").addEventListener("click", function() {
-    var file = this.dataset.file;
-    if (!file) {
-      console.log("No file to delete");
-      return;
-    }
-  
-    fetch("/docs/uploads/" + file, {
-      method: "DELETE"
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("File deleted:", data);
-      // Disable the delete button
-      document.getElementById("delete-button").disabled = true;
-    });
-  });
-  </script>
+	<a>To delete put in the terminal curl -X DELETE http://localhost:8002/uploads/image.jpeg</a>
