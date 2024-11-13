@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _query(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _query(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_bodySize(0), _chunkSize(-1),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""), _query(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""), _query(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_bodySize(0), _chunkSize(-1),_contentLength(0),_infoCgi(this), _lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -153,7 +153,7 @@ void Request::parseFirstLine(void)
 		{
 			_serverCode = 405;
 			Log::log(Log::ERROR,"Wrong Method");
-			this->_client->setRequestStatus(true);
+			//this->_client->setRequestStatus(true);
 			return;
 		}
 		Log::logVar(Log::DEBUG,"method is:", _method);
@@ -511,62 +511,50 @@ std::string Request::getHeaders(const std::string& headername)
 
 void Request::parseChunkedBody()
 {
+	int loop_count = 0 ;
 	while (!this->_request.empty())
 	{
-        std::istringstream ss_request(_request);
-        std::string chunk_size_str;
-        std::string buffer;
-
-        // Read the chunk size line
-        std::getline(ss_request, chunk_size_str);
-        chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
-        if (chunk_size_str.empty())
-            continue;
-
-        // Parse the chunk size
-        std::stringstream chunk_stream(chunk_size_str);
-        size_t chunk_size;
-        chunk_stream >> std::hex >> chunk_size;
-        if (chunk_stream.fail())
-        {
-            Log::log(Log::ERROR, "Failed to parse chunk size");
-			_serverCode = 400;
-			this->_client->setRequestStatus(true);
-            break;
-        }
-		Log::logVar(Log::DEBUG, "Chunk size: {}", chunk_size);
-
-        // If chunk size is 0, this is the last chunk
-        if (chunk_size == 0)
-        {
-            std::string trailing;
-            std::getline(ss_request, trailing);
-			Log::logVar(Log::DEBUG, "End of chunked body with trailing : ", trailing);
-			_isBodyParsed = true;
-            break;
-        }
-
-        // Read the chunk data
-        buffer.resize(chunk_size);
-        if (!ss_request.read(&buffer[0], chunk_size))
+      loop_count++;
+		if (this->_chunkSize == -1)
 		{
-            Log::log(Log::ERROR, "Chunk size does not match the size of the chunk data");
-			_serverCode = 400;
+			size_t pos = this->_request.find("\r\n");
+			if (pos == std::string::npos)
+				return; 
+			std::string line = this->_request.substr(0,pos);
+			std::istringstream iss(line);
+			if (!(iss >> std::hex >> this->_chunkSize))
+			{
+				Log::log(Log::ERROR, "Failed to parse chunk size");
+				return;
+			}
+			this->_request.erase(0, pos + 2);
+			if (this->_chunkSize == 0)
+			{
+				_isBodyParsed = true;
+				return;
+			}
+			Log::logVar(Log::DEBUG, "Chunk size:", this->_chunkSize);
+		}
+		size_t pos = this->_request.find("\r\n");
+		if (pos == std::string::npos)
+			return ;
+		if (pos != (size_t)this->_chunkSize)
+		{
+			Log::log(Log::ERROR, "Chunk size does not match");
+			return;
+		}
+
+		std::ofstream tmpFile("tmp_file", std::ios::app);
+		if (!tmpFile.is_open())
+		{
+			_serverCode = 500;
+			Log::log(Log::ERROR, "Failed to open temporary file");
 			this->_client->setRequestStatus(true);
-            break;
-        }
-
-        // Read the trailing CRLF
-        std::string trailing;
-        std::getline(ss_request, trailing);
-
-        // Store the chunk data
-        _body += buffer;
-		Log::logVar(Log::DEBUG,"Chunked body size: {}", _body.size());
-
-        // Erase the processed chunk from the request buffer
-        size_t processed_size = chunk_size_str.size() + 2 + chunk_size + 2; // chunk size + CRLF + chunk data + CRLF
-        _request.erase(0, processed_size);
+		}
+		tmpFile.close();
+		this->_request.erase(0, this->_chunkSize + 2);
+		this->_chunkSize = -1;
+		this->_bodySize += this->_chunkSize;
 	}
 }
 
