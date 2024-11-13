@@ -57,6 +57,7 @@ void Client::handleRequest(int fd)
 	memset(buffer,0, CLIENT_BUFFER + 1);
 	bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
 	Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
+	Log::logVar(Log::DEBUG,"buffer received {}.", buffer);
 
 	if (bytes > 0)
 	{
@@ -72,6 +73,7 @@ void Client::handleRequest(int fd)
 	}
 
 	request.append(buffer,bytes);
+	Log::logVar(Log::DEBUG,"request received {}.", request);
 	this->_request->parseRequest(request);
 	if (this->getRequestStatus() == true)
 		changeEpoll(fd);

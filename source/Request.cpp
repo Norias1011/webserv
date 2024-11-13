@@ -119,6 +119,12 @@ void Request::parseFirstLine(void)
 {
 	if (this->_isFirstLineParsed == true)
 		return;
+	size_t pos = this->_request.find('\n');
+	if (pos == std::string::npos)
+	{
+		Log::log(Log::DEBUG,"End of the first line not found");
+		return;
+	}
 	// METHOD PARSING AND CHECK
 	int i = 0;
 	int size = _request.size();
@@ -134,7 +140,7 @@ void Request::parseFirstLine(void)
 		{
 			_serverCode = 400;
 			Log::log(Log::ERROR,"Wrong Method");
-			this->_client->setRequestStatus(true);
+			//this->_client->setRequestStatus(true);
 		}
 		this->_method += this->_request[i];
 		i++;
@@ -281,7 +287,7 @@ void Request::parseRequestHeaders()
 	{
 		Log::log(Log::DEBUG,"End of the headers not found");
 		_serverCode = 400;
-		this->_client->setRequestStatus(true);
+		//this->_client->setRequestStatus(true);
 		return;
 	}
 	std::string all_headers = _request.substr(start, end - start);
@@ -401,6 +407,8 @@ std::string Request::isMethod(std::string const &method)
 		return "POST";
 	if (method == "DELETE")
 		return "DELETE";
+	if (method == "")
+		return "empty";
 	return "WRONG METHOD";
 }
 
