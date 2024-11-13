@@ -658,6 +658,7 @@ int Request::findConfigLocation()
 		}
 	}
 	Log::log(Log::INFO, "No location block defined \u2713");
+	_configLocation = NULL;
 	_serverCode = 404;
 	this->_client->setRequestStatus(true);
 	return (0);

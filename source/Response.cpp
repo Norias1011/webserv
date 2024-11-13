@@ -157,12 +157,12 @@ void Response::manageDeleteRequest()
         path = this->_request->getConfigLocation()->getRoot() + this->_request->getPath();
     }
 	Log::logVar(Log::DEBUG, "entering DELETE method with path:", path);
-    /*if (!fileExists(path))
+    if (!fileExists(path))
     {
         std::cerr << "Error: File not found" << std::endl;
         _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
         return ;
-    }*/
+    }
     if (isDirectory(path))
     {
         std::cerr << "Error: Unable to delete directory" << std::endl;
