@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
             }
             signal(SIGINT, signalHandler);
             config.parseConfig(config_file);
-            //config.printAll();
+            config.printAll();
 		
 		    global_server= new Server(config);
 		    global_server->createSocket();

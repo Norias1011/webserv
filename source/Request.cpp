@@ -359,6 +359,7 @@ void Request::parseBody()
 		}
 		else if (_headers["Content-Type"].find("text/plain") != std::string::npos) 
 		{
+			_body =_request;
 			Log::logVar(Log::INFO,"Entering text/plain- le body {}", _request );
 			return;
 		}
@@ -610,7 +611,6 @@ int Request::findConfigServer() //should we check here the range of usable port 
 				_configServer = &(it2[0]); // to check  if it works
 				_configServer->print();
 				this->findConfigLocation();
-				return (0);
 			}
         }
     }
@@ -626,6 +626,11 @@ int Request::findConfigLocation()
     	return -1;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
+	if (this->_configServer->getLocations().empty())
+	{
+		this->_configLocation = NULL;
+		return 0;
+	}
 	const std::vector<ConfigLocation>& locations = this->_configServer->getLocations();
 
 	for (std::vector<ConfigLocation>::const_iterator it = locations.begin(); it != locations.end(); ++it)
@@ -650,14 +655,19 @@ int Request::findConfigLocation()
 			Log::log(Log::INFO, "Config location done with a match \u2713");
 			return (0);
 		}
-		Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
-		this->_configLocation = &(it[0]);
 	}
+	Log::log(Log::INFO, "No location block defined \u2713");
+	_serverCode = 404;
+	this->_client->setRequestStatus(true);
 	return (0);
 }
 
 int Request::isMethodAllowed()
 {
+	if (this->getConfigLocation() == NULL)
+	{
+		return 0;
+	}
 	const std::vector<std::string>& allowedMethods = this->getConfigLocation()->getMethods();
 
     if (allowedMethods.empty())
@@ -690,6 +700,7 @@ int Request::checkSize()
 		std::istringstream ss(content_length_str);
 		ss >> _contentLength;
 		Log::logVar(Log::DEBUG, "Content-Length: {}", _contentLength);
+		Log::logVar(Log::DEBUG, "Max body size: {}", this->getConfigServer()->getMaxBodySize());
 
 		if (_contentLength > this->getConfigServer()->getMaxBodySize())
 		{

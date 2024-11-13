@@ -58,7 +58,7 @@ ConfigListen::ConfigListen(std::string ipLine) : _ip(""), _port(0), _IpAndPort(i
         throw std::runtime_error("[ERROR] Config Listen Error: Invalid ip or port");
     }
     _IpAndPort = _ip + ":" + NumberToString(_port); //::to_string(this->_port);
-    if (this->_port > 65535)
+    if (this->_port > 65535 && this->_port < 1)
     {
         std::cerr << "Error: Invalid port" << std::endl; //throw une error ici
         throw std::runtime_error("[ERROR] Config Listen Error: Invalid port");
