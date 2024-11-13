@@ -50,18 +50,15 @@ int Client::getFd() const
 
 void Client::handleRequest(int fd)
 {
-	//sleep(1);
 	std::string request;
 	char buffer[CLIENT_BUFFER + 1];
 	int bytes = 0;
 	memset(buffer,0, CLIENT_BUFFER + 1);
 	bytes = recv(this->_fd, buffer, CLIENT_BUFFER , 0);
-	Log::logVar(Log::DEBUG,"bytes received {}.", bytes);
 
 	if (bytes > 0)
 	{
 		buffer[bytes] = '\0';
-		Log::logVar(Log::DEBUG,"request received {}.", request);
 	}
 	else if (bytes < 0)
 		throw std::runtime_error("Error recv function");
@@ -80,22 +77,21 @@ void Client::handleRequest(int fd)
 void Client::changeEpoll(int epollfd)
 {
 	epoll_event ev;
-	ev.events = EPOLLOUT; // Reponse est prete a etre envoyé / Request finished
+	ev.events = EPOLLOUT; 
 	ev.data.fd = this->_fd;
 	epoll_ctl(epollfd, EPOLL_CTL_MOD, this->_fd, &ev);
 }
 
 void Client::sendResponse(int fd)
 {
-	Log::logVar(Log::DEBUG, "Sending response to client with fd {}",_fd);
     if (this->_response->giveAnswer() == -1)
     {
 		Log::log(Log::ERROR, "Error: Unable to send response");
         return ;
     }
     int sendResponse = -1;
-	Log::logVar(Log::DEBUG, "sendResponse fd is :", _fd);
-	Log::logVar(Log::DEBUG, "sendResponse response is :", _response->getResponse());
+	//Log::logVar(Log::DEBUG, "sendResponse fd is :", _fd);
+	//Log::logVar(Log::DEBUG, "sendResponse response is :", _response->getResponse());
     if (_fd != -1)
         sendResponse = send(_fd, this->_response->getResponse().c_str(), _response->getResponse().size(), 0);
     if (sendResponse < 0)
@@ -105,7 +101,6 @@ void Client::sendResponse(int fd)
     else
 	{
         Log::logVar(Log::DEBUG, "Response sent to client with fd {}", _fd);
-		Log::logVar(Log::DEBUG, "Response sent to client with sendResponse {}", sendResponse);
 	}
     if (this->getResponse()->_done == true)
     {

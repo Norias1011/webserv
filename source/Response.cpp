@@ -40,7 +40,6 @@ Response &Response::operator=(Response const &src)
 int Response::giveAnswer()
 {
     std::cout << "[DEBUG] - Response::giveAnswer" << std::endl;
-    std::cout << "[DEBUG] - Response::giveAnswer - ServerCode is : " << _request->getServerCode()<< std::endl;
     if (!_response.empty())
     {
         std::cout << "[DEBUG] - Response::giveAnswer - response is not empty" << std::endl;
@@ -116,13 +115,13 @@ bool Response::checkRewrite()
         return true;
     }
     std::string root;
-	Log::logVar(Log::DEBUG,"this->_request->getConfigServer()->getRoot()",this->_request->getConfigServer()->getRoot());
-	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation():",this->_request->getConfigLocation());
-	Log::logVar(Log::DEBUG,"this->_request->getConfigLocation()->getRoot():",this->_request->getConfigLocation()->getRoot());
+	//Log::logVar(Log::DEBUG,"this->_request->getConfigServer()->getRoot()",this->_request->getConfigServer()->getRoot());
+	//Log::logVar(Log::DEBUG,"this->_request->getConfigLocation():",this->_request->getConfigLocation());
+	//Log::logVar(Log::DEBUG,"this->_request->getConfigLocation()->getRoot():",this->_request->getConfigLocation()->getRoot());
     if (this->_request->getConfigLocation() && !this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigLocation()->getRoot();
     else
-        root = this->_request->getConfigServer()->getRoot(); // check ici car ça segfault si on se connecte a distance
+        root = this->_request->getConfigServer()->getRoot();
     if (_request->getConfigLocation() && _request->getConfigLocation()->getAlias().size() > 0)
         tmpPath = _request->getConfigLocation()->getAlias() + _request->getPath().substr(_request->getConfigLocation()->getPath().size());
     else
@@ -256,12 +255,12 @@ void Response::handleLocation()
 {
     std::string root;
     std::string path = "";
-    std::cout << "[DEBUG] - Response::handleLocation - path: " << _request->getPath() << std::endl;
+    //std::cout << "[DEBUG] - Response::handleLocation - path: " << _request->getPath() << std::endl;
     if (this->_request->getConfigLocation()->getRoot().empty())
         root = this->_request->getConfigServer()->getRoot();
     else
         root = this->_request->getConfigLocation()->getRoot();
-    std::cout << "[DEBUG] - Response::handleLocation - root: " << root << std::endl;
+    //std::cout << "[DEBUG] - Response::handleLocation - root: " << root << std::endl;
     std::vector<std::string> FullPath = getFullPaths();
     if (FullPath.empty())
     {
@@ -270,10 +269,10 @@ void Response::handleLocation()
     }
     for (size_t i = 0; i < FullPath.size(); i++)
     {
-        std::cout << "[DEBUG] - Response::handleLocation - FullPath: " << FullPath[i] << std::endl;
+        //std::cout << "[DEBUG] - Response::handleLocation - FullPath: " << FullPath[i] << std::endl;
         if (checkFileExist(FullPath[i]))
         {
-            std::cout << "[DEBUG] - Response::handleLocation - File exist : " << FullPath[i] <<  std::endl;
+           //std::cout << "[DEBUG] - Response::handleLocation - File exist : " << FullPath[i] <<  std::endl;
             path = FullPath[i];
             break;
         }

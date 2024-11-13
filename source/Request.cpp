@@ -319,7 +319,7 @@ void Request::parseRequestHeaders()
 
 int Request::checkConfig()
 {
-	Log::log(Log::DEBUG, "Entering checkConfig");
+	//Log::log(Log::DEBUG, "Entering checkConfig");
 	if (this->findConfigServer() == -1)
 		return -1;
 	if (this->isMethodAllowed() == -1)
@@ -331,19 +331,10 @@ int Request::checkConfig()
 	}
 	if (this->checkSize() == -1)
 		return -1;
-	Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
 	if (this->findCGI() == 0)
 		Log::log(Log::DEBUG, "CGI is found in the request");
 	else
 		Log::log(Log::DEBUG, "CGI is not found in the request");
-	std::cout << "is CGI found ? " << this->findCGI() << std::endl;
-	Log::logVar(Log::DEBUG, "is CGI found ? ", this->findCGI());
-	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
-	{
-		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
-		_serverCode = 413;
-		return (-1)
-	}*/
 	if (this->_client->getRequestStatus() == true)
 		return -1;
 	return 0;
@@ -352,12 +343,12 @@ int Request::checkConfig()
 
 void Request::parseBody()
 {
-	Log::log(Log::DEBUG, "Entering parseBody function");
+	//Log::log(Log::DEBUG, "Entering parseBody function");
 	if (_isChunked == true)
 	{
 		parseChunkedBody();
 	}
-	if (_method == "POST") //et pas CGI
+	if (_method == "POST") 
 	{
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
@@ -372,9 +363,6 @@ void Request::parseBody()
 			return;
 		}
 	}
-	Log::logVar(Log::DEBUG, "request?: {}", this->_request);
-	Log::logVar(Log::DEBUG, "Body is size: {}", this->_request.size());
-	Log::logVar(Log::DEBUG, "content length: {}", this->_contentLength);
 	if (_method == "GET" && this->_request.size() == 0)
 	{
 		_isBodyParsed = true;
@@ -527,7 +515,6 @@ std::string Request::getHeaders(const std::string& headername)
 
 void Request::parseChunkedBody()
 {
-	Log::log(Log::DEBUG, "Entering parseChunkedBody");
 	int loop_count = 0 ;
 	while (!this->_request.empty())
 	{
@@ -578,11 +565,6 @@ void Request::parseChunkedBody()
 
 int Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
-	/*if(_configDone == true)
-	{
-		Log::log(Log::DEBUG, "Config server/locations already found");
-        return -1;
-	}*/
 	std::string host = getHeaders("Host");
 	if (host.empty())
 	{
@@ -717,8 +699,8 @@ int Request::checkSize()
 			return -1;
 		}
 	}
-	else
-		Log::log(Log::DEBUG, "Content-Length header is missing");
+	//else
+		//Log::log(Log::DEBUG, "Content-Length header is missing");
 	return 0;
 }
 
@@ -751,7 +733,7 @@ bool isDirectory(const std::string& path)
 
 int Request::findCGI()
 {
-	Log::log(Log::DEBUG, "Entering findCGI");
+	//Log::log(Log::DEBUG, "Entering findCGI");
 	if (this->_configLocation == NULL)
 	{
 		Log::log(Log::ERROR, "No location found for CGI");
@@ -803,7 +785,6 @@ std::vector<std::string> Request::findFullPathLocation()
         if (isAlias)
             pathRequest = pathRequest.substr(this->_configLocation->getPath().size());
         FullPaths.push_back(root + pathRequest);
-		Log::logVar(Log::DEBUG, "Request::findFullPathLocation - root + pathRequest: {}", root + pathRequest);
     }
     for (size_t i = 0; i < allIndex.size(); i++)
     {
@@ -815,7 +796,6 @@ std::vector<std::string> Request::findFullPathLocation()
             pathRequest = root + "/" + index;
         else
             pathRequest = root + pathRequest + "/" + index;
-        std::cout << "[DEBUG] - Request::findFullPathLocation - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
     }
