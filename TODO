@@ -1,4 +1,0 @@
-a checker:
-
-quand on va chercher une page d'erreur , mettre conditiion si il trouve pas de la generer.
-checker les alias dans la config + modifier la partie path dans les response 

@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 13:51:07 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/15 10:59:32 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:36:19 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,8 @@ class ConfigListen
         bool valid_part(char *s);
 		
         const std::string &get_IpAndPort() const { return _IpAndPort; };
-		const unsigned int &get_Port() const { return _port; };
-		const std::string &get_IP() const { return _ip; }; 
+        const unsigned int &get_Port() const { return _port; };
+        const std::string &get_IP() const { return _ip; }; 
     private:
         std::string _ip;
         unsigned int _port;

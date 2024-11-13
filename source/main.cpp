@@ -13,6 +13,7 @@
 #include "../include/Config.hpp"
 #include "../include/Server.hpp"
 #include "../include/Client.hpp"
+#include "../include/Request.hpp"
 #include <signal.h>
 
 Server *global_server = NULL;
@@ -39,6 +40,15 @@ int main(int argc, char *argv[])
             std::string config_file;
             Config config;
             config_file = (argc == 2) ? argv[1] : "configs/default.conf";
+            struct stat file_stat;
+            if (stat(config_file.c_str(), &file_stat) != 0) {
+                std::cerr << "File " << config_file << " does not exist." << std::endl;
+                return 1;
+            }
+            if (S_ISDIR(file_stat.st_mode)) {
+                std::cerr << "File " << config_file << " is a directory." << std::endl;
+                return 1;
+            }
             signal(SIGINT, signalHandler);
             config.parseConfig(config_file);
             config.printAll();

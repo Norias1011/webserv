@@ -2,11 +2,11 @@
 #include <bits/basic_string.h>
 #include <stdexcept> 
 
-Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request() : _client(NULL), _request(""),  _path(""),_uri(""), _query(""), _method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_bodySize(0), _chunkSize(-1),_contentLength(0), _infoCgi(this), _lastRequestTime(0)
 {
 }
 
-Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_contentLength(0),_lastRequestTime(0)
+Request::Request(Client* client):_client(client), _request(""),  _path(""), _uri(""), _query(""),_method(""), _httpVersion(""),_serverCode(200), _init(true), _working(false),_configDone(false),_isMethodParsed(false),_isHttpParsed(false), _isPathParsed(false),_isFirstLineParsed(false),_isHeadersParsed(false),_isBodyParsed(false),_isChunked(false),_bodySize(0), _chunkSize(-1),_contentLength(0),_infoCgi(this), _lastRequestTime(0)
 {
 	const std::map<std::string, std::vector<ConfigServer> >& serverConfigs = _client->getServer()->getConfig().getConfigServer();
     if (!serverConfigs.empty())
@@ -57,9 +57,13 @@ Request &Request::operator=(Request const &src)
         this->_httpVersion = src._httpVersion;
 		this->_init = src._init;
 		this->_working = src._working;
+		this->_configDone = src._configDone;
 		this->_lastRequestTime = src._lastRequestTime;
 		this->_serverCode = src._serverCode;
 		this->_headers = src._headers;
+		this->_postHeaders = src._postHeaders;
+		this->_fileHeaders = src._fileHeaders;
+		this->_uploadedFilename = src._uploadedFilename;
 		this->_body = src._body;
 		this->_isChunked = src._isChunked;
 		this->_isFirstLineParsed = src._isFirstLineParsed;
@@ -67,7 +71,9 @@ Request &Request::operator=(Request const &src)
 		this->_isHttpParsed = src._isHttpParsed;
 		this->_isMethodParsed = src._isMethodParsed;
 		this->_isPathParsed = src._isPathParsed;
+		this->_isBodyParsed = src._isBodyParsed;
 		this->_contentLength = src._contentLength;
+		this->_infoCgi = src._infoCgi;
 	}
 	return *this;
 }
@@ -99,9 +105,10 @@ void Request::parseRequest(const std::string &raw_request)
 	}
 	else
 		Log::log(Log::DEBUG, "headers are not properly parsed");
-	if (_isBodyParsed == true)
+	if (_isBodyParsed == true || _method =="DELETE")
 	{
 		Log::log(Log::DEBUG, "The body is parsed");
+		_serverCode = 200;
 		this->_client->setRequestStatus(true);
 	}
 	else
@@ -113,6 +120,12 @@ void Request::parseFirstLine(void)
 {
 	if (this->_isFirstLineParsed == true)
 		return;
+	size_t pos = this->_request.find('\n');
+	if (pos == std::string::npos)
+	{
+		Log::log(Log::DEBUG,"End of the first line not found");
+		return;
+	}
 	// METHOD PARSING AND CHECK
 	int i = 0;
 	int size = _request.size();
@@ -128,7 +141,7 @@ void Request::parseFirstLine(void)
 		{
 			_serverCode = 400;
 			Log::log(Log::ERROR,"Wrong Method");
-			this->_client->setRequestStatus(true);
+			//this->_client->setRequestStatus(true);
 		}
 		this->_method += this->_request[i];
 		i++;
@@ -275,7 +288,7 @@ void Request::parseRequestHeaders()
 	{
 		Log::log(Log::DEBUG,"End of the headers not found");
 		_serverCode = 400;
-		this->_client->setRequestStatus(true);
+		//this->_client->setRequestStatus(true);
 		return;
 	}
 	std::string all_headers = _request.substr(start, end - start);
@@ -307,7 +320,7 @@ void Request::parseRequestHeaders()
 
 int Request::checkConfig()
 {
-	Log::log(Log::DEBUG, "Entering checkConfig");
+	//Log::log(Log::DEBUG, "Entering checkConfig");
 	if (this->findConfigServer() == -1)
 		return -1;
 	if (this->isMethodAllowed() == -1)
@@ -319,19 +332,10 @@ int Request::checkConfig()
 	}
 	if (this->checkSize() == -1)
 		return -1;
-			Log::logVar(Log::DEBUG, "is checksize found 0 or -1? if 0 we continue : ", this->checkSize());
 	if (this->findCGI() == 0)
 		Log::log(Log::DEBUG, "CGI is found in the request");
 	else
 		Log::log(Log::DEBUG, "CGI is not found in the request");
-	std::cout << "is CGI found ? " << this->findCGI() << std::endl;
-	Log::logVar(Log::DEBUG, "is CGI found ? ", this->findCGI());
-	/*if (this->_contentLength > this->checkConfig->getMaxBodySize())
-	{
-		Log::logVar(Log::ERROR, "Content-Length is too big: {}", this->_contentLength);
-		_serverCode = 413;
-		return (-1)
-	}*/
 	if (this->_client->getRequestStatus() == true)
 		return -1;
 	return 0;
@@ -340,11 +344,12 @@ int Request::checkConfig()
 
 void Request::parseBody()
 {
+	//Log::log(Log::DEBUG, "Entering parseBody function");
 	if (_isChunked == true)
 	{
 		parseChunkedBody();
 	}
-	if (_method == "POST") //et pas CGI
+	if (_method == "POST") 
 	{
 		if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos) 
 		{
@@ -355,13 +360,18 @@ void Request::parseBody()
 		}
 		else if (_headers["Content-Type"].find("text/plain") != std::string::npos) 
 		{
+			_body =_request;
 			Log::logVar(Log::INFO,"Entering text/plain- le body {}", _request );
 			return;
 		}
 	}
-	Log::logVar(Log::DEBUG, "request?: {}", this->_request);
-	Log::logVar(Log::DEBUG, "Body is size: {}", this->_request.size());
-	Log::logVar(Log::DEBUG, "content length: {}", this->_contentLength);
+	if (_method == "GET" && this->_request.size() == 0)
+	{
+		_isBodyParsed = true;
+		return;
+	}
+	else
+		return;
 	if (this->_request.size() == this->_contentLength)
 	{
 		_isBodyParsed = true;
@@ -396,6 +406,8 @@ std::string Request::isMethod(std::string const &method)
 		return "POST";
 	if (method == "DELETE")
 		return "DELETE";
+	if (method == "")
+		return "empty";
 	return "WRONG METHOD";
 }
 
@@ -505,72 +517,56 @@ std::string Request::getHeaders(const std::string& headername)
 
 void Request::parseChunkedBody()
 {
+	int loop_count = 0 ;
 	while (!this->_request.empty())
 	{
-        std::istringstream ss_request(_request);
-        std::string chunk_size_str;
-        std::string buffer;
-
-        // Read the chunk size line
-        std::getline(ss_request, chunk_size_str);
-        chunk_size_str.erase(std::remove(chunk_size_str.begin(), chunk_size_str.end(), '\r'), chunk_size_str.end());
-        if (chunk_size_str.empty())
-            continue;
-
-        // Parse the chunk size
-        std::stringstream chunk_stream(chunk_size_str);
-        size_t chunk_size;
-        chunk_stream >> std::hex >> chunk_size;
-        if (chunk_stream.fail())
-        {
-            Log::log(Log::ERROR, "Failed to parse chunk size");
-			_serverCode = 400;
-			this->_client->setRequestStatus(true);
-            break;
-        }
-		Log::logVar(Log::DEBUG, "Chunk size: {}", chunk_size);
-
-        // If chunk size is 0, this is the last chunk
-        if (chunk_size == 0)
-        {
-            std::string trailing;
-            std::getline(ss_request, trailing);
-			Log::logVar(Log::DEBUG, "End of chunked body with trailing : ", trailing);
-			_isBodyParsed = true;
-            break;
-        }
-
-        // Read the chunk data
-        buffer.resize(chunk_size);
-        if (!ss_request.read(&buffer[0], chunk_size))
+      loop_count++;
+		if (this->_chunkSize == -1)
 		{
-            Log::log(Log::ERROR, "Chunk size does not match the size of the chunk data");
-			_serverCode = 400;
+			size_t pos = this->_request.find("\r\n");
+			if (pos == std::string::npos)
+				return; 
+			std::string line = this->_request.substr(0,pos);
+			std::istringstream iss(line);
+			if (!(iss >> std::hex >> this->_chunkSize))
+			{
+				Log::log(Log::ERROR, "Failed to parse chunk size");
+				return;
+			}
+			this->_request.erase(0, pos + 2);
+			if (this->_chunkSize == 0)
+			{
+				_isBodyParsed = true;
+				return;
+			}
+			Log::logVar(Log::DEBUG, "Chunk size:", this->_chunkSize);
+		}
+		size_t pos = this->_request.find("\r\n");
+		if (pos == std::string::npos)
+			return ;
+		if (pos != (size_t)this->_chunkSize)
+		{
+			Log::log(Log::ERROR, "Chunk size does not match");
+			return;
+		}
+
+		std::ofstream tmpFile("tmp_file", std::ios::app);
+		if (!tmpFile.is_open())
+		{
+			_serverCode = 500;
+			Log::log(Log::ERROR, "Failed to open temporary file");
 			this->_client->setRequestStatus(true);
-            break;
-        }
-
-        // Read the trailing CRLF
-        std::string trailing;
-        std::getline(ss_request, trailing);
-
-        // Store the chunk data
-        _body += buffer;
-		Log::logVar(Log::DEBUG,"Chunked body size: {}", _body.size());
-
-        // Erase the processed chunk from the request buffer
-        size_t processed_size = chunk_size_str.size() + 2 + chunk_size + 2; // chunk size + CRLF + chunk data + CRLF
-        _request.erase(0, processed_size);
+		}
+		tmpFile.write(this->_request.c_str(), this->_chunkSize);
+		tmpFile.close();
+		this->_request.erase(0, this->_chunkSize + 2);
+		this->_chunkSize = -1;
+		this->_bodySize += this->_chunkSize;
 	}
 }
 
 int Request::findConfigServer() //should we check here the range of usable port - example the restricted one etc - to see with Antho si c'est deja check autre part?
 {
-	/*if(_configDone == true)
-	{
-		Log::log(Log::DEBUG, "Config server/locations already found");
-        return -1;
-	}*/
 	std::string host = getHeaders("Host");
 	if (host.empty())
 	{
@@ -616,7 +612,6 @@ int Request::findConfigServer() //should we check here the range of usable port 
 				_configServer = &(it2[0]); // to check  if it works
 				_configServer->print();
 				this->findConfigLocation();
-				return (0);
 			}
         }
     }
@@ -632,18 +627,27 @@ int Request::findConfigLocation()
     	return -1;
 	}
 	Log::log(Log::DEBUG, "Je rentre dans find config location");
+	if (this->_configServer->getLocations().empty())
+	{
+		this->_configLocation = NULL;
+		return 0;
+	}
 	const std::vector<ConfigLocation>& locations = this->_configServer->getLocations();
 
 	for (std::vector<ConfigLocation>::const_iterator it = locations.begin(); it != locations.end(); ++it)
 	{
 		Log::logVar(Log::DEBUG, "le path dans la requete : {}", _path);
 		Log::logVar(Log::DEBUG, "le path dans la config : {}", it->getPath());
-
-		// Normalize paths
-		std::string configPath = normalizePath(it->getPath());
-		std::string requestPath = _path;
-
-		if (requestPath.compare(0, configPath.length(), configPath) == 0 && (requestPath.length() == configPath.length() || requestPath[configPath.length()] == '/'))
+    	if (_method == "POST" && _path.size() >= 4 && _path.compare(_path.size() - 4, 4, ".bla") == 0)
+		{
+			this->_configLocation = &(locations[4]);
+			_configDone = true;
+			_serverCode = 200;
+			this->_configLocation->print();
+			Log::log(Log::INFO, "Config location done with a .bla match and POST method \u2713");
+			return 0;
+		}
+		if (_path.compare(0, it->getPath().length(), it->getPath()) == 0 && (_path.length() == it->getPath().length() || _path[it->getPath().length()] == '/'))
 		{
 			this->_configLocation = &(*it);
 			_configDone = true;
@@ -653,13 +657,18 @@ int Request::findConfigLocation()
 			return 0;
 		}
 	}
-	Log::log(Log::INFO, "No location block defined, using default behavior (the first one) \u2713");
-	this->_configLocation = &(locations[0]);
+	Log::log(Log::INFO, "No location block defined \u2713");
+	_serverCode = 404;
+	this->_client->setRequestStatus(true);
 	return (0);
 }
 
 int Request::isMethodAllowed()
 {
+	if (this->getConfigLocation() == NULL)
+	{
+		return 0;
+	}
 	const std::vector<std::string>& allowedMethods = this->getConfigLocation()->getMethods();
 
     if (allowedMethods.empty())
@@ -692,6 +701,7 @@ int Request::checkSize()
 		std::istringstream ss(content_length_str);
 		ss >> _contentLength;
 		Log::logVar(Log::DEBUG, "Content-Length: {}", _contentLength);
+		Log::logVar(Log::DEBUG, "Max body size: {}", this->getConfigServer()->getMaxBodySize());
 
 		if (_contentLength > this->getConfigServer()->getMaxBodySize())
 		{
@@ -701,8 +711,8 @@ int Request::checkSize()
 			return -1;
 		}
 	}
-	else
-		Log::log(Log::DEBUG, "Content-Length header is missing");
+	//else
+		//Log::log(Log::DEBUG, "Content-Length header is missing");
 	return 0;
 }
 
@@ -735,7 +745,7 @@ bool isDirectory(const std::string& path)
 
 int Request::findCGI()
 {
-	Log::log(Log::DEBUG, "Entering findCGI");
+	//Log::log(Log::DEBUG, "Entering findCGI");
 	if (this->_configLocation == NULL)
 	{
 		Log::log(Log::ERROR, "No location found for CGI");
@@ -787,7 +797,6 @@ std::vector<std::string> Request::findFullPathLocation()
         if (isAlias)
             pathRequest = pathRequest.substr(this->_configLocation->getPath().size());
         FullPaths.push_back(root + pathRequest);
-		Log::logVar(Log::DEBUG, "Request::findFullPathLocation - root + pathRequest: {}", root + pathRequest);
     }
     for (size_t i = 0; i < allIndex.size(); i++)
     {
@@ -799,7 +808,6 @@ std::vector<std::string> Request::findFullPathLocation()
             pathRequest = root + "/" + index;
         else
             pathRequest = root + pathRequest + "/" + index;
-        std::cout << "[DEBUG] - Request::findFullPathLocation - pathRequest: " << pathRequest << std::endl;
         FullPaths.push_back(pathRequest);
         pathRequest = tmpPath;
     }

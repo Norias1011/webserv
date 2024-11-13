@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 14:13:35 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/10/31 14:25:13 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/11 16:50:37 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,7 @@ ConfigServer::ConfigServer(std::string filename) : _filename(filename), _maxBody
 
 ConfigServer::ConfigServer(ConfigServer const &src)
 {
-    if (this != &src)
-    {
-        *this = src;
-    }
+    *this = src;
 }
 
 ConfigServer &ConfigServer::operator=(ConfigServer const &src)
@@ -46,11 +43,13 @@ ConfigServer &ConfigServer::operator=(ConfigServer const &src)
         this->_index = src._index;
         this->_ip = src._ip;
         this->_port = src._port;
-        this->_locations = src._locations;
+        _locations = src._locations;
         this->_joinIpPort = src._joinIpPort;
+        this->_IpPortTaken = src._IpPortTaken;
+        this->_doubleInformation = src._doubleInformation;
         this->_errorPages = src._errorPages;
         this->_maxBodySize = src._maxBodySize;
-        this->_listens = src._listens;
+        _listens = src._listens;
     }
     return *this;
 }
