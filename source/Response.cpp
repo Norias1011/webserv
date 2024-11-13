@@ -104,6 +104,10 @@ int Response::giveAnswer()
 bool Response::checkRewrite()
 {
 	//if (this->_request->getConfigDone() == false)
+    if (_request->getMethod() == "DELETE")
+	{
+		return false;
+	}
 	std::string tmpPath;
     if (this->_request->getConfigLocation() && this->_request->getConfigLocation()->getRewrite().second.size() > 0)
     {
@@ -131,10 +135,6 @@ bool Response::checkRewrite()
 	{
         return false;
 	}
-	if (_request->getMethod() == "DELETE")
-	{
-		return false;
-	}
     if (checkFileExist(root + tmpPath) || (this->_request->getConfigLocation() && checkFileExist(this->_request->getConfigLocation()->getAlias() + tmpPath.substr(this->_request->getConfigLocation()->getPath().size()))))
     {
         std::string tmpHeader = _request->getHeaders()["Host"];
@@ -149,14 +149,20 @@ bool Response::checkRewrite()
 
 void Response::manageDeleteRequest()
 {
-    std::string path = this->_request->getConfigLocation() ? this->_request->getConfigLocation()->getRoot() + this->_request->getPath() : this->_request->getConfigServer()->getRoot() +this->_request->getPath() ;
+    std::string path;
+    if (this->_request->getConfigLocation() == NULL)
+        path = this->_request->getConfigServer()->getRoot() + this->_request->getPath();
+    else
+    {
+        path = this->_request->getConfigLocation()->getRoot() + this->_request->getPath();
+    }
 	Log::logVar(Log::DEBUG, "entering DELETE method with path:", path);
-    if (!fileExists(path))
+    /*if (!fileExists(path))
     {
         std::cerr << "Error: File not found" << std::endl;
         _response = _errorPage.getConfigErrorPage(this->_request->getConfigServer()->getErrorPages(), 404);
         return ;
-    }
+    }*/
     if (isDirectory(path))
     {
         std::cerr << "Error: Unable to delete directory" << std::endl;

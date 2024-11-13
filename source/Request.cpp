@@ -92,7 +92,7 @@ void Request::parseRequest(const std::string &raw_request)
 	}
 	this->_request += raw_request;
 
-	Log::logVar(Log::DEBUG, "Parsing request {}", this->_request);
+	//Log::logVar(Log::DEBUG, "Parsing request {}", this->_request);
 	this->parseFirstLine();
 	if (this->getFirstLineParsed() == true)
 		this->parseRequestHeaders();
@@ -113,7 +113,7 @@ void Request::parseRequest(const std::string &raw_request)
 	}
 	else
 		Log::log(Log::DEBUG, "The body is not properly parsed");
-	Log::logVar(Log::DEBUG, "Request is parsed ?: {}", this->_client->getRequestStatus());
+	//Log::logVar(Log::DEBUG, "Request is parsed ?: {}", this->_client->getRequestStatus());
 }
 
 void Request::parseFirstLine(void)
@@ -415,9 +415,9 @@ void Request::parseMultipartFormData(const std::string& boundary)
 {
     size_t pos = 0;
 	Log::log(Log::DEBUG," Entering into the parsing of the body for multipartform data ");
-	Log::logVar(Log::INFO," boundary: {} ", boundary);
-	Log::logVar(Log::INFO," body: {} ", _request);
-	Log::logVar(Log::INFO," pos: {} ", _request.find(boundary));
+	//Log::logVar(Log::INFO," boundary: {} ", boundary);
+	//Log::logVar(Log::INFO," body: {} ", _request);
+	//Log::logVar(Log::INFO," pos: {} ", _request.find(boundary));
     while ((pos = _request.find(boundary)) != std::string::npos) 
 	{
         std::string part = _request.substr(0, pos);
@@ -493,7 +493,7 @@ void Request::parseMultipartFormData(const std::string& boundary)
 				{
 					Log::logVar(Log::INFO, " File uploaded on: {}", file_path);
 					this->_client->setRequestStatus(true);
-					_serverCode = 200; // cest 201 je crois mais ca bug a cause de la reponse a voir
+					_serverCode = 200;
 				}
             }
         } 
