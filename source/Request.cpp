@@ -108,6 +108,7 @@ void Request::parseRequest(const std::string &raw_request)
 	if (_isBodyParsed == true || _method =="DELETE")
 	{
 		Log::log(Log::DEBUG, "The body is parsed");
+		_serverCode = 200;
 		this->_client->setRequestStatus(true);
 	}
 	else
