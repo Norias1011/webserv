@@ -6,7 +6,7 @@
 /*   By: akinzeli <akinzeli@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/02 11:31:24 by akinzeli          #+#    #+#             */
-/*   Updated: 2024/11/08 13:49:34 by akinzeli         ###   ########.fr       */
+/*   Updated: 2024/11/13 15:25:37 by akinzeli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ void signalHandler(int signum)
         global_server = NULL;
     }
     std::cout << "Interrupt signal (" << signum << ") received." << std::endl;
-    exit(signum);
 }
 
 int main(int argc, char *argv[])
